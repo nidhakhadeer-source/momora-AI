@@ -15,10 +15,10 @@ class VisitPrepViewModel : ViewModel() {
     fun onEvent(event: VisitPrepUiEvent) {
         when (event) {
             VisitPrepUiEvent.OnEditAppointmentClicked -> {
-                // Action for edit
+                _uiState.update { it.copy(navigateToRoute = Screen.HealthReport.route) }
             }
             VisitPrepUiEvent.OnContactDoctorClicked -> {
-                // Action for contact
+                _uiState.update { it.copy(navigateToRoute = Screen.HealthReport.route) }
             }
             is VisitPrepUiEvent.OnToggleChecklistItem -> {
                 _uiState.update { state ->
@@ -35,13 +35,13 @@ class VisitPrepViewModel : ViewModel() {
                 }
             }
             VisitPrepUiEvent.OnAddQuestionClicked -> {
-                // Action for adding a question
+                _uiState.update { it.copy(navigateToRoute = Screen.HealthReport.route) }
             }
             is VisitPrepUiEvent.OnToggleReminder -> {
                 _uiState.update { it.copy(isReminderEnabled = event.enabled) }
             }
             VisitPrepUiEvent.OnPrepareHealthSummaryClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.HealthReport.route) }
             }
             is VisitPrepUiEvent.OnTabSelected -> {
                 _uiState.update { it.copy(selectedTab = event.tabIndex) }
