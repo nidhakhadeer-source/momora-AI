@@ -1,28 +1,20 @@
 package com.example.SIMATS.navigation
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import com.example.SIMATS.ui.duedate.DueDateScreen
 import com.example.SIMATS.ui.goals.GoalsPreferencesScreen
 import com.example.SIMATS.ui.healthhistory.HealthHistoryScreen
+import com.example.SIMATS.ui.home.HomeScreen
 import com.example.SIMATS.ui.login.LoginScreen
 import com.example.SIMATS.ui.privacyconsent.PrivacyConsentScreen
 import com.example.SIMATS.ui.profile.ProfileSetupScreen
 import com.example.SIMATS.ui.resetpassword.ResetPasswordScreen
 import com.example.SIMATS.ui.signup.SignUpScreen
 import com.example.SIMATS.ui.splash.SplashScreen
-import com.example.SIMATS.ui.theme.MomoraScreenBackground
-import com.example.SIMATS.ui.theme.MomoraTealPrimary
 
 @Composable
 fun AppNavHost() {
@@ -146,23 +138,13 @@ fun AppNavHost() {
             )
         }
         Screen.Home -> {
-            PlaceholderScreen(title = "Home Screen")
+            HomeScreen(
+                onNavigateTo = { route ->
+                    when (route) {
+                        Screen.Splash.route -> currentScreen = Screen.Splash
+                    }
+                }
+            )
         }
-    }
-}
-
-@Composable
-private fun PlaceholderScreen(title: String) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MomoraScreenBackground),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineMedium,
-            color = MomoraTealPrimary
-        )
     }
 }
