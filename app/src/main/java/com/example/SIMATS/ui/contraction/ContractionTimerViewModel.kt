@@ -1,6 +1,7 @@
 package com.example.SIMATS.ui.contraction
 
 import androidx.lifecycle.ViewModel
+import com.example.SIMATS.navigation.Screen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,7 +25,7 @@ class ContractionTimerViewModel : ViewModel() {
                 }
             }
             ContractionTimerUiEvent.OnContactMaternityTeamClicked -> {
-                // Action for calling maternity team
+                _uiState.update { it.copy(navigateToRoute = Screen.WeightTracker.route) }
             }
             is ContractionTimerUiEvent.OnTabSelected -> {
                 _uiState.update { it.copy(selectedTab = event.tabIndex) }

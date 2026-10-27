@@ -25,6 +25,7 @@ import com.example.SIMATS.ui.splash.SplashScreen
 import com.example.SIMATS.ui.symptom.SymptomLoggerScreen
 import com.example.SIMATS.ui.symptominsights.SymptomInsightsScreen
 import com.example.SIMATS.ui.timeline.TimelineScreen
+import com.example.SIMATS.ui.weight.WeightTrackerScreen
 
 @Composable
 fun AppNavHost() {
@@ -280,11 +281,24 @@ fun AppNavHost() {
             ContractionTimerScreen(
                 onNavigateTo = { route ->
                     when (route) {
+                        Screen.WeightTracker.route -> currentScreen = Screen.WeightTracker
                         Screen.Home.route -> currentScreen = Screen.Home
                     }
                 },
                 onNavigateBack = {
                     currentScreen = Screen.KickHistory
+                }
+            )
+        }
+        Screen.WeightTracker -> {
+            WeightTrackerScreen(
+                onNavigateTo = { route ->
+                    when (route) {
+                        Screen.Home.route -> currentScreen = Screen.Home
+                    }
+                },
+                onNavigateBack = {
+                    currentScreen = Screen.ContractionTimer
                 }
             )
         }

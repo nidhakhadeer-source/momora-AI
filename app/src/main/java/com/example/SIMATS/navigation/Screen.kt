@@ -21,4 +21,5 @@ sealed class Screen(val route: String) {
     data object KickCounter : Screen("kick_counter")
     data object KickHistory : Screen("kick_history")
     data object ContractionTimer : Screen("contraction_timer")
+    data object WeightTracker : Screen("weight_tracker")
 }
