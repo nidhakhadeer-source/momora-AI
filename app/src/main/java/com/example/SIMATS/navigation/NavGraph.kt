@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.example.SIMATS.ui.babydevelopment.BabyDevelopmentScreen
+import com.example.SIMATS.ui.checkin.DailyCheckInScreen
 import com.example.SIMATS.ui.duedate.DueDateScreen
 import com.example.SIMATS.ui.goals.GoalsPreferencesScreen
 import com.example.SIMATS.ui.healthhistory.HealthHistoryScreen
@@ -144,6 +145,7 @@ fun AppNavHost() {
                 onNavigateTo = { route ->
                     when (route) {
                         Screen.Timeline.route -> currentScreen = Screen.Timeline
+                        Screen.DailyCheckIn.route -> currentScreen = Screen.DailyCheckIn
                         Screen.Splash.route -> currentScreen = Screen.Splash
                     }
                 }
@@ -171,6 +173,18 @@ fun AppNavHost() {
                 },
                 onNavigateBack = {
                     currentScreen = Screen.Timeline
+                }
+            )
+        }
+        Screen.DailyCheckIn -> {
+            DailyCheckInScreen(
+                onNavigateTo = { route ->
+                    when (route) {
+                        Screen.Home.route -> currentScreen = Screen.Home
+                    }
+                },
+                onNavigateBack = {
+                    currentScreen = Screen.Home
                 }
             )
         }

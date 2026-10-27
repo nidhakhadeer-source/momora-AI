@@ -22,7 +22,7 @@ class HomeViewModel : ViewModel() {
                 }
             }
             HomeUiEvent.OnStartCheckInClicked -> {
-                // Action for daily check-in
+                _uiState.update { it.copy(navigateToRoute = Screen.DailyCheckIn.route) }
             }
             HomeUiEvent.OnViewTrackersClicked -> {
                 _uiState.update { it.copy(navigateToRoute = Screen.Timeline.route) }
