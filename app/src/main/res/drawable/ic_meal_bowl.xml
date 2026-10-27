@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="110dp"
+    android:viewportWidth="300"
+    android:viewportHeight="160">
+
+  <!-- Background Card Overlay -->
+  <path
+      android:pathData="M20,10 H280 A16,16 0 0,1 296,26 V134 A16,16 0 0,1 280,150 H20 A16,16 0 0,1 4,134 V26 A16,16 0 0,1 20,10 Z"
+      android:fillColor="#F4EBE1"/>
+
+  <!-- Table Tablecloth Texture -->
+  <path
+      android:pathData="M10,120 L290,120"
+      android:strokeColor="#E3D7C9"
+      android:strokeWidth="1"/>
+
+  <!-- Bowl Outer Rim -->
+  <path
+      android:pathData="M150,85m-75,0a75,50 0 1,1 150,0a75,50 0 1,1 -150,0"
+      android:fillColor="#DFD5C6"
+      android:strokeColor="#B5A896"
+      android:strokeWidth="3"/>
+
+  <!-- Bowl Inner Content -->
+  <path
+      android:pathData="M150,83m-68,0a68,43 0 1,1 136,0a68,43 0 1,1 -136,0"
+      android:fillColor="#4A3B2C"/>
+
+  <!-- Lentils & Grains Base -->
+  <path
+      android:pathData="M95,83 C105,60 195,60 205,83 C200,110 100,110 95,83 Z"
+      android:fillColor="#A2784F"/>
+
+  <!-- Roasted Veggies (Red Peppers & Chickpeas) -->
+  <path
+      android:pathData="M115,75 Q130,68 140,78"
+      android:strokeColor="#C84B31"
+      android:strokeWidth="5"
+      android:strokeLineCap="round"/>
+  <path
+      android:pathData="M160,88 Q175,80 185,92"
+      android:strokeColor="#C84B31"
+      android:strokeWidth="5"
+      android:strokeLineCap="round"/>
+  <path
+      android:pathData="M130,90m-5,0a5,5 0 1,1 10,0a5,5 0 1,1 -10,0"
+      android:fillColor="#E8A048"/>
+  <path
+      android:pathData="M155,75m-5,0a5,5 0 1,1 10,0a5,5 0 1,1 -10,0"
+      android:fillColor="#E8A048"/>
+  <path
+      android:pathData="M170,85m-5,0a5,5 0 1,1 10,0a5,5 0 1,1 -10,0"
+      android:fillColor="#E8A048"/>
+
+  <!-- Spinach Leaves -->
+  <path
+      android:pathData="M110,85 C105,75 120,70 125,82 Z"
+      android:fillColor="#235C53"/>
+  <path
+      android:pathData="M165,70 C160,60 175,58 180,68 Z"
+      android:fillColor="#235C53"/>
+
+  <!-- Lemon Wedge -->
+  <path
+      android:pathData="M185,60 A12,12 0 0,1 205,75 Z"
+      android:fillColor="#F3C742"
+      android:strokeColor="#DDA712"
+      android:strokeWidth="1.5"/>
+
+  <!-- Golden Fork & Spoon -->
+  <path
+      android:pathData="M235,60 L260,115 M248,55 L270,110"
+      android:strokeColor="#D4A359"
+      android:strokeWidth="2.5"
+      android:strokeLineCap="round"/>
+
+</vector>

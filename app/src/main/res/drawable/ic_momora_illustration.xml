@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="190dp"
+    android:height="140dp"
+    android:viewportWidth="260"
+    android:viewportHeight="190">
+
+  <!-- Soft Warm Sun Rays -->
+  <path
+      android:pathData="M65,18 L65,8 M45,28 L37,20 M85,28 L93,20 M32,48 L22,48 M98,48 L108,48"
+      android:strokeColor="#E8BA73"
+      android:strokeWidth="2.5"
+      android:strokeLineCap="round"/>
+
+  <!-- Sun -->
+  <path
+      android:pathData="M65,32 A16,16 0 1 1 64.99,32 Z"
+      android:fillColor="#E8BA73"/>
+
+  <!-- Left Leaf Vine (Sage Green) -->
+  <path
+      android:pathData="M50,165 C45,135 30,105 55,60 C62,95 60,135 50,165 Z"
+      android:fillColor="#8EA99D"/>
+
+  <!-- Individual Leaves Left -->
+  <!-- Leaf L1 -->
+  <path
+      android:pathData="M38,105 C22,95 18,78 32,68 C46,78 42,95 38,105 Z"
+      android:fillColor="#769C8E"/>
+  <!-- Leaf L2 -->
+  <path
+      android:pathData="M42,135 C25,130 22,112 36,102 C50,112 47,130 42,135 Z"
+      android:fillColor="#8EA99D"/>
+  <!-- Leaf L3 -->
+  <path
+      android:pathData="M56,82 C42,72 46,55 60,50 C70,62 66,75 56,82 Z"
+      android:fillColor="#9DB6AB"/>
+  <!-- Leaf L4 -->
+  <path
+      android:pathData="M48,155 C35,150 32,135 44,128 C56,135 54,150 48,155 Z"
+      android:fillColor="#769C8E"/>
+
+  <!-- Right Leaf Vine (Sage Green) -->
+  <path
+      android:pathData="M210,165 C215,135 230,105 205,60 C198,95 200,135 210,165 Z"
+      android:fillColor="#8EA99D"/>
+
+  <!-- Individual Leaves Right -->
+  <!-- Leaf R1 -->
+  <path
+      android:pathData="M222,105 C238,95 242,78 228,68 C214,78 218,95 222,105 Z"
+      android:fillColor="#769C8E"/>
+  <!-- Leaf R2 -->
+  <path
+      android:pathData="M218,135 C235,130 238,112 224,102 C210,112 213,130 218,135 Z"
+      android:fillColor="#8EA99D"/>
+  <!-- Leaf R3 -->
+  <path
+      android:pathData="M204,82 C218,72 214,55 200,50 C190,62 194,75 204,82 Z"
+      android:fillColor="#9DB6AB"/>
+  <!-- Leaf R4 -->
+  <path
+      android:pathData="M212,155 C225,150 228,135 216,128 C204,135 206,150 212,155 Z"
+      android:fillColor="#769C8E"/>
+
+  <!-- Cushion Base -->
+  <path
+      android:pathData="M90,162 C90,152 170,152 170,162 C182,172 180,180 168,183 C130,186 130,186 92,183 C80,180 78,172 90,162 Z"
+      android:fillColor="#ECE0CF"/>
+  <path
+      android:pathData="M95,162 Q130,167 165,162"
+      android:strokeColor="#DBCAA3"
+      android:strokeWidth="1.5"/>
+
+  <!-- Sitting Legs/Dress Fold -->
+  <path
+      android:pathData="M94,158 C90,148 108,142 130,142 C152,142 170,148 166,158 C158,166 102,166 94,158 Z"
+      android:fillColor="#A88B9C"/>
+
+  <!-- Woman Dress Body & Bump -->
+  <path
+      android:pathData="M117,85 C108,95 102,108 102,122 C102,140 114,148 130,148 C146,148 158,140 158,122 C158,108 152,95 143,85 Z"
+      android:fillColor="#BC9CAF"/>
+
+  <!-- Soft Highlight on Bump -->
+  <path
+      android:pathData="M115,115 C107,125 108,138 120,144"
+      android:strokeColor="#AA8A9D"
+      android:strokeWidth="2"
+      android:strokeLineCap="round"/>
+
+  <!-- Skin Neck & Chest -->
+  <path
+      android:pathData="M127,70 L133,70 L134,82 L126,82 Z"
+      android:fillColor="#C4886E"/>
+
+  <!-- Hands Gently Cradling Bump -->
+  <path
+      android:pathData="M118,118 C124,122 130,126 135,128 C130,132 124,130 119,124 Z"
+      android:fillColor="#C4886E"/>
+  <path
+      android:pathData="M142,118 C136,122 130,126 125,128 C130,132 136,130 141,124 Z"
+      android:fillColor="#C4886E"/>
+
+  <!-- Arms / Sleeves -->
+  <path
+      android:pathData="M118,88 Q110,102 118,118"
+      android:strokeColor="#BC9CAF"
+      android:strokeWidth="9"
+      android:strokeLineCap="round"/>
+  <path
+      android:pathData="M142,88 Q150,102 142,118"
+      android:strokeColor="#BC9CAF"
+      android:strokeWidth="9"
+      android:strokeLineCap="round"/>
+
+  <!-- Face Profile -->
+  <path
+      android:pathData="M125,52 C125,44 135,44 135,52 C135,62 125,70 125,52 Z"
+      android:fillColor="#C4886E"/>
+
+  <!-- Hair Flowing over shoulders -->
+  <path
+      android:pathData="M126,44 C118,44 114,54 116,68 C118,82 110,100 113,114 C115,104 121,85 121,68 C121,54 122,48 126,44 Z"
+      android:fillColor="#34251F"/>
+  <path
+      android:pathData="M134,44 C142,44 146,54 144,68 C142,82 150,100 147,114 C145,104 139,85 139,68 C139,54 138,48 134,44 Z"
+      android:fillColor="#34251F"/>
+
+  <!-- Hair Bun / Accents -->
+  <path
+      android:pathData="M130,41 A7,7 0 1 1 129.9,41 Z"
+      android:fillColor="#34251F"/>
+
+</vector>

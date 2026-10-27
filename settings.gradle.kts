@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Momora ai"
+rootProject.name = "Momora AI"
 include(":app")

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="110dp"
+    android:viewportWidth="300"
+    android:viewportHeight="160">
+
+  <!-- Background Card Overlay -->
+  <path
+      android:pathData="M20,10 H280 A16,16 0 0,1 296,26 V134 A16,16 0 0,1 280,150 H20 A16,16 0 0,1 4,134 V26 A16,16 0 0,1 20,10 Z"
+      android:fillColor="#F9F5F0"/>
+
+  <!-- Sunlit Window Light Glow -->
+  <path
+      android:pathData="M15,10 L100,10 L140,150 L15,150 Z"
+      android:fillColor="#FFFDF9"/>
+  <path
+      android:pathData="M30,20 H90 V140 H30 Z"
+      android:strokeColor="#EAE1D5"
+      android:strokeWidth="2"/>
+
+  <!-- Wooden Armchair -->
+  <path
+      android:pathData="M180,75 H240 V140 H232 V105 H188 V140 H180 Z"
+      android:fillColor="#9C7753"/>
+
+  <!-- Pregnant Woman in Soft Lavender Dress -->
+  <path
+      android:pathData="M130,120 L125,140 M145,120 L150,140"
+      android:strokeColor="#C4886E"
+      android:strokeWidth="8"
+      android:strokeLineCap="round"/>
+
+  <!-- Lavender Flowing Dress & Bump -->
+  <path
+      android:pathData="M125,75 C115,85 110,100 120,118 C135,125 155,120 160,105 C160,88 150,75 138,75 Z"
+      android:fillColor="#D0C0D0"/>
+
+  <!-- Gentle Hands Holding Bump -->
+  <path
+      android:pathData="M128,95 Q140,102 148,95"
+      android:strokeColor="#C4886E"
+      android:strokeWidth="5"
+      android:strokeLineCap="round"/>
+
+  <!-- Head & Dark Hair -->
+  <path
+      android:pathData="M142,55m-10,0a10,10 0 1,1 20,0a10,10 0 1,1 -20,0"
+      android:fillColor="#C4886E"/>
+  <path
+      android:pathData="M134,48 C128,48 130,62 135,68 C138,58 142,48 146,48 Z"
+      android:fillColor="#34251F"/>
+
+</vector>
