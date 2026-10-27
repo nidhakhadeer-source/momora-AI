@@ -12,6 +12,7 @@ import com.example.SIMATS.ui.checkin.DailyCheckInScreen
 import com.example.SIMATS.ui.contraction.ContractionTimerScreen
 import com.example.SIMATS.ui.dailyplan.DailyPlanScreen
 import com.example.SIMATS.ui.duedate.DueDateScreen
+import com.example.SIMATS.ui.exercise.ExerciseGuidanceScreen
 import com.example.SIMATS.ui.glucose.GlucoseLogScreen
 import com.example.SIMATS.ui.goals.GoalsPreferencesScreen
 import com.example.SIMATS.ui.healthhistory.HealthHistoryScreen
@@ -350,11 +351,24 @@ fun AppNavHost() {
             NutritionPlanScreen(
                 onNavigateTo = { route ->
                     when (route) {
+                        Screen.ExerciseGuidance.route -> currentScreen = Screen.ExerciseGuidance
                         Screen.Home.route -> currentScreen = Screen.Home
                     }
                 },
                 onNavigateBack = {
                     currentScreen = Screen.HydrationLog
+                }
+            )
+        }
+        Screen.ExerciseGuidance -> {
+            ExerciseGuidanceScreen(
+                onNavigateTo = { route ->
+                    when (route) {
+                        Screen.Home.route -> currentScreen = Screen.Home
+                    }
+                },
+                onNavigateBack = {
+                    currentScreen = Screen.NutritionPlan
                 }
             )
         }

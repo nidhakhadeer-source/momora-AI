@@ -18,13 +18,13 @@ class NutritionPlanViewModel : ViewModel() {
                 _uiState.update { it.copy(isBookmarked = !it.isBookmarked) }
             }
             NutritionPlanUiEvent.OnSwapMealsClicked -> {
-                // Action for swapping meals
+                _uiState.update { it.copy(navigateToRoute = Screen.ExerciseGuidance.route) }
             }
             is NutritionPlanUiEvent.OnMealActionClicked -> {
-                // Action for inspecting meal item
+                _uiState.update { it.copy(navigateToRoute = Screen.ExerciseGuidance.route) }
             }
             NutritionPlanUiEvent.OnOpenShoppingListClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.ExerciseGuidance.route) }
             }
             is NutritionPlanUiEvent.OnTabSelected -> {
                 _uiState.update { it.copy(selectedTab = event.tabIndex) }

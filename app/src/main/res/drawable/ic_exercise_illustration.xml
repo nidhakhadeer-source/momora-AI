@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="110dp"
+    android:viewportWidth="300"
+    android:viewportHeight="160">
+
+  <!-- Room Interior Background -->
+  <path
+      android:pathData="M20,10 H280 A16,16 0 0,1 296,26 V134 A16,16 0 0,1 280,150 H20 A16,16 0 0,1 4,134 V26 A16,16 0 0,1 20,10 Z"
+      android:fillColor="#F6F1EA"/>
+
+  <!-- Potted Plant on Floor -->
+  <path
+      android:pathData="M35,115 H65 L60,140 H40 Z"
+      android:fillColor="#B87352"/>
+  <path
+      android:pathData="M50,115 C30,90 25,60 45,50 C60,60 55,90 50,115 Z M50,115 C70,90 75,60 55,50 C40,60 45,90 50,115 Z"
+      android:fillColor="#235C53"/>
+
+  <!-- Exercise Mat -->
+  <path
+      android:pathData="M30,138 H270 V145 H30 Z"
+      android:fillColor="#A28BA1"/>
+
+  <!-- Wooden Chair for Support -->
+  <path
+      android:pathData="M210,70 H250 V140 H242 V100 H218 V140 H210 Z"
+      android:fillColor="#9C7753"/>
+  <path
+      android:pathData="M210,90 H250 V96 H210 Z"
+      android:fillColor="#805F3F"/>
+
+  <!-- Stretching Pregnant Woman -->
+  <!-- Legs standing softly -->
+  <path
+      android:pathData="M140,110 L135,140 M155,110 L160,140"
+      android:strokeColor="#748A7D"
+      android:strokeWidth="10"
+      android:strokeLineCap="round"/>
+
+  <!-- Soft Sage Activewear Outfit Body & Bump -->
+  <path
+      android:pathData="M135,65 C125,75 120,90 130,105 C145,110 160,105 165,90 C165,75 155,65 145,65 Z"
+      android:fillColor="#8DA396"/>
+
+  <!-- Arm Reaching Overhead Stretch -->
+  <path
+      android:pathData="M138,68 Q125,40 145,30"
+      android:strokeColor="#C4886E"
+      android:strokeWidth="7"
+      android:strokeLineCap="round"/>
+
+  <!-- Arm Resting on Chair for Balance -->
+  <path
+      android:pathData="M158,72 Q180,80 210,88"
+      android:strokeColor="#C4886E"
+      android:strokeWidth="7"
+      android:strokeLineCap="round"/>
+
+  <!-- Head & Hair -->
+  <path
+      android:pathData="M150,48m-10,0a10,10 0 1,1 20,0a10,10 0 1,1 -20,0"
+      android:fillColor="#C4886E"/>
+  <path
+      android:pathData="M142,42 C135,42 138,55 142,60 C145,52 148,42 152,42 Z"
+      android:fillColor="#34251F"/>
+
+</vector>
