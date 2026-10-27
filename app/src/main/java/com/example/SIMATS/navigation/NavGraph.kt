@@ -18,6 +18,7 @@ import com.example.SIMATS.ui.resetpassword.ResetPasswordScreen
 import com.example.SIMATS.ui.signup.SignUpScreen
 import com.example.SIMATS.ui.splash.SplashScreen
 import com.example.SIMATS.ui.symptom.SymptomLoggerScreen
+import com.example.SIMATS.ui.symptominsights.SymptomInsightsScreen
 import com.example.SIMATS.ui.timeline.TimelineScreen
 
 @Composable
@@ -194,11 +195,24 @@ fun AppNavHost() {
             SymptomLoggerScreen(
                 onNavigateTo = { route ->
                     when (route) {
+                        Screen.SymptomInsights.route -> currentScreen = Screen.SymptomInsights
                         Screen.Home.route -> currentScreen = Screen.Home
                     }
                 },
                 onNavigateBack = {
                     currentScreen = Screen.DailyCheckIn
+                }
+            )
+        }
+        Screen.SymptomInsights -> {
+            SymptomInsightsScreen(
+                onNavigateTo = { route ->
+                    when (route) {
+                        Screen.Home.route -> currentScreen = Screen.Home
+                    }
+                },
+                onNavigateBack = {
+                    currentScreen = Screen.SymptomLogger
                 }
             )
         }

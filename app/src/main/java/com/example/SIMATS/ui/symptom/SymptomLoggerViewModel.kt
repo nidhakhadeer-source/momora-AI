@@ -30,7 +30,7 @@ class SymptomLoggerViewModel : ViewModel() {
                 _uiState.update { it.copy(notes = event.notes) }
             }
             SymptomLoggerUiEvent.OnSaveSymptomClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.SymptomInsights.route) }
             }
             SymptomLoggerUiEvent.OnViewWarningSignsClicked -> {
                 // Action for warning signs
