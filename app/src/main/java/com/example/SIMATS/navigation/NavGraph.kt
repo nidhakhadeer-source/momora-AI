@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.example.SIMATS.ui.login.LoginScreen
 import com.example.SIMATS.ui.privacyconsent.PrivacyConsentScreen
+import com.example.SIMATS.ui.profile.ProfileSetupScreen
 import com.example.SIMATS.ui.resetpassword.ResetPasswordScreen
 import com.example.SIMATS.ui.signup.SignUpScreen
 import com.example.SIMATS.ui.splash.SplashScreen
@@ -81,11 +82,24 @@ fun AppNavHost() {
             PrivacyConsentScreen(
                 onNavigateTo = { route ->
                     when (route) {
+                        Screen.ProfileSetup.route -> currentScreen = Screen.ProfileSetup
                         Screen.Home.route -> currentScreen = Screen.Home
                     }
                 },
                 onNavigateBack = {
                     currentScreen = Screen.Login
+                }
+            )
+        }
+        Screen.ProfileSetup -> {
+            ProfileSetupScreen(
+                onNavigateTo = { route ->
+                    when (route) {
+                        Screen.Home.route -> currentScreen = Screen.Home
+                    }
+                },
+                onNavigateBack = {
+                    currentScreen = Screen.PrivacyConsent
                 }
             )
         }

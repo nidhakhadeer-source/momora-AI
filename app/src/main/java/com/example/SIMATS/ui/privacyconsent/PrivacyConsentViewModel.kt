@@ -27,10 +27,10 @@ class PrivacyConsentViewModel : ViewModel() {
                 // Action for privacy notice
             }
             PrivacyConsentUiEvent.OnSaveChoicesClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.ProfileSetup.route) }
             }
             PrivacyConsentUiEvent.OnSkipClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.ProfileSetup.route) }
             }
             PrivacyConsentUiEvent.OnBackClicked -> {
                 _uiState.update { it.copy(navigateBack = true) }
