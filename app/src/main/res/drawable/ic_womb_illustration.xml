@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="180dp"
+    android:height="130dp"
+    android:viewportWidth="300"
+    android:viewportHeight="200">
+
+  <!-- Womb Oval Background -->
+  <path
+      android:pathData="M150,15 C220,15 270,55 270,100 C270,145 220,185 150,185 C80,185 30,145 30,100 C30,55 80,15 150,15 Z"
+      android:fillColor="#F6ECE1"
+      android:strokeColor="#E3C2B0"
+      android:strokeWidth="2"/>
+
+  <!-- Umbilical Cord Spiral -->
+  <path
+      android:pathData="M230,60 C210,80 190,70 180,90 C170,110 160,100 150,105"
+      android:strokeColor="#D98A78"
+      android:strokeWidth="3"
+      android:fillColor="#00000000"
+      android:strokeLineCap="round"/>
+
+  <!-- Resting Baby Figure Skin -->
+  <path
+      android:pathData="M130,85 C120,70 140,55 155,65 C170,75 165,95 150,100 C135,105 125,120 135,135 C145,150 165,145 175,135 C185,125 180,110 170,110"
+      android:fillColor="#E3A896"/>
+
+  <!-- Baby Head -->
+  <path
+      android:pathData="M155,70m-18,0a18,18 0 1,1 36,0a18,18 0 1,1 -36,0"
+      android:fillColor="#E3A896"/>
+
+  <!-- Baby Arms / Folded Hands -->
+  <path
+      android:pathData="M148,82 C142,88 138,95 142,98 C146,100 152,94 150,88"
+      android:fillColor="#D89785"/>
+
+  <!-- Baby Legs Folded -->
+  <path
+      android:pathData="M158,115 C170,118 182,125 180,135 C175,142 162,140 152,130"
+      android:fillColor="#D89785"/>
+
+  <!-- Artistic Soft Curves -->
+  <path
+      android:pathData="M40,100 C40,40 110,30 180,30 M50,120 C50,170 120,175 200,175"
+      android:strokeColor="#A8C1B5"
+      android:strokeWidth="1.5"
+      android:fillColor="#00000000"/>
+
+</vector>

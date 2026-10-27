@@ -1,6 +1,7 @@
 package com.example.SIMATS.ui.timeline
 
 import androidx.lifecycle.ViewModel
+import com.example.SIMATS.navigation.Screen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,10 +18,10 @@ class TimelineViewModel : ViewModel() {
                 _uiState.update { it.copy(selectedTrimester = event.trimester) }
             }
             is TimelineUiEvent.OnWeekItemClicked -> {
-                // Action for selecting a week item
+                _uiState.update { it.copy(navigateToRoute = Screen.BabyDevelopment.route) }
             }
             TimelineUiEvent.OnExploreWeekClicked -> {
-                // Action for exploring current week
+                _uiState.update { it.copy(navigateToRoute = Screen.BabyDevelopment.route) }
             }
             is TimelineUiEvent.OnTabSelected -> {
                 _uiState.update { it.copy(selectedTab = event.tabIndex) }
