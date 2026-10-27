@@ -15,6 +15,7 @@ import com.example.SIMATS.ui.profile.ProfileSetupScreen
 import com.example.SIMATS.ui.resetpassword.ResetPasswordScreen
 import com.example.SIMATS.ui.signup.SignUpScreen
 import com.example.SIMATS.ui.splash.SplashScreen
+import com.example.SIMATS.ui.timeline.TimelineScreen
 
 @Composable
 fun AppNavHost() {
@@ -141,8 +142,21 @@ fun AppNavHost() {
             HomeScreen(
                 onNavigateTo = { route ->
                     when (route) {
+                        Screen.Timeline.route -> currentScreen = Screen.Timeline
                         Screen.Splash.route -> currentScreen = Screen.Splash
                     }
+                }
+            )
+        }
+        Screen.Timeline -> {
+            TimelineScreen(
+                onNavigateTo = { route ->
+                    when (route) {
+                        Screen.Home.route -> currentScreen = Screen.Home
+                    }
+                },
+                onNavigateBack = {
+                    currentScreen = Screen.Home
                 }
             )
         }

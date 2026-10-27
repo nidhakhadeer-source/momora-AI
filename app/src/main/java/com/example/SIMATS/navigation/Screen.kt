@@ -11,4 +11,5 @@ sealed class Screen(val route: String) {
     data object HealthHistory : Screen("health_history")
     data object GoalsPreferences : Screen("goals_preferences")
     data object Home : Screen("home")
+    data object Timeline : Screen("timeline")
 }

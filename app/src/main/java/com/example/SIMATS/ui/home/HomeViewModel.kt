@@ -1,6 +1,7 @@
 package com.example.SIMATS.ui.home
 
 import androidx.lifecycle.ViewModel
+import com.example.SIMATS.navigation.Screen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,13 +15,17 @@ class HomeViewModel : ViewModel() {
     fun onEvent(event: HomeUiEvent) {
         when (event) {
             is HomeUiEvent.OnTabSelected -> {
-                _uiState.update { it.copy(selectedTab = event.tabIndex) }
+                if (event.tabIndex == 1) {
+                    _uiState.update { it.copy(navigateToRoute = Screen.Timeline.route) }
+                } else {
+                    _uiState.update { it.copy(selectedTab = event.tabIndex) }
+                }
             }
             HomeUiEvent.OnStartCheckInClicked -> {
                 // Action for daily check-in
             }
             HomeUiEvent.OnViewTrackersClicked -> {
-                _uiState.update { it.copy(selectedTab = 1) }
+                _uiState.update { it.copy(navigateToRoute = Screen.Timeline.route) }
             }
             HomeUiEvent.OnPrenatalVitaminClicked -> {
                 // Action for prenatal vitamin
