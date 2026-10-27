@@ -38,10 +38,10 @@ class AppointmentsCalendarViewModel : ViewModel() {
                 // Action for next month
             }
             AppointmentsCalendarUiEvent.OnAddAppointmentClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.VisitPrep.route) }
             }
             is AppointmentsCalendarUiEvent.OnAppointmentDetailsClicked -> {
-                // Action for appointment details
+                _uiState.update { it.copy(navigateToRoute = Screen.VisitPrep.route) }
             }
             is AppointmentsCalendarUiEvent.OnTabSelected -> {
                 _uiState.update { it.copy(selectedTab = event.tabIndex) }

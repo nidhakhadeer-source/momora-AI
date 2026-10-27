@@ -33,6 +33,7 @@ import com.example.SIMATS.ui.splash.SplashScreen
 import com.example.SIMATS.ui.symptom.SymptomLoggerScreen
 import com.example.SIMATS.ui.symptominsights.SymptomInsightsScreen
 import com.example.SIMATS.ui.timeline.TimelineScreen
+import com.example.SIMATS.ui.visitprep.VisitPrepScreen
 import com.example.SIMATS.ui.weight.WeightTrackerScreen
 
 @Composable
@@ -406,11 +407,24 @@ fun AppNavHost() {
             AppointmentsCalendarScreen(
                 onNavigateTo = { route ->
                     when (route) {
+                        Screen.VisitPrep.route -> currentScreen = Screen.VisitPrep
                         Screen.Home.route -> currentScreen = Screen.Home
                     }
                 },
                 onNavigateBack = {
                     currentScreen = Screen.MedicationReminders
+                }
+            )
+        }
+        Screen.VisitPrep -> {
+            VisitPrepScreen(
+                onNavigateTo = { route ->
+                    when (route) {
+                        Screen.Home.route -> currentScreen = Screen.Home
+                    }
+                },
+                onNavigateBack = {
+                    currentScreen = Screen.AppointmentsCalendar
                 }
             )
         }
