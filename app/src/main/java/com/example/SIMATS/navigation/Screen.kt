@@ -25,4 +25,5 @@ sealed class Screen(val route: String) {
     data object BloodPressure : Screen("blood_pressure")
     data object GlucoseLog : Screen("glucose_log")
     data object HydrationLog : Screen("hydration_log")
+    data object NutritionPlan : Screen("nutrition_plan")
 }

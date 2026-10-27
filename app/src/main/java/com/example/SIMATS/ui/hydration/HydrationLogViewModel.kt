@@ -1,6 +1,7 @@
 package com.example.SIMATS.ui.hydration
 
 import androidx.lifecycle.ViewModel
+import com.example.SIMATS.navigation.Screen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,12 +32,13 @@ class HydrationLogViewModel : ViewModel() {
                         currentLoggedLiters = newTotalLiters,
                         progress = newProgress,
                         progressFooterText = if (remainingMl > 0) "$remainingMl mL to your personal goal · Edit goal" else "Goal completed! · Edit goal",
-                        sipsList = listOf(newSip) + state.sipsList
+                        sipsList = listOf(newSip) + state.sipsList,
+                        navigateToRoute = Screen.NutritionPlan.route
                     )
                 }
             }
             HydrationLogUiEvent.OnEditGoalClicked -> {
-                // Action for edit goal
+                _uiState.update { it.copy(navigateToRoute = Screen.NutritionPlan.route) }
             }
             is HydrationLogUiEvent.OnToggleReminders -> {
                 _uiState.update { it.copy(isRemindersEnabled = event.enabled) }
