@@ -18,7 +18,7 @@ class KickHistoryViewModel : ViewModel() {
                 _uiState.update { it.copy(selectedRange = event.range) }
             }
             KickHistoryUiEvent.OnStartNewSessionClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.KickCounter.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.ContractionTimer.route) }
             }
             KickHistoryUiEvent.OnViewAllClicked -> {
                 // View all sessions action

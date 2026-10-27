@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import com.example.SIMATS.ui.ai.AiChatScreen
 import com.example.SIMATS.ui.babydevelopment.BabyDevelopmentScreen
 import com.example.SIMATS.ui.checkin.DailyCheckInScreen
+import com.example.SIMATS.ui.contraction.ContractionTimerScreen
 import com.example.SIMATS.ui.dailyplan.DailyPlanScreen
 import com.example.SIMATS.ui.duedate.DueDateScreen
 import com.example.SIMATS.ui.goals.GoalsPreferencesScreen
@@ -265,12 +266,25 @@ fun AppNavHost() {
             KickHistoryScreen(
                 onNavigateTo = { route ->
                     when (route) {
+                        Screen.ContractionTimer.route -> currentScreen = Screen.ContractionTimer
                         Screen.KickCounter.route -> currentScreen = Screen.KickCounter
                         Screen.Home.route -> currentScreen = Screen.Home
                     }
                 },
                 onNavigateBack = {
                     currentScreen = Screen.KickCounter
+                }
+            )
+        }
+        Screen.ContractionTimer -> {
+            ContractionTimerScreen(
+                onNavigateTo = { route ->
+                    when (route) {
+                        Screen.Home.route -> currentScreen = Screen.Home
+                    }
+                },
+                onNavigateBack = {
+                    currentScreen = Screen.KickHistory
                 }
             )
         }

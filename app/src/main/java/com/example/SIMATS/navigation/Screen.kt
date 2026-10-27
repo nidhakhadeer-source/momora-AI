@@ -20,4 +20,5 @@ sealed class Screen(val route: String) {
     data object DailyPlan : Screen("daily_plan")
     data object KickCounter : Screen("kick_counter")
     data object KickHistory : Screen("kick_history")
+    data object ContractionTimer : Screen("contraction_timer")
 }
