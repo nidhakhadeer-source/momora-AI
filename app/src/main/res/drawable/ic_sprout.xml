@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+  <!-- Sprout Stem & Leaves -->
+  <path
+      android:pathData="M12,21v-7m0,0c-1.5,0 -4.5,-2 -4.5,-5.5c0,-3 3,-4.5 4.5,-4.5c1.5,0 4.5,1.5 4.5,4.5c0,3.5 -3,5.5 -4.5,5.5z"
+      android:strokeColor="#235C53"
+      android:strokeWidth="2"
+      android:strokeLineCap="round"
+      android:strokeLineJoin="round"/>
+  <path
+      android:pathData="M12,14c-3,-1 -6,-0.5 -7.5,-3.5c1.5,-2.5 5,-2 7.5,0.5"
+      android:strokeColor="#235C53"
+      android:strokeWidth="2"
+      android:strokeLineCap="round"
+      android:strokeLineJoin="round"/>
+  <path
+      android:pathData="M12,11c2.5,-2.5 6,-3 7.5,-0.5c-1.5,3 -4.5,2.5 -7.5,3.5"
+      android:strokeColor="#235C53"
+      android:strokeWidth="2"
+      android:strokeLineCap="round"
+      android:strokeLineJoin="round"/>
+</vector>
