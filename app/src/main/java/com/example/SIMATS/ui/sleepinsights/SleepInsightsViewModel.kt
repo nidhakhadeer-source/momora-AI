@@ -15,10 +15,10 @@ class SleepInsightsViewModel : ViewModel() {
     fun onEvent(event: SleepInsightsUiEvent) {
         when (event) {
             SleepInsightsUiEvent.OnGentleIdeaClicked -> {
-                // Action for gentle idea
+                _uiState.update { it.copy(navigateToRoute = Screen.MedicationReminders.route) }
             }
             SleepInsightsUiEvent.OnAddSleepMoodEntryClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.DailyCheckIn.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.MedicationReminders.route) }
             }
             is SleepInsightsUiEvent.OnTabSelected -> {
                 _uiState.update { it.copy(selectedTab = event.tabIndex) }
