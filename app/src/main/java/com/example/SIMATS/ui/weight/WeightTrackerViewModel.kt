@@ -21,7 +21,7 @@ class WeightTrackerViewModel : ViewModel() {
                 _uiState.update { it.copy(inputWeightText = event.weight) }
             }
             WeightTrackerUiEvent.OnSaveWeightClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.BloodPressure.route) }
             }
             is WeightTrackerUiEvent.OnTabSelected -> {
                 _uiState.update { it.copy(selectedTab = event.tabIndex) }

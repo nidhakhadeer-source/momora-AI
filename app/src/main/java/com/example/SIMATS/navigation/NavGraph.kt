@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.example.SIMATS.ui.ai.AiChatScreen
 import com.example.SIMATS.ui.babydevelopment.BabyDevelopmentScreen
+import com.example.SIMATS.ui.bloodpressure.BloodPressureScreen
 import com.example.SIMATS.ui.checkin.DailyCheckInScreen
 import com.example.SIMATS.ui.contraction.ContractionTimerScreen
 import com.example.SIMATS.ui.dailyplan.DailyPlanScreen
@@ -294,11 +295,24 @@ fun AppNavHost() {
             WeightTrackerScreen(
                 onNavigateTo = { route ->
                     when (route) {
+                        Screen.BloodPressure.route -> currentScreen = Screen.BloodPressure
                         Screen.Home.route -> currentScreen = Screen.Home
                     }
                 },
                 onNavigateBack = {
                     currentScreen = Screen.ContractionTimer
+                }
+            )
+        }
+        Screen.BloodPressure -> {
+            BloodPressureScreen(
+                onNavigateTo = { route ->
+                    when (route) {
+                        Screen.Home.route -> currentScreen = Screen.Home
+                    }
+                },
+                onNavigateBack = {
+                    currentScreen = Screen.WeightTracker
                 }
             )
         }
