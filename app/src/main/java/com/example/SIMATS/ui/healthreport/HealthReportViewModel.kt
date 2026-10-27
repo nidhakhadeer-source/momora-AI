@@ -27,7 +27,7 @@ class HealthReportViewModel : ViewModel() {
                 _uiState.update { it.copy(includePrivateNotes = event.enabled) }
             }
             HealthReportUiEvent.OnPreviewAndExportPdfClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.LearnLibrary.route) }
             }
             is HealthReportUiEvent.OnTabSelected -> {
                 _uiState.update { it.copy(selectedTab = event.tabIndex) }

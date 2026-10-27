@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="110dp"
+    android:viewportWidth="300"
+    android:viewportHeight="160">
+
+  <!-- Room Cozy Table Background -->
+  <path
+      android:pathData="M20,10 H280 A16,16 0 0,1 296,26 V134 A16,16 0 0,1 280,150 H20 A16,16 0 0,1 4,134 V26 A16,16 0 0,1 20,10 Z"
+      android:fillColor="#F8F4EE"/>
+
+  <!-- Bedside Wooden Table -->
+  <path
+      android:pathData="M40,90 L260,90 L250,145 L50,145 Z"
+      android:fillColor="#E6DDD2"
+      android:strokeColor="#D3C7B7"
+      android:strokeWidth="2"/>
+
+  <!-- Table Runner / Cloth -->
+  <path
+      android:pathData="M110,90 L230,90 L220,145 L120,145 Z"
+      android:fillColor="#FAF7F2"/>
+
+  <!-- Tea Mug on Coaster -->
+  <path
+      android:pathData="M90,110m-18,0a18,10 0 1,1 36,0a18,10 0 1,1 -36,0"
+      android:fillColor="#A28BA1"/>
+  <path
+      android:pathData="M78,75 L102,75 L100,108 L80,108 Z"
+      android:fillColor="#4D7068"/>
+  <path
+      android:pathData="M102,80 C112,80 112,100 100,100"
+      android:strokeColor="#4D7068"
+      android:strokeWidth="3.5"
+      android:fillColor="#00000000"/>
+  <path
+      android:pathData="M88,68 Q85,55 92,48 M94,68 Q92,55 98,48"
+      android:strokeColor="#C5B5C4"
+      android:strokeWidth="1.8"
+      android:strokeLineCap="round"/>
+
+  <!-- Lavender Journal Book with Bookmark Ribbon -->
+  <path
+      android:pathData="M135,70 L210,65 L225,120 L150,125 Z"
+      android:fillColor="#D8C7D8"
+      android:strokeColor="#B5A0B5"
+      android:strokeWidth="2"/>
+  <path
+      android:pathData="M180,67 L185,130 L192,125 L198,130 L194,66 Z"
+      android:fillColor="#887288"/>
+
+  <!-- Small Potted Plant -->
+  <path
+      android:pathData="M235,65 H255 L250,85 H240 Z"
+      android:fillColor="#C87A5B"/>
+  <path
+      android:pathData="M245,65 C230,45 235,25 245,20 C255,25 260,45 245,65 Z M245,65 C260,50 270,30 255,20 C240,30 235,50 245,65 Z"
+      android:fillColor="#235C53"/>
+
+</vector>
