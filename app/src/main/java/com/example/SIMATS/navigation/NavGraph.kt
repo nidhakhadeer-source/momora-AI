@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.example.SIMATS.ui.duedate.DueDateScreen
 import com.example.SIMATS.ui.login.LoginScreen
 import com.example.SIMATS.ui.privacyconsent.PrivacyConsentScreen
 import com.example.SIMATS.ui.profile.ProfileSetupScreen
@@ -95,11 +96,24 @@ fun AppNavHost() {
             ProfileSetupScreen(
                 onNavigateTo = { route ->
                     when (route) {
+                        Screen.DueDate.route -> currentScreen = Screen.DueDate
                         Screen.Home.route -> currentScreen = Screen.Home
                     }
                 },
                 onNavigateBack = {
                     currentScreen = Screen.PrivacyConsent
+                }
+            )
+        }
+        Screen.DueDate -> {
+            DueDateScreen(
+                onNavigateTo = { route ->
+                    when (route) {
+                        Screen.Home.route -> currentScreen = Screen.Home
+                    }
+                },
+                onNavigateBack = {
+                    currentScreen = Screen.ProfileSetup
                 }
             )
         }

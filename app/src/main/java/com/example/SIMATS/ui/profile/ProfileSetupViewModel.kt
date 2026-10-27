@@ -30,7 +30,7 @@ class ProfileSetupViewModel : ViewModel() {
                 _uiState.update { it.copy(careTeam = event.careTeam) }
             }
             ProfileSetupUiEvent.OnContinueClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.DueDate.route) }
             }
             ProfileSetupUiEvent.OnBackClicked -> {
                 _uiState.update { it.copy(navigateBack = true) }

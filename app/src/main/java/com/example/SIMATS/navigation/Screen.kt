@@ -7,5 +7,6 @@ sealed class Screen(val route: String) {
     data object ResetPassword : Screen("reset_password")
     data object PrivacyConsent : Screen("privacy_consent")
     data object ProfileSetup : Screen("profile_setup")
+    data object DueDate : Screen("due_date")
     data object Home : Screen("home")
 }
