@@ -24,7 +24,7 @@ class LoginViewModel : ViewModel() {
                 _uiState.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
             }
             LoginUiEvent.OnForgotPasswordClicked -> {
-                // Action for forgot password
+                _uiState.update { it.copy(navigateToRoute = Screen.ResetPassword.route) }
             }
             LoginUiEvent.OnLoginClicked -> {
                 _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }

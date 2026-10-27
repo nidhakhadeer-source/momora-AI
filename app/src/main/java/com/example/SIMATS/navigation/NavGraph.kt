@@ -13,6 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.example.SIMATS.ui.login.LoginScreen
+import com.example.SIMATS.ui.resetpassword.ResetPasswordScreen
 import com.example.SIMATS.ui.signup.SignUpScreen
 import com.example.SIMATS.ui.splash.SplashScreen
 import com.example.SIMATS.ui.theme.MomoraScreenBackground
@@ -53,10 +54,23 @@ fun AppNavHost() {
                     when (route) {
                         Screen.Home.route -> currentScreen = Screen.Home
                         Screen.SignUp.route -> currentScreen = Screen.SignUp
+                        Screen.ResetPassword.route -> currentScreen = Screen.ResetPassword
                     }
                 },
                 onNavigateBack = {
                     currentScreen = Screen.SignUp
+                }
+            )
+        }
+        Screen.ResetPassword -> {
+            ResetPasswordScreen(
+                onNavigateTo = { route ->
+                    when (route) {
+                        Screen.Login.route -> currentScreen = Screen.Login
+                    }
+                },
+                onNavigateBack = {
+                    currentScreen = Screen.Login
                 }
             )
         }
