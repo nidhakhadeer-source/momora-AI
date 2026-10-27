@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import com.example.SIMATS.ui.ai.AiChatScreen
 import com.example.SIMATS.ui.babydevelopment.BabyDevelopmentScreen
 import com.example.SIMATS.ui.bloodpressure.BloodPressureScreen
+import com.example.SIMATS.ui.calendar.AppointmentsCalendarScreen
 import com.example.SIMATS.ui.checkin.DailyCheckInScreen
 import com.example.SIMATS.ui.contraction.ContractionTimerScreen
 import com.example.SIMATS.ui.dailyplan.DailyPlanScreen
@@ -392,11 +393,24 @@ fun AppNavHost() {
             MedicationRemindersScreen(
                 onNavigateTo = { route ->
                     when (route) {
+                        Screen.AppointmentsCalendar.route -> currentScreen = Screen.AppointmentsCalendar
                         Screen.Home.route -> currentScreen = Screen.Home
                     }
                 },
                 onNavigateBack = {
                     currentScreen = Screen.SleepInsights
+                }
+            )
+        }
+        Screen.AppointmentsCalendar -> {
+            AppointmentsCalendarScreen(
+                onNavigateTo = { route ->
+                    when (route) {
+                        Screen.Home.route -> currentScreen = Screen.Home
+                    }
+                },
+                onNavigateBack = {
+                    currentScreen = Screen.MedicationReminders
                 }
             )
         }

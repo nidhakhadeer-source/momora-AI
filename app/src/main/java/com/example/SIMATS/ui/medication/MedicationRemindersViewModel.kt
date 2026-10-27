@@ -28,14 +28,17 @@ class MedicationRemindersViewModel : ViewModel() {
                             )
                         } else item
                     }
-                    state.copy(medications = updatedMedications)
+                    state.copy(
+                        medications = updatedMedications,
+                        navigateToRoute = Screen.AppointmentsCalendar.route
+                    )
                 }
             }
             is MedicationRemindersUiEvent.OnToggleReminders -> {
                 _uiState.update { it.copy(isRemindersEnabled = event.enabled) }
             }
             MedicationRemindersUiEvent.OnAddMedicineClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.AppointmentsCalendar.route) }
             }
             is MedicationRemindersUiEvent.OnTabSelected -> {
                 _uiState.update { it.copy(selectedTab = event.tabIndex) }
