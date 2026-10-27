@@ -18,13 +18,13 @@ class KickCounterViewModel : ViewModel() {
                 _uiState.update { it.copy(kickCount = it.kickCount + 1) }
             }
             KickCounterUiEvent.OnFinishAndSaveSessionClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.KickHistory.route) }
             }
             is KickCounterUiEvent.OnTabSelected -> {
                 _uiState.update { it.copy(selectedTab = event.tabIndex) }
             }
             KickCounterUiEvent.OnHistoryClicked -> {
-                // View kick counter history
+                _uiState.update { it.copy(navigateToRoute = Screen.KickHistory.route) }
             }
             KickCounterUiEvent.OnBackClicked -> {
                 _uiState.update { it.copy(navigateBack = true) }
