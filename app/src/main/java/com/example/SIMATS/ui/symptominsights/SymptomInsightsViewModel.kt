@@ -18,7 +18,7 @@ class SymptomInsightsViewModel : ViewModel() {
                 // Inspect tip item
             }
             SymptomInsightsUiEvent.OnAskFollowUpClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.AiChat.route) }
             }
             SymptomInsightsUiEvent.OnAddQuestionsClicked -> {
                 _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }

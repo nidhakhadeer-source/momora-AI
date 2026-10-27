@@ -5,6 +5,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.example.SIMATS.ui.ai.AiChatScreen
 import com.example.SIMATS.ui.babydevelopment.BabyDevelopmentScreen
 import com.example.SIMATS.ui.checkin.DailyCheckInScreen
 import com.example.SIMATS.ui.duedate.DueDateScreen
@@ -208,11 +209,24 @@ fun AppNavHost() {
             SymptomInsightsScreen(
                 onNavigateTo = { route ->
                     when (route) {
+                        Screen.AiChat.route -> currentScreen = Screen.AiChat
                         Screen.Home.route -> currentScreen = Screen.Home
                     }
                 },
                 onNavigateBack = {
                     currentScreen = Screen.SymptomLogger
+                }
+            )
+        }
+        Screen.AiChat -> {
+            AiChatScreen(
+                onNavigateTo = { route ->
+                    when (route) {
+                        Screen.Home.route -> currentScreen = Screen.Home
+                    }
+                },
+                onNavigateBack = {
+                    currentScreen = Screen.SymptomInsights
                 }
             )
         }
