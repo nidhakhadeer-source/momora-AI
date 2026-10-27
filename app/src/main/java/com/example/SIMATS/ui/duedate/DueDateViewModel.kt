@@ -24,7 +24,7 @@ class DueDateViewModel : ViewModel() {
                 _uiState.update { it.copy(cycleLength = event.cycleLength) }
             }
             DueDateUiEvent.OnUseDueDateClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.HealthHistory.route) }
             }
             DueDateUiEvent.OnBackClicked -> {
                 _uiState.update { it.copy(navigateBack = true) }
