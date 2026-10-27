@@ -10,6 +10,7 @@ val MomoraMintHover = Color(0xFFD3E6DF)
 
 val MomoraScreenBackground = Color(0xFFFCFAF6)
 val MomoraCardBackground = Color(0xFFF6F1E7)
+val MomoraLavenderCard = Color(0xFFF2ECF4)
 
 val MomoraTextHeadline = Color(0xFF1E2C28)
 val MomoraTextBody = Color(0xFF43524E)
