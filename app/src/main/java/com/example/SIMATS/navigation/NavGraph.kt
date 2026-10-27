@@ -13,6 +13,7 @@ import com.example.SIMATS.ui.duedate.DueDateScreen
 import com.example.SIMATS.ui.goals.GoalsPreferencesScreen
 import com.example.SIMATS.ui.healthhistory.HealthHistoryScreen
 import com.example.SIMATS.ui.home.HomeScreen
+import com.example.SIMATS.ui.kickcounter.KickCounterScreen
 import com.example.SIMATS.ui.login.LoginScreen
 import com.example.SIMATS.ui.privacyconsent.PrivacyConsentScreen
 import com.example.SIMATS.ui.profile.ProfileSetupScreen
@@ -237,11 +238,24 @@ fun AppNavHost() {
             DailyPlanScreen(
                 onNavigateTo = { route ->
                     when (route) {
+                        Screen.KickCounter.route -> currentScreen = Screen.KickCounter
                         Screen.Home.route -> currentScreen = Screen.Home
                     }
                 },
                 onNavigateBack = {
                     currentScreen = Screen.Home
+                }
+            )
+        }
+        Screen.KickCounter -> {
+            KickCounterScreen(
+                onNavigateTo = { route ->
+                    when (route) {
+                        Screen.Home.route -> currentScreen = Screen.Home
+                    }
+                },
+                onNavigateBack = {
+                    currentScreen = Screen.DailyPlan
                 }
             )
         }

@@ -1,6 +1,7 @@
 package com.example.SIMATS.ui.dailyplan
 
 import androidx.lifecycle.ViewModel
+import com.example.SIMATS.navigation.Screen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,7 +30,7 @@ class DailyPlanViewModel : ViewModel() {
                 }
             }
             DailyPlanUiEvent.OnAdjustPlanClicked -> {
-                // Action for adjusting today's plan
+                _uiState.update { it.copy(navigateToRoute = Screen.KickCounter.route) }
             }
             is DailyPlanUiEvent.OnTabSelected -> {
                 _uiState.update { it.copy(selectedTab = event.tabIndex) }
