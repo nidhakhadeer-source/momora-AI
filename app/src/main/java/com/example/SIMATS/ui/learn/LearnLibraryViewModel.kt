@@ -21,13 +21,13 @@ class LearnLibraryViewModel : ViewModel() {
                 _uiState.update { it.copy(selectedCategory = event.category) }
             }
             LearnLibraryUiEvent.OnFeaturedArticleClicked -> {
-                // Action for featured article
+                _uiState.update { it.copy(navigateToRoute = Screen.ArticleDetail.route) }
             }
             is LearnLibraryUiEvent.OnArticleClicked -> {
-                // Action for article click
+                _uiState.update { it.copy(navigateToRoute = Screen.ArticleDetail.route) }
             }
             LearnLibraryUiEvent.OnSeeAllClicked -> {
-                // Action for see all
+                _uiState.update { it.copy(navigateToRoute = Screen.ArticleDetail.route) }
             }
             LearnLibraryUiEvent.OnToggleBookmark -> {
                 _uiState.update { it.copy(isBookmarked = !it.isBookmarked) }

@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.example.SIMATS.ui.ai.AiChatScreen
+import com.example.SIMATS.ui.articledetail.ArticleDetailScreen
 import com.example.SIMATS.ui.babydevelopment.BabyDevelopmentScreen
 import com.example.SIMATS.ui.bloodpressure.BloodPressureScreen
 import com.example.SIMATS.ui.calendar.AppointmentsCalendarScreen
@@ -448,11 +449,24 @@ fun AppNavHost() {
             LearnLibraryScreen(
                 onNavigateTo = { route ->
                     when (route) {
+                        Screen.ArticleDetail.route -> currentScreen = Screen.ArticleDetail
                         Screen.Home.route -> currentScreen = Screen.Home
                     }
                 },
                 onNavigateBack = {
                     currentScreen = Screen.HealthReport
+                }
+            )
+        }
+        Screen.ArticleDetail -> {
+            ArticleDetailScreen(
+                onNavigateTo = { route ->
+                    when (route) {
+                        Screen.Home.route -> currentScreen = Screen.Home
+                    }
+                },
+                onNavigateBack = {
+                    currentScreen = Screen.LearnLibrary
                 }
             )
         }
