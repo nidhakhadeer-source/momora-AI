@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.example.SIMATS.ui.signup.SignUpScreen
 import com.example.SIMATS.ui.splash.SplashScreen
 import com.example.SIMATS.ui.theme.MomoraScreenBackground
 import com.example.SIMATS.ui.theme.MomoraTealPrimary
@@ -25,9 +26,23 @@ fun AppNavHost() {
             SplashScreen(
                 onNavigateTo = { route ->
                     when (route) {
+                        Screen.SignUp.route -> currentScreen = Screen.SignUp
                         Screen.Home.route -> currentScreen = Screen.Home
                         Screen.Login.route -> currentScreen = Screen.Login
                     }
+                }
+            )
+        }
+        Screen.SignUp -> {
+            SignUpScreen(
+                onNavigateTo = { route ->
+                    when (route) {
+                        Screen.Home.route -> currentScreen = Screen.Home
+                        Screen.Login.route -> currentScreen = Screen.Login
+                    }
+                },
+                onNavigateBack = {
+                    currentScreen = Screen.Splash
                 }
             )
         }

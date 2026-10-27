@@ -19,7 +19,7 @@ class SplashViewModel(
     fun onEvent(event: SplashUiEvent) {
         when (event) {
             SplashUiEvent.OnBeginJourneyClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.SignUp.route) }
             }
             SplashUiEvent.OnAlreadyHaveAccountClicked -> {
                 _uiState.update { it.copy(navigateToRoute = Screen.Login.route) }
