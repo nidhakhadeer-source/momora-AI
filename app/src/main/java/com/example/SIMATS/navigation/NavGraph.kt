@@ -8,6 +8,7 @@ import androidx.compose.runtime.setValue
 import com.example.SIMATS.ui.ai.AiChatScreen
 import com.example.SIMATS.ui.babydevelopment.BabyDevelopmentScreen
 import com.example.SIMATS.ui.checkin.DailyCheckInScreen
+import com.example.SIMATS.ui.dailyplan.DailyPlanScreen
 import com.example.SIMATS.ui.duedate.DueDateScreen
 import com.example.SIMATS.ui.goals.GoalsPreferencesScreen
 import com.example.SIMATS.ui.healthhistory.HealthHistoryScreen
@@ -149,6 +150,8 @@ fun AppNavHost() {
                     when (route) {
                         Screen.Timeline.route -> currentScreen = Screen.Timeline
                         Screen.DailyCheckIn.route -> currentScreen = Screen.DailyCheckIn
+                        Screen.DailyPlan.route -> currentScreen = Screen.DailyPlan
+                        Screen.AiChat.route -> currentScreen = Screen.AiChat
                         Screen.Splash.route -> currentScreen = Screen.Splash
                     }
                 }
@@ -227,6 +230,18 @@ fun AppNavHost() {
                 },
                 onNavigateBack = {
                     currentScreen = Screen.SymptomInsights
+                }
+            )
+        }
+        Screen.DailyPlan -> {
+            DailyPlanScreen(
+                onNavigateTo = { route ->
+                    when (route) {
+                        Screen.Home.route -> currentScreen = Screen.Home
+                    }
+                },
+                onNavigateBack = {
+                    currentScreen = Screen.Home
                 }
             )
         }

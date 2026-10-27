@@ -17,6 +17,8 @@ class HomeViewModel : ViewModel() {
             is HomeUiEvent.OnTabSelected -> {
                 if (event.tabIndex == 1) {
                     _uiState.update { it.copy(navigateToRoute = Screen.Timeline.route) }
+                } else if (event.tabIndex == 2) {
+                    _uiState.update { it.copy(navigateToRoute = Screen.AiChat.route) }
                 } else {
                     _uiState.update { it.copy(selectedTab = event.tabIndex) }
                 }
@@ -28,13 +30,13 @@ class HomeViewModel : ViewModel() {
                 _uiState.update { it.copy(navigateToRoute = Screen.Timeline.route) }
             }
             HomeUiEvent.OnPrenatalVitaminClicked -> {
-                // Action for prenatal vitamin
+                _uiState.update { it.copy(navigateToRoute = Screen.DailyPlan.route) }
             }
             HomeUiEvent.OnAntenatalVisitClicked -> {
                 // Action for antenatal visit
             }
             HomeUiEvent.OnOpenDailyPlanClicked -> {
-                // Action for daily plan
+                _uiState.update { it.copy(navigateToRoute = Screen.DailyPlan.route) }
             }
             HomeUiEvent.OnSavedClicked -> {
                 // Action for saved items
