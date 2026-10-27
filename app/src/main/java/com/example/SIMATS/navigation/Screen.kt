@@ -23,4 +23,5 @@ sealed class Screen(val route: String) {
     data object ContractionTimer : Screen("contraction_timer")
     data object WeightTracker : Screen("weight_tracker")
     data object BloodPressure : Screen("blood_pressure")
+    data object GlucoseLog : Screen("glucose_log")
 }

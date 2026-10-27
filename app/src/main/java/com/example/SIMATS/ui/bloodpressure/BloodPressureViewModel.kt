@@ -24,7 +24,7 @@ class BloodPressureViewModel : ViewModel() {
                 _uiState.update { it.copy(inputPulse = event.pulse) }
             }
             BloodPressureUiEvent.OnSaveReadingClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.GlucoseLog.route) }
             }
             is BloodPressureUiEvent.OnTabSelected -> {
                 _uiState.update { it.copy(selectedTab = event.tabIndex) }
