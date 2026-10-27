@@ -16,6 +16,7 @@ import com.example.SIMATS.ui.glucose.GlucoseLogScreen
 import com.example.SIMATS.ui.goals.GoalsPreferencesScreen
 import com.example.SIMATS.ui.healthhistory.HealthHistoryScreen
 import com.example.SIMATS.ui.home.HomeScreen
+import com.example.SIMATS.ui.hydration.HydrationLogScreen
 import com.example.SIMATS.ui.kickcounter.KickCounterScreen
 import com.example.SIMATS.ui.kickhistory.KickHistoryScreen
 import com.example.SIMATS.ui.login.LoginScreen
@@ -322,11 +323,24 @@ fun AppNavHost() {
             GlucoseLogScreen(
                 onNavigateTo = { route ->
                     when (route) {
+                        Screen.HydrationLog.route -> currentScreen = Screen.HydrationLog
                         Screen.Home.route -> currentScreen = Screen.Home
                     }
                 },
                 onNavigateBack = {
                     currentScreen = Screen.BloodPressure
+                }
+            )
+        }
+        Screen.HydrationLog -> {
+            HydrationLogScreen(
+                onNavigateTo = { route ->
+                    when (route) {
+                        Screen.Home.route -> currentScreen = Screen.Home
+                    }
+                },
+                onNavigateBack = {
+                    currentScreen = Screen.GlucoseLog
                 }
             )
         }

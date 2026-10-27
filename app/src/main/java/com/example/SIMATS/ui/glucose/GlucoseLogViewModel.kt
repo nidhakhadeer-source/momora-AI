@@ -24,7 +24,7 @@ class GlucoseLogViewModel : ViewModel() {
                 _uiState.update { it.copy(dateTimeInput = event.dateTime) }
             }
             GlucoseLogUiEvent.OnSaveReadingClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.HydrationLog.route) }
             }
             is GlucoseLogUiEvent.OnTabSelected -> {
                 _uiState.update { it.copy(selectedTab = event.tabIndex) }
