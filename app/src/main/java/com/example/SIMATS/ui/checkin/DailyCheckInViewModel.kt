@@ -27,7 +27,7 @@ class DailyCheckInViewModel : ViewModel() {
                 _uiState.update { it.copy(notesOnMind = event.notes) }
             }
             DailyCheckInUiEvent.OnSaveCheckInClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.SymptomLogger.route) }
             }
             is DailyCheckInUiEvent.OnTabSelected -> {
                 _uiState.update { it.copy(selectedTab = event.tabIndex) }
