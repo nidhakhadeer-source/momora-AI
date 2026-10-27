@@ -26,6 +26,7 @@ import com.example.SIMATS.ui.privacyconsent.PrivacyConsentScreen
 import com.example.SIMATS.ui.profile.ProfileSetupScreen
 import com.example.SIMATS.ui.resetpassword.ResetPasswordScreen
 import com.example.SIMATS.ui.signup.SignUpScreen
+import com.example.SIMATS.ui.sleepinsights.SleepInsightsScreen
 import com.example.SIMATS.ui.splash.SplashScreen
 import com.example.SIMATS.ui.symptom.SymptomLoggerScreen
 import com.example.SIMATS.ui.symptominsights.SymptomInsightsScreen
@@ -364,11 +365,25 @@ fun AppNavHost() {
             ExerciseGuidanceScreen(
                 onNavigateTo = { route ->
                     when (route) {
+                        Screen.SleepInsights.route -> currentScreen = Screen.SleepInsights
                         Screen.Home.route -> currentScreen = Screen.Home
                     }
                 },
                 onNavigateBack = {
                     currentScreen = Screen.NutritionPlan
+                }
+            )
+        }
+        Screen.SleepInsights -> {
+            SleepInsightsScreen(
+                onNavigateTo = { route ->
+                    when (route) {
+                        Screen.DailyCheckIn.route -> currentScreen = Screen.DailyCheckIn
+                        Screen.Home.route -> currentScreen = Screen.Home
+                    }
+                },
+                onNavigateBack = {
+                    currentScreen = Screen.ExerciseGuidance
                 }
             )
         }

@@ -18,10 +18,10 @@ class ExerciseGuidanceViewModel : ViewModel() {
                 _uiState.update { it.copy(selectedIntensity = event.option) }
             }
             is ExerciseGuidanceUiEvent.OnStepItemClicked -> {
-                // Action for inspecting step item
+                _uiState.update { it.copy(navigateToRoute = Screen.SleepInsights.route) }
             }
             ExerciseGuidanceUiEvent.OnBeginSessionClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.SleepInsights.route) }
             }
             is ExerciseGuidanceUiEvent.OnTabSelected -> {
                 _uiState.update { it.copy(selectedTab = event.tabIndex) }
