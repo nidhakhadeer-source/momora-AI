@@ -27,10 +27,10 @@ class SignUpViewModel : ViewModel() {
                 _uiState.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
             }
             SignUpUiEvent.OnCreateAccountClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.PrivacyConsent.route) }
             }
             SignUpUiEvent.OnContinueWithGoogleClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.PrivacyConsent.route) }
             }
             SignUpUiEvent.OnLoginClicked -> {
                 _uiState.update { it.copy(navigateToRoute = Screen.Login.route) }

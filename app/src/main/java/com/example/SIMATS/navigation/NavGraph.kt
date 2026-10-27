@@ -13,6 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.example.SIMATS.ui.login.LoginScreen
+import com.example.SIMATS.ui.privacyconsent.PrivacyConsentScreen
 import com.example.SIMATS.ui.resetpassword.ResetPasswordScreen
 import com.example.SIMATS.ui.signup.SignUpScreen
 import com.example.SIMATS.ui.splash.SplashScreen
@@ -29,8 +30,8 @@ fun AppNavHost() {
                 onNavigateTo = { route ->
                     when (route) {
                         Screen.SignUp.route -> currentScreen = Screen.SignUp
-                        Screen.Home.route -> currentScreen = Screen.Home
                         Screen.Login.route -> currentScreen = Screen.Login
+                        Screen.Home.route -> currentScreen = Screen.Home
                     }
                 }
             )
@@ -39,8 +40,9 @@ fun AppNavHost() {
             SignUpScreen(
                 onNavigateTo = { route ->
                     when (route) {
-                        Screen.Home.route -> currentScreen = Screen.Home
+                        Screen.PrivacyConsent.route -> currentScreen = Screen.PrivacyConsent
                         Screen.Login.route -> currentScreen = Screen.Login
+                        Screen.Home.route -> currentScreen = Screen.Home
                     }
                 },
                 onNavigateBack = {
@@ -52,9 +54,10 @@ fun AppNavHost() {
             LoginScreen(
                 onNavigateTo = { route ->
                     when (route) {
-                        Screen.Home.route -> currentScreen = Screen.Home
+                        Screen.PrivacyConsent.route -> currentScreen = Screen.PrivacyConsent
                         Screen.SignUp.route -> currentScreen = Screen.SignUp
                         Screen.ResetPassword.route -> currentScreen = Screen.ResetPassword
+                        Screen.Home.route -> currentScreen = Screen.Home
                     }
                 },
                 onNavigateBack = {
@@ -67,6 +70,18 @@ fun AppNavHost() {
                 onNavigateTo = { route ->
                     when (route) {
                         Screen.Login.route -> currentScreen = Screen.Login
+                    }
+                },
+                onNavigateBack = {
+                    currentScreen = Screen.Login
+                }
+            )
+        }
+        Screen.PrivacyConsent -> {
+            PrivacyConsentScreen(
+                onNavigateTo = { route ->
+                    when (route) {
+                        Screen.Home.route -> currentScreen = Screen.Home
                     }
                 },
                 onNavigateBack = {

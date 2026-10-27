@@ -27,10 +27,10 @@ class LoginViewModel : ViewModel() {
                 _uiState.update { it.copy(navigateToRoute = Screen.ResetPassword.route) }
             }
             LoginUiEvent.OnLoginClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.PrivacyConsent.route) }
             }
             LoginUiEvent.OnContinueWithGoogleClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.PrivacyConsent.route) }
             }
             LoginUiEvent.OnCreateAccountClicked -> {
                 _uiState.update { it.copy(navigateToRoute = Screen.SignUp.route) }
