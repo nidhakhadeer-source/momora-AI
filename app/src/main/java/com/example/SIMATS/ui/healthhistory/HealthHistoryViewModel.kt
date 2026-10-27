@@ -35,10 +35,10 @@ class HealthHistoryViewModel : ViewModel() {
                 _uiState.update { it.copy(teamMonitoring = event.monitoring) }
             }
             HealthHistoryUiEvent.OnSaveAndContinueClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.GoalsPreferences.route) }
             }
             HealthHistoryUiEvent.OnSkipLaterClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.Home.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.GoalsPreferences.route) }
             }
             HealthHistoryUiEvent.OnBackClicked -> {
                 _uiState.update { it.copy(navigateBack = true) }
