@@ -8,6 +8,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.SIMATS.ui.duedate.DueDateScreen
 import com.example.SIMATS.ui.duedate.DueDateViewModel
+import com.example.SIMATS.ui.healthreport.HealthReportScreen
+import com.example.SIMATS.ui.healthreport.HealthReportViewModel
 import com.example.SIMATS.ui.home.HomeScreen
 import com.example.SIMATS.ui.home.HomeViewModel
 import com.example.SIMATS.ui.login.LoginScreen
@@ -91,10 +93,10 @@ fun AppNavHost() {
                     currentScreen = Screen.Home
                 },
                 onNavTabSelected = { index ->
-                    if (index == 0) {
-                        currentScreen = Screen.Home
-                    } else if (index == 1) {
-                        currentScreen = Screen.DueDate
+                    when (index) {
+                        0 -> currentScreen = Screen.Home
+                        1 -> currentScreen = Screen.HealthReport
+                        2 -> currentScreen = Screen.DueDate
                     }
                 }
             )
@@ -107,10 +109,26 @@ fun AppNavHost() {
                     currentScreen = Screen.Home
                 },
                 onNavTabSelected = { index ->
-                    if (index == 0) {
-                        currentScreen = Screen.Home
-                    } else if (index == 4) {
-                        currentScreen = Screen.Profile
+                    when (index) {
+                        0 -> currentScreen = Screen.Home
+                        1 -> currentScreen = Screen.HealthReport
+                        4 -> currentScreen = Screen.Profile
+                    }
+                }
+            )
+        }
+        Screen.HealthReport -> {
+            val healthReportViewModel: HealthReportViewModel = viewModel()
+            HealthReportScreen(
+                viewModel = healthReportViewModel,
+                onNavigateBack = {
+                    currentScreen = Screen.Home
+                },
+                onNavTabSelected = { index ->
+                    when (index) {
+                        0 -> currentScreen = Screen.Home
+                        3 -> currentScreen = Screen.DueDate
+                        4 -> currentScreen = Screen.Profile
                     }
                 }
             )
