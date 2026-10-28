@@ -22,6 +22,8 @@ import com.example.SIMATS.ui.home.HomeScreen
 import com.example.SIMATS.ui.home.HomeViewModel
 import com.example.SIMATS.ui.login.LoginScreen
 import com.example.SIMATS.ui.login.LoginViewModel
+import com.example.SIMATS.ui.main.MainScreen
+import com.example.SIMATS.ui.main.MainViewModel
 import com.example.SIMATS.ui.medicalreports.MedicalReportsScreen
 import com.example.SIMATS.ui.medicalreports.MedicalReportsViewModel
 import com.example.SIMATS.ui.medication.MedicationRemindersScreen
@@ -117,7 +119,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.Notifications
+                        3 -> currentScreen = Screen.DoctorDashboard
                     }
                 }
             )
@@ -134,7 +136,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.Notifications
+                        3 -> currentScreen = Screen.DoctorDashboard
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -152,7 +154,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.Notifications
+                        3 -> currentScreen = Screen.DoctorDashboard
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -170,7 +172,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.Notifications
+                        3 -> currentScreen = Screen.DoctorDashboard
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -188,7 +190,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.Notifications
+                        3 -> currentScreen = Screen.DoctorDashboard
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -205,7 +207,7 @@ fun AppNavHost() {
                     when (index) {
                         0 -> currentScreen = Screen.Home
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.Notifications
+                        3 -> currentScreen = Screen.DoctorDashboard
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -222,7 +224,7 @@ fun AppNavHost() {
                     when (index) {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
-                        3 -> currentScreen = Screen.Notifications
+                        3 -> currentScreen = Screen.DoctorDashboard
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -240,7 +242,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.BabyDevelopment
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.Notifications
+                        3 -> currentScreen = Screen.DoctorDashboard
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -258,7 +260,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.BabyDevelopment
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.Notifications
+                        3 -> currentScreen = Screen.DoctorDashboard
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -276,7 +278,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.BabyDevelopment
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.Notifications
+                        3 -> currentScreen = Screen.DoctorDashboard
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -294,7 +296,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.BabyDevelopment
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.Notifications
+                        3 -> currentScreen = Screen.DoctorDashboard
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -312,7 +314,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.BabyDevelopment
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.Notifications
+                        3 -> currentScreen = Screen.DoctorDashboard
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -330,9 +332,16 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.BabyDevelopment
                         2 -> currentScreen = Screen.AiChat
+                        3 -> currentScreen = Screen.DoctorDashboard
                         4 -> currentScreen = Screen.Profile
                     }
                 }
+            )
+        }
+        Screen.DoctorDashboard -> {
+            val doctorViewModel: MainViewModel = viewModel()
+            MainScreen(
+                viewModel = doctorViewModel
             )
         }
     }
