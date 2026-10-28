@@ -34,6 +34,8 @@ import com.example.SIMATS.ui.nutrition.NutritionPlanScreen
 import com.example.SIMATS.ui.nutrition.NutritionPlanViewModel
 import com.example.SIMATS.ui.onboarding.OnboardingScreen
 import com.example.SIMATS.ui.onboarding.OnboardingViewModel
+import com.example.SIMATS.ui.patienthealthmonitoring.PatientHealthMonitoringScreen
+import com.example.SIMATS.ui.patienthealthmonitoring.PatientHealthMonitoringViewModel
 import com.example.SIMATS.ui.patienthistory.PatientHistoryScreen
 import com.example.SIMATS.ui.patienthistory.PatientHistoryViewModel
 import com.example.SIMATS.ui.patientlist.PatientListScreen
@@ -370,7 +372,21 @@ fun AppNavHost() {
                     currentScreen = Screen.AssignedPatients
                 },
                 onOpenHealthMonitoringClick = {
-                    currentScreen = Screen.HealthReport
+                    currentScreen = Screen.PatientHealthMonitoring
+                },
+                onNavTabSelected = { index ->
+                    if (index == 0) {
+                        currentScreen = Screen.DoctorDashboard
+                    }
+                }
+            )
+        }
+        Screen.PatientHealthMonitoring -> {
+            val healthMonitoringViewModel: PatientHealthMonitoringViewModel = viewModel()
+            PatientHealthMonitoringScreen(
+                viewModel = healthMonitoringViewModel,
+                onNavigateBack = {
+                    currentScreen = Screen.PatientHistory
                 },
                 onNavTabSelected = { index ->
                     if (index == 0) {
