@@ -20,6 +20,8 @@ import com.example.SIMATS.ui.home.HomeScreen
 import com.example.SIMATS.ui.home.HomeViewModel
 import com.example.SIMATS.ui.login.LoginScreen
 import com.example.SIMATS.ui.login.LoginViewModel
+import com.example.SIMATS.ui.medication.MedicationRemindersScreen
+import com.example.SIMATS.ui.medication.MedicationRemindersViewModel
 import com.example.SIMATS.ui.nutrition.NutritionPlanScreen
 import com.example.SIMATS.ui.nutrition.NutritionPlanViewModel
 import com.example.SIMATS.ui.onboarding.OnboardingScreen
@@ -109,7 +111,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.Nutrition
+                        3 -> currentScreen = Screen.Medication
                     }
                 }
             )
@@ -126,7 +128,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.Nutrition
+                        3 -> currentScreen = Screen.Medication
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -144,7 +146,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.Nutrition
+                        3 -> currentScreen = Screen.Medication
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -162,7 +164,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.Nutrition
+                        3 -> currentScreen = Screen.Medication
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -180,7 +182,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.Nutrition
+                        3 -> currentScreen = Screen.Medication
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -197,7 +199,7 @@ fun AppNavHost() {
                     when (index) {
                         0 -> currentScreen = Screen.Home
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.Nutrition
+                        3 -> currentScreen = Screen.Medication
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -214,7 +216,7 @@ fun AppNavHost() {
                     when (index) {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
-                        3 -> currentScreen = Screen.Nutrition
+                        3 -> currentScreen = Screen.Medication
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -232,7 +234,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.BabyDevelopment
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.Nutrition
+                        3 -> currentScreen = Screen.Medication
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -244,6 +246,24 @@ fun AppNavHost() {
                 viewModel = nutritionViewModel,
                 onNavigateBack = {
                     currentScreen = Screen.Symptom
+                },
+                onNavTabSelected = { index ->
+                    when (index) {
+                        0 -> currentScreen = Screen.Home
+                        1 -> currentScreen = Screen.BabyDevelopment
+                        2 -> currentScreen = Screen.AiChat
+                        3 -> currentScreen = Screen.Medication
+                        4 -> currentScreen = Screen.Profile
+                    }
+                }
+            )
+        }
+        Screen.Medication -> {
+            val medicationViewModel: MedicationRemindersViewModel = viewModel()
+            MedicationRemindersScreen(
+                viewModel = medicationViewModel,
+                onNavigateBack = {
+                    currentScreen = Screen.Nutrition
                 },
                 onNavTabSelected = { index ->
                     when (index) {
