@@ -6,6 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.SIMATS.ui.bloodpressure.BloodPressureScreen
+import com.example.SIMATS.ui.bloodpressure.BloodPressureViewModel
 import com.example.SIMATS.ui.duedate.DueDateScreen
 import com.example.SIMATS.ui.duedate.DueDateViewModel
 import com.example.SIMATS.ui.healthreport.HealthReportScreen
@@ -97,7 +99,7 @@ fun AppNavHost() {
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.WeightTracker
+                        1 -> currentScreen = Screen.BloodPressure
                         2 -> currentScreen = Screen.HealthReport
                     }
                 }
@@ -113,7 +115,7 @@ fun AppNavHost() {
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.WeightTracker
+                        1 -> currentScreen = Screen.BloodPressure
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -129,7 +131,7 @@ fun AppNavHost() {
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.WeightTracker
+                        1 -> currentScreen = Screen.BloodPressure
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -140,7 +142,23 @@ fun AppNavHost() {
             WeightTrackerScreen(
                 viewModel = weightViewModel,
                 onNavigateBack = {
-                    currentScreen = Screen.HealthReport
+                    currentScreen = Screen.BloodPressure
+                },
+                onNavTabSelected = { index ->
+                    when (index) {
+                        0 -> currentScreen = Screen.Home
+                        1 -> currentScreen = Screen.BloodPressure
+                        4 -> currentScreen = Screen.Profile
+                    }
+                }
+            )
+        }
+        Screen.BloodPressure -> {
+            val bpViewModel: BloodPressureViewModel = viewModel()
+            BloodPressureScreen(
+                viewModel = bpViewModel,
+                onNavigateBack = {
+                    currentScreen = Screen.WeightTracker
                 },
                 onNavTabSelected = { index ->
                     when (index) {
