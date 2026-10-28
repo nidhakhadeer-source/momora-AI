@@ -26,6 +26,8 @@ import com.example.SIMATS.ui.medicalreports.MedicalReportsScreen
 import com.example.SIMATS.ui.medicalreports.MedicalReportsViewModel
 import com.example.SIMATS.ui.medication.MedicationRemindersScreen
 import com.example.SIMATS.ui.medication.MedicationRemindersViewModel
+import com.example.SIMATS.ui.notifications.NotificationsScreen
+import com.example.SIMATS.ui.notifications.NotificationsViewModel
 import com.example.SIMATS.ui.nutrition.NutritionPlanScreen
 import com.example.SIMATS.ui.nutrition.NutritionPlanViewModel
 import com.example.SIMATS.ui.onboarding.OnboardingScreen
@@ -115,7 +117,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.MedicalReports
+                        3 -> currentScreen = Screen.Notifications
                     }
                 }
             )
@@ -132,7 +134,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.MedicalReports
+                        3 -> currentScreen = Screen.Notifications
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -150,7 +152,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.MedicalReports
+                        3 -> currentScreen = Screen.Notifications
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -168,7 +170,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.MedicalReports
+                        3 -> currentScreen = Screen.Notifications
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -186,7 +188,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.MedicalReports
+                        3 -> currentScreen = Screen.Notifications
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -203,7 +205,7 @@ fun AppNavHost() {
                     when (index) {
                         0 -> currentScreen = Screen.Home
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.MedicalReports
+                        3 -> currentScreen = Screen.Notifications
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -220,7 +222,7 @@ fun AppNavHost() {
                     when (index) {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
-                        3 -> currentScreen = Screen.MedicalReports
+                        3 -> currentScreen = Screen.Notifications
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -238,7 +240,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.BabyDevelopment
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.MedicalReports
+                        3 -> currentScreen = Screen.Notifications
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -256,7 +258,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.BabyDevelopment
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.MedicalReports
+                        3 -> currentScreen = Screen.Notifications
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -274,7 +276,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.BabyDevelopment
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.MedicalReports
+                        3 -> currentScreen = Screen.Notifications
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -292,7 +294,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.BabyDevelopment
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.MedicalReports
+                        3 -> currentScreen = Screen.Notifications
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -304,6 +306,24 @@ fun AppNavHost() {
                 viewModel = reportsViewModel,
                 onNavigateBack = {
                     currentScreen = Screen.AppointmentsCalendar
+                },
+                onNavTabSelected = { index ->
+                    when (index) {
+                        0 -> currentScreen = Screen.Home
+                        1 -> currentScreen = Screen.BabyDevelopment
+                        2 -> currentScreen = Screen.AiChat
+                        3 -> currentScreen = Screen.Notifications
+                        4 -> currentScreen = Screen.Profile
+                    }
+                }
+            )
+        }
+        Screen.Notifications -> {
+            val notificationsViewModel: NotificationsViewModel = viewModel()
+            NotificationsScreen(
+                viewModel = notificationsViewModel,
+                onNavigateBack = {
+                    currentScreen = Screen.MedicalReports
                 },
                 onNavTabSelected = { index ->
                     when (index) {
