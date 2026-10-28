@@ -12,6 +12,8 @@ import com.example.SIMATS.ui.login.LoginScreen
 import com.example.SIMATS.ui.login.LoginViewModel
 import com.example.SIMATS.ui.onboarding.OnboardingScreen
 import com.example.SIMATS.ui.onboarding.OnboardingViewModel
+import com.example.SIMATS.ui.profile.ProfileSetupScreen
+import com.example.SIMATS.ui.profile.ProfileSetupViewModel
 import com.example.SIMATS.ui.signup.SignUpScreen
 import com.example.SIMATS.ui.signup.SignUpViewModel
 import com.example.SIMATS.ui.splash.SplashScreen
@@ -75,7 +77,23 @@ fun AppNavHost() {
         }
         Screen.Home -> {
             val homeViewModel: HomeViewModel = viewModel()
-            HomeScreen(viewModel = homeViewModel)
+            HomeScreen(
+                viewModel = homeViewModel
+            )
+        }
+        Screen.Profile -> {
+            val profileViewModel: ProfileSetupViewModel = viewModel()
+            ProfileSetupScreen(
+                viewModel = profileViewModel,
+                onNavigateBack = {
+                    currentScreen = Screen.Home
+                },
+                onNavTabSelected = { index ->
+                    if (index == 0) {
+                        currentScreen = Screen.Home
+                    }
+                }
+            )
         }
     }
 }
