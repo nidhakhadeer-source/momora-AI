@@ -6,6 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.SIMATS.ui.duedate.DueDateScreen
+import com.example.SIMATS.ui.duedate.DueDateViewModel
 import com.example.SIMATS.ui.home.HomeScreen
 import com.example.SIMATS.ui.home.HomeViewModel
 import com.example.SIMATS.ui.login.LoginScreen
@@ -91,6 +93,24 @@ fun AppNavHost() {
                 onNavTabSelected = { index ->
                     if (index == 0) {
                         currentScreen = Screen.Home
+                    } else if (index == 1) {
+                        currentScreen = Screen.DueDate
+                    }
+                }
+            )
+        }
+        Screen.DueDate -> {
+            val dueDateViewModel: DueDateViewModel = viewModel()
+            DueDateScreen(
+                viewModel = dueDateViewModel,
+                onNavigateBack = {
+                    currentScreen = Screen.Home
+                },
+                onNavTabSelected = { index ->
+                    if (index == 0) {
+                        currentScreen = Screen.Home
+                    } else if (index == 4) {
+                        currentScreen = Screen.Profile
                     }
                 }
             )
