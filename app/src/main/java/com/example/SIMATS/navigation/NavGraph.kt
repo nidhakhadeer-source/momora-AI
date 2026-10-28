@@ -6,6 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.SIMATS.ui.adddoctor.AddDoctorScreen
+import com.example.SIMATS.ui.adddoctor.AddDoctorViewModel
 import com.example.SIMATS.ui.admindashboard.AdminDashboardScreen
 import com.example.SIMATS.ui.admindashboard.AdminDashboardViewModel
 import com.example.SIMATS.ui.ai.AiChatScreen
@@ -445,9 +447,27 @@ fun AppNavHost() {
             val adminViewModel: AdminDashboardViewModel = viewModel()
             AdminDashboardScreen(
                 viewModel = adminViewModel,
-                onManageDoctorsClick = {},
+                onManageDoctorsClick = {
+                    currentScreen = Screen.AddDoctor
+                },
                 onManagePatientsClick = {},
-                onAddDoctorClick = {}
+                onAddDoctorClick = {
+                    currentScreen = Screen.AddDoctor
+                }
+            )
+        }
+        Screen.AddDoctor -> {
+            val addDoctorViewModel: AddDoctorViewModel = viewModel()
+            AddDoctorScreen(
+                viewModel = addDoctorViewModel,
+                onNavigateBack = {
+                    currentScreen = Screen.AdminDashboard
+                },
+                onNavTabSelected = { index ->
+                    if (index == 0) {
+                        currentScreen = Screen.AdminDashboard
+                    }
+                }
             )
         }
     }
