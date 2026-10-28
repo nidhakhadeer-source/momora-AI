@@ -32,6 +32,8 @@ import com.example.SIMATS.ui.login.LoginScreen
 import com.example.SIMATS.ui.login.LoginViewModel
 import com.example.SIMATS.ui.main.MainScreen
 import com.example.SIMATS.ui.main.MainViewModel
+import com.example.SIMATS.ui.managedoctors.ManageDoctorsScreen
+import com.example.SIMATS.ui.managedoctors.ManageDoctorsViewModel
 import com.example.SIMATS.ui.medicalreports.MedicalReportsScreen
 import com.example.SIMATS.ui.medicalreports.MedicalReportsViewModel
 import com.example.SIMATS.ui.medication.MedicationRemindersScreen
@@ -448,7 +450,7 @@ fun AppNavHost() {
             AdminDashboardScreen(
                 viewModel = adminViewModel,
                 onManageDoctorsClick = {
-                    currentScreen = Screen.AddDoctor
+                    currentScreen = Screen.ManageDoctors
                 },
                 onManagePatientsClick = {},
                 onAddDoctorClick = {
@@ -462,6 +464,25 @@ fun AppNavHost() {
                 viewModel = addDoctorViewModel,
                 onNavigateBack = {
                     currentScreen = Screen.AdminDashboard
+                },
+                onNavTabSelected = { index ->
+                    if (index == 0) {
+                        currentScreen = Screen.AdminDashboard
+                    } else if (index == 1) {
+                        currentScreen = Screen.ManageDoctors
+                    }
+                }
+            )
+        }
+        Screen.ManageDoctors -> {
+            val manageDoctorsViewModel: ManageDoctorsViewModel = viewModel()
+            ManageDoctorsScreen(
+                viewModel = manageDoctorsViewModel,
+                onNavigateBack = {
+                    currentScreen = Screen.AddDoctor
+                },
+                onAddDoctorClick = {
+                    currentScreen = Screen.AddDoctor
                 },
                 onNavTabSelected = { index ->
                     if (index == 0) {
