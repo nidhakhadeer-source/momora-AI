@@ -10,6 +10,8 @@ import com.example.SIMATS.ui.adddoctor.AddDoctorScreen
 import com.example.SIMATS.ui.adddoctor.AddDoctorViewModel
 import com.example.SIMATS.ui.admindashboard.AdminDashboardScreen
 import com.example.SIMATS.ui.admindashboard.AdminDashboardViewModel
+import com.example.SIMATS.ui.adminsettings.AdminSettingsScreen
+import com.example.SIMATS.ui.adminsettings.AdminSettingsViewModel
 import com.example.SIMATS.ui.ai.AiChatScreen
 import com.example.SIMATS.ui.ai.AiChatViewModel
 import com.example.SIMATS.ui.babydevelopment.BabyDevelopmentScreen
@@ -459,6 +461,11 @@ fun AppNavHost() {
                 },
                 onAddDoctorClick = {
                     currentScreen = Screen.AddDoctor
+                },
+                onNavTabSelected = { index ->
+                    if (index == 3) {
+                        currentScreen = Screen.AdminSettings
+                    }
                 }
             )
         }
@@ -476,6 +483,8 @@ fun AppNavHost() {
                         currentScreen = Screen.ManageDoctors
                     } else if (index == 2) {
                         currentScreen = Screen.ManagePatients
+                    } else if (index == 3) {
+                        currentScreen = Screen.AdminSettings
                     }
                 }
             )
@@ -495,6 +504,8 @@ fun AppNavHost() {
                         currentScreen = Screen.AdminDashboard
                     } else if (index == 2) {
                         currentScreen = Screen.ManagePatients
+                    } else if (index == 3) {
+                        currentScreen = Screen.AdminSettings
                     }
                 }
             )
@@ -511,6 +522,29 @@ fun AppNavHost() {
                         currentScreen = Screen.AdminDashboard
                     } else if (index == 1) {
                         currentScreen = Screen.ManageDoctors
+                    } else if (index == 3) {
+                        currentScreen = Screen.AdminSettings
+                    }
+                }
+            )
+        }
+        Screen.AdminSettings -> {
+            val adminSettingsViewModel: AdminSettingsViewModel = viewModel()
+            AdminSettingsScreen(
+                viewModel = adminSettingsViewModel,
+                onNavigateBack = {
+                    currentScreen = Screen.ManagePatients
+                },
+                onLogoutSuccess = {
+                    currentScreen = Screen.Login
+                },
+                onNavTabSelected = { index ->
+                    if (index == 0) {
+                        currentScreen = Screen.AdminDashboard
+                    } else if (index == 1) {
+                        currentScreen = Screen.ManageDoctors
+                    } else if (index == 2) {
+                        currentScreen = Screen.ManagePatients
                     }
                 }
             )
