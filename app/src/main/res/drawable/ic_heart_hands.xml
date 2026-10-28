@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="80dp"
+    android:height="80dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+  <path
+      android:pathData="M50,85 C25,65 10,48 10,32 C10,18 21,8 34,8 C42,8 47,12 50,17 C53,12 58,8 66,8 C79,8 90,18 90,32 C90,48 75,65 50,85 Z"
+      android:strokeColor="#6A4C6A"
+      android:strokeWidth="3"
+      android:fillColor="#00000000"
+      android:strokeLineCap="round"
+      android:strokeLineJoin="round"/>
+  <!-- Interlocking Hands Detail Lines -->
+  <path
+      android:pathData="M32,32 C38,42 45,45 50,48 C55,45 62,42 68,32"
+      android:strokeColor="#6A4C6A"
+      android:strokeWidth="2.5"
+      android:fillColor="#00000000"
+      android:strokeLineCap="round"/>
+  <path
+      android:pathData="M38,48 Q50,60 62,48"
+      android:strokeColor="#6A4C6A"
+      android:strokeWidth="2.5"
+      android:fillColor="#00000000"
+      android:strokeLineCap="round"/>
+</vector>

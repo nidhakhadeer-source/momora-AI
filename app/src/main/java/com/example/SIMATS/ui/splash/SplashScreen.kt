@@ -1,7 +1,7 @@
 package com.example.SIMATS.ui.splash
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,19 +10,16 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,7 +29,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -42,12 +38,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.SIMATS.R
 import com.example.SIMATS.ui.theme.MomoraAITheme
-import com.example.SIMATS.ui.theme.MomoraCardBackground
 import com.example.SIMATS.ui.theme.MomoraMintLight
 import com.example.SIMATS.ui.theme.MomoraScreenBackground
-import com.example.SIMATS.ui.theme.MomoraSubheaderPurple
 import com.example.SIMATS.ui.theme.MomoraTealPrimary
-import com.example.SIMATS.ui.theme.MomoraTextBody
 import com.example.SIMATS.ui.theme.MomoraTextHeadline
 import com.example.SIMATS.ui.theme.MomoraTextMuted
 
@@ -76,207 +69,206 @@ fun SplashScreenContent(
     uiState: SplashUiState,
     onEvent: (SplashUiEvent) -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MomoraScreenBackground)
-    ) {
-        Column(
+    Scaffold(
+        containerColor = MomoraScreenBackground
+    ) { innerPadding ->
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .statusBarsPadding()
-                .navigationBarsPadding()
-                .padding(horizontal = 24.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.Start
+                .padding(innerPadding)
+                .clickable { onEvent(SplashUiEvent.OnGetStartedClicked) },
+            contentAlignment = Alignment.TopCenter
         ) {
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Header Bar: Sprout Icon | momora AI | More Options
-            Row(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .fillMaxSize()
+                    .statusBarsPadding()
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_sprout),
-                    contentDescription = "Momora Logo",
-                    tint = MomoraTealPrimary,
-                    modifier = Modifier.size(28.dp)
-                )
-
-                Text(
-                    text = uiState.titleLogoText,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MomoraTealPrimary
-                )
-
-                IconButton(
-                    onClick = { onEvent(SplashUiEvent.OnMoreOptionsClicked) },
-                    modifier = Modifier.size(28.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_more_dots),
-                        contentDescription = "More Options",
-                        tint = MomoraTealPrimary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Subheader: WELCOME TO YOUR PREGNANCY COMPANION
-            Text(
-                text = uiState.subheader,
-                style = MaterialTheme.typography.labelMedium,
-                color = MomoraSubheaderPurple,
-                letterSpacing = 1.1.sp
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Headline: A little reassurance. Every step of the way.
-            Text(
-                text = uiState.headline,
-                style = MaterialTheme.typography.headlineLarge,
-                color = MomoraTextHeadline,
-                lineHeight = 34.sp
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Illustration Card
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(MomoraCardBackground)
-                    .padding(vertical = 20.dp, horizontal = 16.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_momora_illustration),
-                    contentDescription = "Pregnancy Companion Illustration",
+                // Top Header Bar with Heart Badges
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp),
-                    contentScale = ContentScale.Fit
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Body Description Paragraph
-            Text(
-                text = uiState.description,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MomoraTextBody,
-                lineHeight = 22.sp
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Feature Item: Heart Icon + Text
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Start
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_heart_outline),
-                    contentDescription = null,
-                    tint = MomoraTealPrimary,
-                    modifier = Modifier.size(18.dp)
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Text(
-                    text = uiState.featureText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MomoraTextMuted
-                )
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Primary Button: Begin my journey
-            Button(
-                onClick = { onEvent(SplashUiEvent.OnBeginJourneyClicked) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MomoraTealPrimary,
-                    contentColor = Color.White
-                ),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 0.dp,
-                    pressedElevation = 2.dp
-                )
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
+                        .padding(top = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_arrow_forward),
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(20.dp)
+                    // Top-Left Heart Badge
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFFCEEF3)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_heart),
+                            contentDescription = "Heart Icon",
+                            tint = Color(0xFF887288),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    // Top-Right Shield Heart Badge
+                    Box(
+                        modifier = Modifier
+                            .size(44.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFFCEEF3)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_shield_heart),
+                            contentDescription = "Shield Heart Icon",
+                            tint = Color(0xFF887288),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Central Graphic Illustration Stack
+                Box(
+                    modifier = Modifier.size(260.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Outer Soft Pink Circle
+                    Box(
+                        modifier = Modifier
+                            .size(240.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFFCEEF3))
                     )
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                    // Inner Soft Purple Circle
+                    Box(
+                        modifier = Modifier
+                            .size(170.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFEFE4F0)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_heart_hands),
+                            contentDescription = "Heart Hands Illustration",
+                            tint = Color(0xFF6A4C6A),
+                            modifier = Modifier.size(72.dp)
+                        )
+                    }
+
+                    // Floating Small Heart Badge on Top Right
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(top = 28.dp, end = 28.dp)
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(MomoraMintLight),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_heart),
+                            contentDescription = null,
+                            tint = MomoraTealPrimary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Logo & Headline Content
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = uiState.title,
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF6A4C6A),
+                        letterSpacing = (-0.5).sp
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = uiState.primaryButtonText,
-                        style = MaterialTheme.typography.labelLarge,
-                        color = Color.White
+                        text = uiState.headline,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraTextHeadline,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = uiState.subtitle,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MomoraTextMuted,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 20.sp,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Soft Mint Pill Badge Tag
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(MomoraMintLight)
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Text(
+                            text = uiState.badgeText,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraTealPrimary,
+                            letterSpacing = 1.0.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Page Indicator Dots & Footer Disclaimer
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 24.dp)
+                ) {
+                    // 3 Page Indicator Dots
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        repeat(uiState.pageCount) { index ->
+                            val isSelected = index == uiState.currentPage
+                            Box(
+                                modifier = Modifier
+                                    .padding(horizontal = 4.dp)
+                                    .size(if (isSelected) 8.dp else 6.dp)
+                                    .clip(CircleShape)
+                                    .background(if (isSelected) Color(0xFF6A4C6A) else Color(0xFFF5D8E4))
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = uiState.footerText,
+                        fontSize = 12.sp,
+                        color = MomoraTextMuted,
+                        textAlign = TextAlign.Center
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Secondary Button: I already have an account
-            Button(
-                onClick = { onEvent(SplashUiEvent.OnAlreadyHaveAccountClicked) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(28.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MomoraMintLight,
-                    contentColor = MomoraTealPrimary
-                ),
-                elevation = ButtonDefaults.buttonElevation(
-                    defaultElevation = 0.dp,
-                    pressedElevation = 1.dp
-                )
-            ) {
-                Text(
-                    text = uiState.secondaryButtonText,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MomoraTealPrimary
-                )
-            }
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            // Footer Text
-            Text(
-                text = uiState.footerText,
-                style = MaterialTheme.typography.bodySmall,
-                color = MomoraTextMuted,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
