@@ -34,6 +34,8 @@ import com.example.SIMATS.ui.main.MainScreen
 import com.example.SIMATS.ui.main.MainViewModel
 import com.example.SIMATS.ui.managedoctors.ManageDoctorsScreen
 import com.example.SIMATS.ui.managedoctors.ManageDoctorsViewModel
+import com.example.SIMATS.ui.managepatients.ManagePatientsScreen
+import com.example.SIMATS.ui.managepatients.ManagePatientsViewModel
 import com.example.SIMATS.ui.medicalreports.MedicalReportsScreen
 import com.example.SIMATS.ui.medicalreports.MedicalReportsViewModel
 import com.example.SIMATS.ui.medication.MedicationRemindersScreen
@@ -452,7 +454,9 @@ fun AppNavHost() {
                 onManageDoctorsClick = {
                     currentScreen = Screen.ManageDoctors
                 },
-                onManagePatientsClick = {},
+                onManagePatientsClick = {
+                    currentScreen = Screen.ManagePatients
+                },
                 onAddDoctorClick = {
                     currentScreen = Screen.AddDoctor
                 }
@@ -470,6 +474,8 @@ fun AppNavHost() {
                         currentScreen = Screen.AdminDashboard
                     } else if (index == 1) {
                         currentScreen = Screen.ManageDoctors
+                    } else if (index == 2) {
+                        currentScreen = Screen.ManagePatients
                     }
                 }
             )
@@ -487,6 +493,24 @@ fun AppNavHost() {
                 onNavTabSelected = { index ->
                     if (index == 0) {
                         currentScreen = Screen.AdminDashboard
+                    } else if (index == 2) {
+                        currentScreen = Screen.ManagePatients
+                    }
+                }
+            )
+        }
+        Screen.ManagePatients -> {
+            val managePatientsViewModel: ManagePatientsViewModel = viewModel()
+            ManagePatientsScreen(
+                viewModel = managePatientsViewModel,
+                onNavigateBack = {
+                    currentScreen = Screen.ManageDoctors
+                },
+                onNavTabSelected = { index ->
+                    if (index == 0) {
+                        currentScreen = Screen.AdminDashboard
+                    } else if (index == 1) {
+                        currentScreen = Screen.ManageDoctors
                     }
                 }
             )
