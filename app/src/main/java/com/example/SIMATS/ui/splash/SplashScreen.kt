@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -50,18 +51,28 @@ import com.example.SIMATS.ui.theme.MomoraPurpleDark
 import com.example.SIMATS.ui.theme.MomoraPurplePrimary
 import com.example.SIMATS.ui.theme.MomoraPurpleText
 import com.example.SIMATS.ui.theme.MomoraScreenBackground
+import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(
     viewModel: SplashViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onNavigateNext: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState) {
+        if (uiState is SplashUiState.Success) {
+            delay(1500)
+            onNavigateNext()
+        }
+    }
 
     SplashScreenContent(
         modifier = modifier,
         onFavoriteClick = { viewModel.onEvent(SplashUiEvent.OnFavoriteClicked) },
-        onHelpClick = { viewModel.onEvent(SplashUiEvent.OnHelpClicked) }
+        onHelpClick = { viewModel.onEvent(SplashUiEvent.OnHelpClicked) },
+        onNextClick = { onNavigateNext() }
     )
 }
 
@@ -69,14 +80,16 @@ fun SplashScreen(
 fun SplashScreenContent(
     modifier: Modifier = Modifier,
     onFavoriteClick: () -> Unit = {},
-    onHelpClick: () -> Unit = {}
+    onHelpClick: () -> Unit = {},
+    onNextClick: () -> Unit = {}
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(MomoraScreenBackground)
             .statusBarsPadding()
-            .navigationBarsPadding(),
+            .navigationBarsPadding()
+            .clickable { onNextClick() },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
@@ -286,10 +299,8 @@ private fun HandsHeartIllustration(
         val h = size.height
         val strokeWidth = 3.5.dp.toPx()
 
-        // Main outer heart path forming hands holding together
         val heartPath = Path().apply {
             moveTo(w * 0.50f, h * 0.78f)
-            // Left heart arc / hand curve
             cubicTo(
                 w * 0.32f, h * 0.70f,
                 w * 0.16f, h * 0.52f,
@@ -300,7 +311,6 @@ private fun HandsHeartIllustration(
                 w * 0.44f, h * 0.20f,
                 w * 0.50f, h * 0.34f
             )
-            // Right heart arc / hand curve
             cubicTo(
                 w * 0.56f, h * 0.20f,
                 w * 0.76f, h * 0.20f,
@@ -319,7 +329,6 @@ private fun HandsHeartIllustration(
             style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round)
         )
 
-        // Hand clasp detail lines inside the heart
         val leftHandDetail = Path().apply {
             moveTo(w * 0.30f, h * 0.52f)
             cubicTo(
@@ -350,9 +359,6 @@ private fun HandsHeartIllustration(
     }
 }
 
-/**
- * Top bar / badge Heart outline icon canvas drawing.
- */
 @Composable
 private fun TopBarHeartIcon(
     color: Color,
@@ -395,9 +401,6 @@ private fun TopBarHeartIcon(
     }
 }
 
-/**
- * Top bar Help / Question Mark icon canvas drawing.
- */
 @Composable
 private fun TopBarHelpIcon(
     color: Color,
@@ -408,14 +411,12 @@ private fun TopBarHelpIcon(
         val h = size.height
         val strokeWidth = 1.8.dp.toPx()
 
-        // Outer Circle
         drawCircle(
             color = color,
             radius = size.minDimension * 0.45f,
             style = Stroke(width = strokeWidth)
         )
 
-        // Question mark arc
         val qPath = Path().apply {
             moveTo(w * 0.38f, h * 0.38f)
             cubicTo(
@@ -435,7 +436,6 @@ private fun TopBarHelpIcon(
             style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
         )
 
-        // Question mark dot
         drawCircle(
             color = color,
             radius = strokeWidth * 0.8f,
