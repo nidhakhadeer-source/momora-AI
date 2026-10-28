@@ -1,0 +1,59 @@
+package com.example.SIMATS.data.repository
+
+import com.example.SIMATS.data.model.AssignedPatientItem
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+
+interface PatientListRepository {
+    fun getAssignedPatients(): Flow<List<AssignedPatientItem>>
+}
+
+class PatientListRepositoryImpl : PatientListRepository {
+    override fun getAssignedPatients(): Flow<List<AssignedPatientItem>> = flow {
+        emit(
+            listOf(
+                AssignedPatientItem(
+                    id = "1",
+                    patientIdText = "P-13042",
+                    name = "Maya Patel",
+                    gestationalAge = "24w 3d",
+                    dueDateText = "Due 13 Feb 2027",
+                    latestVitalsNote = "Latest BP 112/72 mmHg · Updated today",
+                    needsReview = false,
+                    isHighlighted = true
+                ),
+                AssignedPatientItem(
+                    id = "2",
+                    patientIdText = "P-1098",
+                    name = "Laila Ahmed",
+                    gestationalAge = "30w 2d",
+                    needsReview = true,
+                    reviewType = "New ultrasound report"
+                ),
+                AssignedPatientItem(
+                    id = "3",
+                    patientIdText = "P-1011",
+                    name = "Sofia Reyes",
+                    gestationalAge = "18w 5d",
+                    needsReview = true,
+                    reviewType = "New lab report"
+                ),
+                AssignedPatientItem(
+                    id = "4",
+                    patientIdText = "P-1027",
+                    name = "Nora Williams",
+                    gestationalAge = "38w 0d",
+                    visitNote = "Visit today",
+                    needsReview = false
+                ),
+                AssignedPatientItem(
+                    id = "5",
+                    patientIdText = "P-1093",
+                    name = "Emma Wilson",
+                    gestationalAge = "12w 1d",
+                    needsReview = false
+                )
+            )
+        )
+    }
+}
