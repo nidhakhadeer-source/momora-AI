@@ -16,6 +16,8 @@ import com.example.SIMATS.ui.calendar.AppointmentsCalendarScreen
 import com.example.SIMATS.ui.calendar.AppointmentsCalendarViewModel
 import com.example.SIMATS.ui.doctoradvice.DoctorAdviceScreen
 import com.example.SIMATS.ui.doctoradvice.DoctorAdviceViewModel
+import com.example.SIMATS.ui.doctorschedule.DoctorScheduleScreen
+import com.example.SIMATS.ui.doctorschedule.DoctorScheduleViewModel
 import com.example.SIMATS.ui.duedate.DueDateScreen
 import com.example.SIMATS.ui.duedate.DueDateViewModel
 import com.example.SIMATS.ui.healthreport.HealthReportScreen
@@ -410,6 +412,29 @@ fun AppNavHost() {
                 onNavTabSelected = { index ->
                     if (index == 0) {
                         currentScreen = Screen.DoctorDashboard
+                    } else if (index == 2) {
+                        currentScreen = Screen.DoctorSchedule
+                    }
+                }
+            )
+        }
+        Screen.DoctorSchedule -> {
+            val doctorScheduleViewModel: DoctorScheduleViewModel = viewModel()
+            DoctorScheduleScreen(
+                viewModel = doctorScheduleViewModel,
+                onNavigateBack = {
+                    currentScreen = Screen.DoctorAdvice
+                },
+                onViewRecordClick = {
+                    currentScreen = Screen.PatientHistory
+                },
+                onNavTabSelected = { index ->
+                    if (index == 0) {
+                        currentScreen = Screen.DoctorDashboard
+                    } else if (index == 1) {
+                        currentScreen = Screen.AssignedPatients
+                    } else if (index == 3) {
+                        currentScreen = Screen.DoctorAdvice
                     }
                 }
             )
