@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -55,7 +56,8 @@ import com.example.SIMATS.ui.theme.MomoraScreenBackground
 fun OnboardingScreen(
     viewModel: OnboardingViewModel,
     modifier: Modifier = Modifier,
-    onNavigateToLogin: () -> Unit = {}
+    onNavigateToLogin: () -> Unit = {},
+    onGetStartedComplete: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -64,7 +66,12 @@ fun OnboardingScreen(
         uiState = uiState,
         onFavoriteClick = { viewModel.onEvent(OnboardingUiEvent.OnFavoriteClicked) },
         onHelpClick = { viewModel.onEvent(OnboardingUiEvent.OnHelpClicked) },
+        onBackClick = { viewModel.onEvent(OnboardingUiEvent.OnBackClicked) },
         onContinueClick = { viewModel.onEvent(OnboardingUiEvent.OnContinueClicked) },
+        onGetStartedClick = {
+            viewModel.onEvent(OnboardingUiEvent.OnGetStartedClicked)
+            onGetStartedComplete()
+        },
         onLoginClick = {
             viewModel.onEvent(OnboardingUiEvent.OnLoginClicked)
             onNavigateToLogin()
@@ -76,6 +83,38 @@ fun OnboardingScreen(
 fun OnboardingScreenContent(
     modifier: Modifier = Modifier,
     uiState: OnboardingUiState = OnboardingUiState(),
+    onFavoriteClick: () -> Unit = {},
+    onHelpClick: () -> Unit = {},
+    onBackClick: () -> Unit = {},
+    onContinueClick: () -> Unit = {},
+    onGetStartedClick: () -> Unit = {},
+    onLoginClick: () -> Unit = {}
+) {
+    if (uiState.currentPage == 0) {
+        OnboardingWelcomeStep(
+            modifier = modifier,
+            onFavoriteClick = onFavoriteClick,
+            onHelpClick = onHelpClick,
+            onContinueClick = onContinueClick,
+            onLoginClick = onLoginClick
+        )
+    } else {
+        OnboardingInsightsStep(
+            modifier = modifier,
+            onBackClick = onBackClick,
+            onHelpClick = onHelpClick,
+            onGetStartedClick = onGetStartedClick,
+            onLoginClick = onLoginClick
+        )
+    }
+}
+
+/**
+ * Step 1: Onboarding Welcome Screen Content (02 Onboarding — Welcome)
+ */
+@Composable
+private fun OnboardingWelcomeStep(
+    modifier: Modifier = Modifier,
     onFavoriteClick: () -> Unit = {},
     onHelpClick: () -> Unit = {},
     onContinueClick: () -> Unit = {},
@@ -92,7 +131,7 @@ fun OnboardingScreenContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        // 1. Top Bar
+        // Top Bar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -129,7 +168,7 @@ fun OnboardingScreenContent(
             }
         }
 
-        // 2. Main Scrollable Content
+        // Scrollable Body Content
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -137,14 +176,12 @@ fun OnboardingScreenContent(
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Hero Illustration Artwork Frame
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(230.dp)
             ) {
-                // Soft Oval Background Frame
                 Box(
                     modifier = Modifier
                         .size(width = 175.dp, height = 210.dp)
@@ -153,7 +190,6 @@ fun OnboardingScreenContent(
                         .border(1.dp, Color(0xFFF3E5ED), RoundedCornerShape(percent = 50))
                 )
 
-                // Botanical & Pregnancy Illustration Canvas
                 OnboardingHeroIllustration(
                     modifier = Modifier.size(width = 220.dp, height = 220.dp)
                 )
@@ -161,7 +197,6 @@ fun OnboardingScreenContent(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Sub-pill Tag
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(50))
@@ -179,7 +214,6 @@ fun OnboardingScreenContent(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Headline Title
             Text(
                 text = "Welcome to Momora AI",
                 fontSize = 25.sp,
@@ -190,7 +224,6 @@ fun OnboardingScreenContent(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Subtitle Description
             Text(
                 text = "Feel informed, connected and cared for, from your first questions to your baby's arrival.",
                 fontSize = 13.sp,
@@ -202,7 +235,6 @@ fun OnboardingScreenContent(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // Feature Item Cards List
             Column(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -223,12 +255,11 @@ fun OnboardingScreenContent(
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // 3. Bottom Action Controls
+        // Bottom Controls
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
         ) {
-            // Page Indicator Dots
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -255,7 +286,6 @@ fun OnboardingScreenContent(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Primary "Continue" Button
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -287,7 +317,6 @@ fun OnboardingScreenContent(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Login Footer Link
             Row(
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -307,7 +336,6 @@ fun OnboardingScreenContent(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Home Bar Line Indicator
             Box(
                 modifier = Modifier
                     .width(134.dp)
@@ -320,14 +348,261 @@ fun OnboardingScreenContent(
 }
 
 /**
- * Feature Card Composable for onboarding highlights.
+ * Step 2: Onboarding Pregnancy Insights & Guidance (03 Onboarding — Insights)
  */
 @Composable
-private fun FeatureCard(
-    iconType: OnboardingIconType,
+private fun OnboardingInsightsStep(
+    modifier: Modifier = Modifier,
+    onBackClick: () -> Unit = {},
+    onHelpClick: () -> Unit = {},
+    onGetStartedClick: () -> Unit = {},
+    onLoginClick: () -> Unit = {}
+) {
+    val scrollState = rememberScrollState()
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .background(MomoraScreenBackground)
+            .statusBarsPadding()
+            .navigationBarsPadding(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
+        // Top Bar (Back Button + Help Button)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clickable { onBackClick() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "←",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MomoraPurpleText
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(MomoraIconBtnBg)
+                    .clickable { onHelpClick() },
+                contentAlignment = Alignment.Center
+            ) {
+                TopBarHelpIcon(
+                    color = MomoraPurplePrimary,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+
+        // Scrollable Body Content
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(scrollState)
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.Start
+        ) {
+            // Hero Card: Sleeping Baby Artwork Container
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(220.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Color(0xFFFAF5EE))
+            ) {
+                InsightsHeroIllustration(
+                    modifier = Modifier.size(200.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Headline
+            Text(
+                text = "Small insights.\nMeaningful reassurance.",
+                fontSize = 25.sp,
+                fontWeight = FontWeight.Bold,
+                lineHeight = 31.sp,
+                color = MomoraPurpleDark
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Subtitle
+            Text(
+                text = "Follow your pregnancy with thoughtful tools and a connected care team.",
+                fontSize = 13.sp,
+                lineHeight = 18.sp,
+                color = MomoraBodyMuted
+            )
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            // Feature Item 1: Understand your wellbeing
+            RowFeatureItem(
+                title = "Understand your wellbeing",
+                subtitle = "Track vitals, symptoms and weekly growth.",
+                iconContent = { PulseIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp)) }
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Feature Item 2: Ask, learn and prepare
+            RowFeatureItem(
+                title = "Ask, learn and prepare",
+                subtitle = "AI education alongside your doctor's care.",
+                iconContent = { SparklesIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp)) }
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Medical Disclaimer Pill Card
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color(0xFFF4ECF8))
+                    .padding(horizontal = 14.dp, vertical = 11.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFEBE0F2)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        ShieldIcon(
+                            color = MomoraPurplePrimary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    Text(
+                        text = "AI guidance is educational, not a diagnosis. It does not replace your maternity team.",
+                        fontSize = 11.5.sp,
+                        lineHeight = 15.sp,
+                        color = MomoraPurplePrimary,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // Bottom Controls
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+        ) {
+            // Page Indicator Dots (2nd Dot Selected)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(6.dp)
+                        .clip(CircleShape)
+                        .background(MomoraDotInactive)
+                )
+                Box(
+                    modifier = Modifier
+                        .size(width = 16.dp, height = 7.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(MomoraDotActive)
+                )
+                Box(
+                    modifier = Modifier
+                        .size(6.dp)
+                        .clip(CircleShape)
+                        .background(MomoraDotInactive)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Primary "Get started" Button
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(MomoraPurplePrimary)
+                    .clickable { onGetStartedClick() },
+                contentAlignment = Alignment.Center
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Get started",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "➔",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Login Link
+            Text(
+                text = "Log in to an existing account.",
+                fontSize = 12.5.sp,
+                color = MomoraBodyMuted,
+                modifier = Modifier.clickable { onLoginClick() }
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Home Bar Indicator
+            Box(
+                modifier = Modifier
+                    .width(134.dp)
+                    .height(4.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(Color(0xFF333333))
+            )
+        }
+    }
+}
+
+/**
+ * Row Item for Feature List.
+ */
+@Composable
+private fun RowFeatureItem(
     title: String,
     subtitle: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    iconContent: @Composable () -> Unit
 ) {
     Row(
         modifier = modifier
@@ -343,7 +618,6 @@ private fun FeatureCard(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.weight(1f)
         ) {
-            // Left Circle Icon Container
             Box(
                 modifier = Modifier
                     .size(38.dp)
@@ -351,22 +625,11 @@ private fun FeatureCard(
                     .background(Color(0xFFEDE4F0)),
                 contentAlignment = Alignment.Center
             ) {
-                if (iconType == OnboardingIconType.HEART) {
-                    TopBarHeartIcon(
-                        color = MomoraPurplePrimary,
-                        modifier = Modifier.size(16.dp)
-                    )
-                } else {
-                    ShieldIcon(
-                        color = MomoraPurplePrimary,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
+                iconContent()
             }
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Text Info
             Column {
                 Text(
                     text = title,
@@ -383,7 +646,6 @@ private fun FeatureCard(
             }
         }
 
-        // Right Chevron Arrow
         Text(
             text = "›",
             fontSize = 20.sp,
@@ -394,8 +656,165 @@ private fun FeatureCard(
 }
 
 /**
- * Hero Illustration showing elegant pregnant woman figure surrounded by botanical leaves.
+ * Feature Card for Step 1.
  */
+@Composable
+private fun FeatureCard(
+    iconType: OnboardingIconType,
+    title: String,
+    subtitle: String,
+    modifier: Modifier = Modifier
+) {
+    RowFeatureItem(
+        modifier = modifier,
+        title = title,
+        subtitle = subtitle,
+        iconContent = {
+            if (iconType == OnboardingIconType.HEART) {
+                TopBarHeartIcon(
+                    color = MomoraPurplePrimary,
+                    modifier = Modifier.size(16.dp)
+                )
+            } else {
+                ShieldIcon(
+                    color = MomoraPurplePrimary,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+        }
+    )
+}
+
+/**
+ * Canvas drawing for Step 2 Sleeping Baby in Womb Illustration.
+ */
+@Composable
+private fun InsightsHeroIllustration(
+    modifier: Modifier = Modifier
+) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+
+        // Outer floral wreath circle
+        val wreathPath = Path().apply {
+            addOval(Rect(w * 0.15f, h * 0.15f, w * 0.85f, h * 0.85f))
+        }
+        drawPath(
+            path = wreathPath,
+            color = Color(0xFF8EA99D).copy(alpha = 0.3f),
+            style = Stroke(width = 1.5.dp.toPx())
+        )
+
+        // Delicate leaves on wreath
+        val leaf1 = Path().apply {
+            moveTo(w * 0.20f, h * 0.30f)
+            cubicTo(w * 0.12f, h * 0.25f, w * 0.15f, h * 0.18f, w * 0.24f, h * 0.22f)
+        }
+        drawPath(leaf1, color = Color(0xFF8EA99D), style = Stroke(width = 1.8.dp.toPx()))
+
+        val leaf2 = Path().apply {
+            moveTo(w * 0.80f, h * 0.30f)
+            cubicTo(w * 0.88f, h * 0.25f, w * 0.85f, h * 0.18f, w * 0.76f, h * 0.22f)
+        }
+        drawPath(leaf2, color = Color(0xFF8EA99D), style = Stroke(width = 1.8.dp.toPx()))
+
+        // Inner soft pink womb circle
+        drawCircle(
+            color = Color(0xFFF9E7EC),
+            radius = w * 0.32f,
+            center = Offset(w * 0.50f, h * 0.50f)
+        )
+
+        // Sleeping Baby Illustration
+        drawCircle(
+            color = Color(0xFFF2D1C2),
+            radius = w * 0.11f,
+            center = Offset(w * 0.44f, h * 0.38f)
+        )
+
+        val eyePath = Path().apply {
+            moveTo(w * 0.40f, h * 0.38f)
+            cubicTo(w * 0.42f, h * 0.41f, w * 0.45f, h * 0.41f, w * 0.47f, h * 0.38f)
+        }
+        drawPath(eyePath, color = Color(0xFF6E4F76), style = Stroke(width = 1.8.dp.toPx(), cap = StrokeCap.Round))
+
+        val bodyPath = Path().apply {
+            moveTo(w * 0.44f, h * 0.48f)
+            cubicTo(w * 0.65f, h * 0.45f, w * 0.68f, h * 0.65f, w * 0.52f, h * 0.68f)
+            cubicTo(w * 0.42f, h * 0.68f, w * 0.38f, h * 0.60f, w * 0.44f, h * 0.55f)
+        }
+        drawPath(bodyPath, color = Color(0xFFF2D1C2))
+
+        val armPath = Path().apply {
+            moveTo(w * 0.46f, h * 0.48f)
+            cubicTo(w * 0.52f, h * 0.50f, w * 0.52f, h * 0.56f, w * 0.48f, h * 0.56f)
+        }
+        drawPath(armPath, color = Color(0xFFE5B9A6), style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round))
+    }
+}
+
+/**
+ * Canvas drawing for Heartbeat / ECG Pulse wave icon.
+ */
+@Composable
+private fun PulseIcon(
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val strokeWidth = 1.8.dp.toPx()
+
+        val pulsePath = Path().apply {
+            moveTo(w * 0.10f, h * 0.50f)
+            lineTo(w * 0.30f, h * 0.50f)
+            lineTo(w * 0.40f, h * 0.25f)
+            lineTo(w * 0.55f, h * 0.75f)
+            lineTo(w * 0.70f, h * 0.40f)
+            lineTo(w * 0.80f, h * 0.50f)
+            lineTo(w * 0.90f, h * 0.50f)
+        }
+
+        drawPath(
+            path = pulsePath,
+            color = color,
+            style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        )
+    }
+}
+
+/**
+ * Canvas drawing for Sparkles / AI learning icon.
+ */
+@Composable
+private fun SparklesIcon(
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val strokeWidth = 1.8.dp.toPx()
+
+        val starPath = Path().apply {
+            moveTo(w * 0.50f, h * 0.15f)
+            cubicTo(w * 0.50f, h * 0.35f, w * 0.65f, h * 0.50f, w * 0.85f, h * 0.50f)
+            cubicTo(w * 0.65f, h * 0.50f, w * 0.50f, h * 0.65f, w * 0.50f, h * 0.85f)
+            cubicTo(w * 0.50f, h * 0.65f, w * 0.35f, h * 0.50f, w * 0.15f, h * 0.50f)
+            cubicTo(w * 0.35f, h * 0.50f, w * 0.50f, h * 0.35f, w * 0.50f, h * 0.15f)
+            close()
+        }
+
+        drawPath(
+            path = starPath,
+            color = color,
+            style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        )
+    }
+}
+
 @Composable
 private fun OnboardingHeroIllustration(
     modifier: Modifier = Modifier
@@ -404,7 +823,6 @@ private fun OnboardingHeroIllustration(
         val w = size.width
         val h = size.height
 
-        // Soft botanical leaves sprigs on left side
         val leafPathLeft = Path().apply {
             moveTo(w * 0.25f, h * 0.40f)
             cubicTo(w * 0.15f, h * 0.35f, w * 0.12f, h * 0.25f, w * 0.20f, h * 0.20f)
@@ -419,22 +837,18 @@ private fun OnboardingHeroIllustration(
         }
         drawPath(leafPathRight, color = Color(0xFF8EA99D).copy(alpha = 0.7f))
 
-        // Woman figure outline & dress artwork
-        // Hair
         drawCircle(
             color = Color(0xFF382923),
             radius = w * 0.08f,
             center = Offset(w * 0.48f, h * 0.28f)
         )
 
-        // Face / Skin accent
         drawCircle(
             color = Color(0xFFC68B6E),
             radius = w * 0.06f,
             center = Offset(w * 0.50f, h * 0.29f)
         )
 
-        // Dress (flowing lavender dress)
         val dressPath = Path().apply {
             moveTo(w * 0.45f, h * 0.35f)
             cubicTo(w * 0.40f, h * 0.45f, w * 0.32f, h * 0.60f, w * 0.35f, h * 0.75f)
@@ -444,7 +858,6 @@ private fun OnboardingHeroIllustration(
         }
         drawPath(dressPath, color = Color(0xFFBD9EAE))
 
-        // Hands resting gently on pregnant belly curve
         val bellyCurve = Path().apply {
             moveTo(w * 0.42f, h * 0.50f)
             cubicTo(w * 0.38f, h * 0.58f, w * 0.45f, h * 0.66f, w * 0.55f, h * 0.64f)
@@ -455,7 +868,6 @@ private fun OnboardingHeroIllustration(
             style = Stroke(width = 2.5.dp.toPx(), cap = StrokeCap.Round)
         )
 
-        // Sitting bench / stone element
         val benchPath = Path().apply {
             moveTo(w * 0.28f, h * 0.74f)
             lineTo(w * 0.72f, h * 0.74f)
@@ -467,9 +879,6 @@ private fun OnboardingHeroIllustration(
     }
 }
 
-/**
- * Shield / Privacy Icon drawing.
- */
 @Composable
 private fun ShieldIcon(
     color: Color,
@@ -494,7 +903,6 @@ private fun ShieldIcon(
             style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round)
         )
 
-        // Inner check mark inside shield
         val checkPath = Path().apply {
             moveTo(w * 0.38f, h * 0.50f)
             lineTo(w * 0.48f, h * 0.60f)
@@ -595,6 +1003,12 @@ private fun TopBarHelpIcon(
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 760)
 @Composable
-fun OnboardingScreenPreview() {
-    OnboardingScreenContent()
+fun OnboardingStep1Preview() {
+    OnboardingScreenContent(uiState = OnboardingUiState(currentPage = 0))
+}
+
+@Preview(showBackground = true, widthDp = 360, heightDp = 760)
+@Composable
+fun OnboardingStep2Preview() {
+    OnboardingScreenContent(uiState = OnboardingUiState(currentPage = 1))
 }

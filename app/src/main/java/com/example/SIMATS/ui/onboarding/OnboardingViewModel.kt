@@ -24,7 +24,21 @@ class OnboardingViewModel(
     fun onEvent(event: OnboardingUiEvent) {
         when (event) {
             OnboardingUiEvent.OnContinueClicked -> {
-                // Navigate forward
+                if (_uiState.value.currentPage < _uiState.value.totalPages - 1) {
+                    _uiState.value = _uiState.value.copy(
+                        currentPage = _uiState.value.currentPage + 1
+                    )
+                }
+            }
+            OnboardingUiEvent.OnBackClicked -> {
+                if (_uiState.value.currentPage > 0) {
+                    _uiState.value = _uiState.value.copy(
+                        currentPage = _uiState.value.currentPage - 1
+                    )
+                }
+            }
+            OnboardingUiEvent.OnGetStartedClicked -> {
+                // Handle Get Started action (complete onboarding)
             }
             OnboardingUiEvent.OnLoginClicked -> {
                 // Navigate to login screen

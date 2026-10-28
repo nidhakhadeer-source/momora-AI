@@ -2,6 +2,8 @@ package com.example.SIMATS.ui.onboarding
 
 sealed interface OnboardingUiEvent {
     data object OnContinueClicked : OnboardingUiEvent
+    data object OnBackClicked : OnboardingUiEvent
+    data object OnGetStartedClicked : OnboardingUiEvent
     data object OnLoginClicked : OnboardingUiEvent
     data object OnFavoriteClicked : OnboardingUiEvent
     data object OnHelpClicked : OnboardingUiEvent
