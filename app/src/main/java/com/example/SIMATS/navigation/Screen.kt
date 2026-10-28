@@ -11,4 +11,5 @@ sealed class Screen(val route: String) {
     data object HealthReport : Screen("health_report")
     data object WeightTracker : Screen("weight_tracker")
     data object BloodPressure : Screen("blood_pressure")
+    data object BabyDevelopment : Screen("baby_development")
 }
