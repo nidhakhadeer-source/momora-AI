@@ -15,7 +15,7 @@ class SplashViewModel : ViewModel() {
     fun onEvent(event: SplashUiEvent) {
         when (event) {
             SplashUiEvent.OnGetStartedClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.SignUp.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.Welcome.route) }
             }
             SplashUiEvent.OnLoginClicked -> {
                 _uiState.update { it.copy(navigateToRoute = Screen.Login.route) }
