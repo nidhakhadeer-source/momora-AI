@@ -10,6 +10,8 @@ import com.example.SIMATS.ui.login.LoginScreen
 import com.example.SIMATS.ui.login.LoginViewModel
 import com.example.SIMATS.ui.onboarding.OnboardingScreen
 import com.example.SIMATS.ui.onboarding.OnboardingViewModel
+import com.example.SIMATS.ui.signup.SignUpScreen
+import com.example.SIMATS.ui.signup.SignUpViewModel
 import com.example.SIMATS.ui.splash.SplashScreen
 import com.example.SIMATS.ui.splash.SplashViewModel
 
@@ -35,7 +37,7 @@ fun AppNavHost() {
                     currentScreen = Screen.Login
                 },
                 onGetStartedComplete = {
-                    currentScreen = Screen.Login
+                    currentScreen = Screen.SignUp
                 }
             )
         }
@@ -50,7 +52,22 @@ fun AppNavHost() {
                     currentScreen = Screen.Home
                 },
                 onCreateAccountClick = {
-                    // Navigate to register/sign up
+                    currentScreen = Screen.SignUp
+                }
+            )
+        }
+        Screen.SignUp -> {
+            val signUpViewModel: SignUpViewModel = viewModel()
+            SignUpScreen(
+                viewModel = signUpViewModel,
+                onNavigateBack = {
+                    currentScreen = Screen.Login
+                },
+                onNavigateToLogin = {
+                    currentScreen = Screen.Login
+                },
+                onRegistrationSuccess = {
+                    currentScreen = Screen.Home
                 }
             )
         }
