@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="220dp"
+    android:height="150dp"
+    android:viewportWidth="300"
+    android:viewportHeight="200">
+
+  <!-- Soft Pink Womb Frame Oval -->
+  <path
+      android:pathData="M150,20 C200,20 230,50 230,100 C230,150 200,180 150,180 C100,180 70,150 70,100 C70,50 100,20 150,20 Z"
+      android:fillColor="#FBEAEB"/>
+
+  <!-- Botanical Wreath Frame -->
+  <path
+      android:pathData="M60,110 C50,85 60,50 80,35 M65,130 C50,110 50,70 85,50"
+      android:strokeColor="#A08BA0"
+      android:strokeWidth="2"
+      android:strokeLineCap="round"/>
+  <path
+      android:pathData="M240,110 C250,85 240,50 220,35 M235,130 C250,110 250,70 215,50"
+      android:strokeColor="#A08BA0"
+      android:strokeWidth="2"
+      android:strokeLineCap="round"/>
+
+  <!-- Sleeping Fetus / Baby Illustration -->
+  <!-- Umbilical Cord Line -->
+  <path
+      android:pathData="M165,105 C185,115 195,95 180,80"
+      android:strokeColor="#E3A898"
+      android:strokeWidth="3"
+      android:fillColor="#00000000"
+      android:strokeLineCap="round"/>
+
+  <!-- Baby Head -->
+  <path
+      android:pathData="M140,65m-22,0a22,22 0 1,1 44,0a22,22 0 1,1 -44,0"
+      android:fillColor="#F7CDA8"/>
+
+  <!-- Sleeping Eyes Line -->
+  <path
+      android:pathData="M130,68 Q136,73 142,68"
+      android:strokeColor="#9C7753"
+      android:strokeWidth="2"
+      android:fillColor="#00000000"
+      android:strokeLineCap="round"/>
+
+  <!-- Baby Curled Body & Arms -->
+  <path
+      android:pathData="M125,85 C115,100 120,120 140,125 C160,125 170,110 165,92 Z"
+      android:fillColor="#F7CDA8"/>
+
+  <!-- Soft Pink Inner Shadow & Blanket Touch -->
+  <path
+      android:pathData="M120,95 C110,110 120,130 145,130 C165,130 175,115 168,98 Z"
+      android:fillColor="#F0BCB0"/>
+
+</vector>

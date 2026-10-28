@@ -15,13 +15,13 @@ class WelcomeViewModel : ViewModel() {
     fun onEvent(event: WelcomeUiEvent) {
         when (event) {
             WelcomeUiEvent.OnContinueClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.SignUp.route) }
+                _uiState.update { it.copy(navigateToRoute = Screen.Onboarding.route) }
             }
             WelcomeUiEvent.OnLoginClicked -> {
                 _uiState.update { it.copy(navigateToRoute = Screen.Login.route) }
             }
             is WelcomeUiEvent.OnFeatureItemClicked -> {
-                // Action for inspecting feature highlight
+                _uiState.update { it.copy(navigateToRoute = Screen.Onboarding.route) }
             }
             WelcomeUiEvent.OnNavigationHandled -> {
                 _uiState.update { it.copy(navigateToRoute = null) }

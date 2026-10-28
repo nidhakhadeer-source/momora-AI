@@ -27,6 +27,7 @@ import com.example.SIMATS.ui.learn.LearnLibraryScreen
 import com.example.SIMATS.ui.login.LoginScreen
 import com.example.SIMATS.ui.medication.MedicationRemindersScreen
 import com.example.SIMATS.ui.nutrition.NutritionPlanScreen
+import com.example.SIMATS.ui.onboarding.OnboardingScreen
 import com.example.SIMATS.ui.privacyconsent.PrivacyConsentScreen
 import com.example.SIMATS.ui.profile.ProfileSetupScreen
 import com.example.SIMATS.ui.resetpassword.ResetPasswordScreen
@@ -61,10 +62,25 @@ fun AppNavHost() {
             WelcomeScreen(
                 onNavigateTo = { route ->
                     when (route) {
+                        Screen.Onboarding.route -> currentScreen = Screen.Onboarding
                         Screen.SignUp.route -> currentScreen = Screen.SignUp
                         Screen.Login.route -> currentScreen = Screen.Login
                         Screen.Home.route -> currentScreen = Screen.Home
                     }
+                }
+            )
+        }
+        Screen.Onboarding -> {
+            OnboardingScreen(
+                onNavigateTo = { route ->
+                    when (route) {
+                        Screen.SignUp.route -> currentScreen = Screen.SignUp
+                        Screen.Login.route -> currentScreen = Screen.Login
+                        Screen.Home.route -> currentScreen = Screen.Home
+                    }
+                },
+                onNavigateBack = {
+                    currentScreen = Screen.Welcome
                 }
             )
         }
@@ -78,7 +94,7 @@ fun AppNavHost() {
                     }
                 },
                 onNavigateBack = {
-                    currentScreen = Screen.Welcome
+                    currentScreen = Screen.Onboarding
                 }
             )
         }
