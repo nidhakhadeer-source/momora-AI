@@ -14,11 +14,25 @@ class LoginViewModel : ViewModel() {
 
     fun onEvent(event: LoginUiEvent) {
         when (event) {
-            is LoginUiEvent.OnEmailChanged -> {
-                _uiState.update { it.copy(email = event.email) }
+            is LoginUiEvent.OnRoleSelected -> {
+                _uiState.update { state ->
+                    val (bannerTitle, bannerSubtitle) = when (event.role) {
+                        "Doctor" -> "Doctor login" to "Access your maternity care dashboard."
+                        "Admin" -> "Admin login" to "Manage system access and clinic configurations."
+                        else -> "Patient login" to "Continue your personalized pregnancy journey."
+                    }
+                    state.copy(
+                        selectedRole = event.role,
+                        roleBannerTitle = bannerTitle,
+                        roleBannerSubtitle = bannerSubtitle
+                    )
+                }
             }
-            is LoginUiEvent.OnPasswordChanged -> {
-                _uiState.update { it.copy(password = event.password) }
+            is LoginUiEvent.OnEmailInputChanged -> {
+                _uiState.update { it.copy(emailInput = event.email) }
+            }
+            is LoginUiEvent.OnPasswordInputChanged -> {
+                _uiState.update { it.copy(passwordInput = event.password) }
             }
             LoginUiEvent.OnTogglePasswordVisibility -> {
                 _uiState.update { it.copy(isPasswordVisible = !it.isPasswordVisible) }
@@ -27,9 +41,6 @@ class LoginViewModel : ViewModel() {
                 _uiState.update { it.copy(navigateToRoute = Screen.ResetPassword.route) }
             }
             LoginUiEvent.OnLoginClicked -> {
-                _uiState.update { it.copy(navigateToRoute = Screen.PrivacyConsent.route) }
-            }
-            LoginUiEvent.OnContinueWithGoogleClicked -> {
                 _uiState.update { it.copy(navigateToRoute = Screen.PrivacyConsent.route) }
             }
             LoginUiEvent.OnCreateAccountClicked -> {
