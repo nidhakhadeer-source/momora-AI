@@ -6,6 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.SIMATS.ui.login.LoginScreen
+import com.example.SIMATS.ui.login.LoginViewModel
 import com.example.SIMATS.ui.onboarding.OnboardingScreen
 import com.example.SIMATS.ui.onboarding.OnboardingViewModel
 import com.example.SIMATS.ui.splash.SplashScreen
@@ -31,17 +33,30 @@ fun AppNavHost() {
                 viewModel = onboardingViewModel,
                 onNavigateToLogin = {
                     currentScreen = Screen.Login
+                },
+                onGetStartedComplete = {
+                    currentScreen = Screen.Login
+                }
+            )
+        }
+        Screen.Login -> {
+            val loginViewModel: LoginViewModel = viewModel()
+            LoginScreen(
+                viewModel = loginViewModel,
+                onNavigateBack = {
+                    currentScreen = Screen.Onboarding
+                },
+                onLoginSuccess = {
+                    currentScreen = Screen.Home
+                },
+                onCreateAccountClick = {
+                    // Navigate to register/sign up
                 }
             )
         }
         else -> {
-            val onboardingViewModel: OnboardingViewModel = viewModel()
-            OnboardingScreen(
-                viewModel = onboardingViewModel,
-                onNavigateToLogin = {
-                    currentScreen = Screen.Login
-                }
-            )
+            val loginViewModel: LoginViewModel = viewModel()
+            LoginScreen(viewModel = loginViewModel)
         }
     }
 }
