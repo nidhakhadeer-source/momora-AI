@@ -6,6 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.SIMATS.ui.ai.AiChatScreen
+import com.example.SIMATS.ui.ai.AiChatViewModel
 import com.example.SIMATS.ui.babydevelopment.BabyDevelopmentScreen
 import com.example.SIMATS.ui.babydevelopment.BabyDevelopmentViewModel
 import com.example.SIMATS.ui.bloodpressure.BloodPressureScreen
@@ -102,7 +104,8 @@ fun AppNavHost() {
                     when (index) {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.BabyDevelopment
-                        2 -> currentScreen = Screen.HealthReport
+                        2 -> currentScreen = Screen.AiChat
+                        3 -> currentScreen = Screen.HealthReport
                     }
                 }
             )
@@ -118,6 +121,7 @@ fun AppNavHost() {
                     when (index) {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.BabyDevelopment
+                        2 -> currentScreen = Screen.AiChat
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -134,6 +138,7 @@ fun AppNavHost() {
                     when (index) {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.BabyDevelopment
+                        2 -> currentScreen = Screen.AiChat
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -150,6 +155,7 @@ fun AppNavHost() {
                     when (index) {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.BabyDevelopment
+                        2 -> currentScreen = Screen.AiChat
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -166,6 +172,7 @@ fun AppNavHost() {
                     when (index) {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.BabyDevelopment
+                        2 -> currentScreen = Screen.AiChat
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -181,6 +188,23 @@ fun AppNavHost() {
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
+                        2 -> currentScreen = Screen.AiChat
+                        4 -> currentScreen = Screen.Profile
+                    }
+                }
+            )
+        }
+        Screen.AiChat -> {
+            val aiViewModel: AiChatViewModel = viewModel()
+            AiChatScreen(
+                viewModel = aiViewModel,
+                onNavigateBack = {
+                    currentScreen = Screen.BabyDevelopment
+                },
+                onNavTabSelected = { index ->
+                    when (index) {
+                        0 -> currentScreen = Screen.Home
+                        1 -> currentScreen = Screen.BabyDevelopment
                         4 -> currentScreen = Screen.Profile
                     }
                 }
