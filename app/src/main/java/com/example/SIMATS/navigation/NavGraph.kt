@@ -22,6 +22,8 @@ import com.example.SIMATS.ui.home.HomeScreen
 import com.example.SIMATS.ui.home.HomeViewModel
 import com.example.SIMATS.ui.login.LoginScreen
 import com.example.SIMATS.ui.login.LoginViewModel
+import com.example.SIMATS.ui.medicalreports.MedicalReportsScreen
+import com.example.SIMATS.ui.medicalreports.MedicalReportsViewModel
 import com.example.SIMATS.ui.medication.MedicationRemindersScreen
 import com.example.SIMATS.ui.medication.MedicationRemindersViewModel
 import com.example.SIMATS.ui.nutrition.NutritionPlanScreen
@@ -113,7 +115,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.AppointmentsCalendar
+                        3 -> currentScreen = Screen.MedicalReports
                     }
                 }
             )
@@ -130,7 +132,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.AppointmentsCalendar
+                        3 -> currentScreen = Screen.MedicalReports
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -148,7 +150,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.AppointmentsCalendar
+                        3 -> currentScreen = Screen.MedicalReports
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -166,7 +168,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.AppointmentsCalendar
+                        3 -> currentScreen = Screen.MedicalReports
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -184,7 +186,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.AppointmentsCalendar
+                        3 -> currentScreen = Screen.MedicalReports
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -201,7 +203,7 @@ fun AppNavHost() {
                     when (index) {
                         0 -> currentScreen = Screen.Home
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.AppointmentsCalendar
+                        3 -> currentScreen = Screen.MedicalReports
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -218,7 +220,7 @@ fun AppNavHost() {
                     when (index) {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
-                        3 -> currentScreen = Screen.AppointmentsCalendar
+                        3 -> currentScreen = Screen.MedicalReports
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -236,7 +238,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.BabyDevelopment
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.AppointmentsCalendar
+                        3 -> currentScreen = Screen.MedicalReports
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -254,7 +256,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.BabyDevelopment
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.AppointmentsCalendar
+                        3 -> currentScreen = Screen.MedicalReports
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -272,7 +274,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.BabyDevelopment
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.AppointmentsCalendar
+                        3 -> currentScreen = Screen.MedicalReports
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -284,6 +286,24 @@ fun AppNavHost() {
                 viewModel = calendarViewModel,
                 onNavigateBack = {
                     currentScreen = Screen.Medication
+                },
+                onNavTabSelected = { index ->
+                    when (index) {
+                        0 -> currentScreen = Screen.Home
+                        1 -> currentScreen = Screen.BabyDevelopment
+                        2 -> currentScreen = Screen.AiChat
+                        3 -> currentScreen = Screen.MedicalReports
+                        4 -> currentScreen = Screen.Profile
+                    }
+                }
+            )
+        }
+        Screen.MedicalReports -> {
+            val reportsViewModel: MedicalReportsViewModel = viewModel()
+            MedicalReportsScreen(
+                viewModel = reportsViewModel,
+                onNavigateBack = {
+                    currentScreen = Screen.AppointmentsCalendar
                 },
                 onNavTabSelected = { index ->
                     when (index) {
