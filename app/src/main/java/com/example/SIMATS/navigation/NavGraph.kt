@@ -22,6 +22,8 @@ import com.example.SIMATS.ui.signup.SignUpScreen
 import com.example.SIMATS.ui.signup.SignUpViewModel
 import com.example.SIMATS.ui.splash.SplashScreen
 import com.example.SIMATS.ui.splash.SplashViewModel
+import com.example.SIMATS.ui.weight.WeightTrackerScreen
+import com.example.SIMATS.ui.weight.WeightTrackerViewModel
 
 @Composable
 fun AppNavHost() {
@@ -95,8 +97,8 @@ fun AppNavHost() {
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.HealthReport
-                        2 -> currentScreen = Screen.DueDate
+                        1 -> currentScreen = Screen.WeightTracker
+                        2 -> currentScreen = Screen.HealthReport
                     }
                 }
             )
@@ -111,7 +113,7 @@ fun AppNavHost() {
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.HealthReport
+                        1 -> currentScreen = Screen.WeightTracker
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -127,7 +129,22 @@ fun AppNavHost() {
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        3 -> currentScreen = Screen.DueDate
+                        1 -> currentScreen = Screen.WeightTracker
+                        4 -> currentScreen = Screen.Profile
+                    }
+                }
+            )
+        }
+        Screen.WeightTracker -> {
+            val weightViewModel: WeightTrackerViewModel = viewModel()
+            WeightTrackerScreen(
+                viewModel = weightViewModel,
+                onNavigateBack = {
+                    currentScreen = Screen.HealthReport
+                },
+                onNavTabSelected = { index ->
+                    when (index) {
+                        0 -> currentScreen = Screen.Home
                         4 -> currentScreen = Screen.Profile
                     }
                 }
