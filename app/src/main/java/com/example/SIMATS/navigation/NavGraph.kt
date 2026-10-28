@@ -20,6 +20,8 @@ import com.example.SIMATS.ui.home.HomeScreen
 import com.example.SIMATS.ui.home.HomeViewModel
 import com.example.SIMATS.ui.login.LoginScreen
 import com.example.SIMATS.ui.login.LoginViewModel
+import com.example.SIMATS.ui.nutrition.NutritionPlanScreen
+import com.example.SIMATS.ui.nutrition.NutritionPlanViewModel
 import com.example.SIMATS.ui.onboarding.OnboardingScreen
 import com.example.SIMATS.ui.onboarding.OnboardingViewModel
 import com.example.SIMATS.ui.profile.ProfileSetupScreen
@@ -107,7 +109,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.HealthReport
+                        3 -> currentScreen = Screen.Nutrition
                     }
                 }
             )
@@ -124,6 +126,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
+                        3 -> currentScreen = Screen.Nutrition
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -141,6 +144,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
+                        3 -> currentScreen = Screen.Nutrition
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -158,6 +162,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
+                        3 -> currentScreen = Screen.Nutrition
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -175,6 +180,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
+                        3 -> currentScreen = Screen.Nutrition
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -191,6 +197,7 @@ fun AppNavHost() {
                     when (index) {
                         0 -> currentScreen = Screen.Home
                         2 -> currentScreen = Screen.AiChat
+                        3 -> currentScreen = Screen.Nutrition
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -207,6 +214,7 @@ fun AppNavHost() {
                     when (index) {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
+                        3 -> currentScreen = Screen.Nutrition
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -218,6 +226,24 @@ fun AppNavHost() {
                 viewModel = symptomViewModel,
                 onNavigateBack = {
                     currentScreen = Screen.AiChat
+                },
+                onNavTabSelected = { index ->
+                    when (index) {
+                        0 -> currentScreen = Screen.Home
+                        1 -> currentScreen = Screen.BabyDevelopment
+                        2 -> currentScreen = Screen.AiChat
+                        3 -> currentScreen = Screen.Nutrition
+                        4 -> currentScreen = Screen.Profile
+                    }
+                }
+            )
+        }
+        Screen.Nutrition -> {
+            val nutritionViewModel: NutritionPlanViewModel = viewModel()
+            NutritionPlanScreen(
+                viewModel = nutritionViewModel,
+                onNavigateBack = {
+                    currentScreen = Screen.Symptom
                 },
                 onNavTabSelected = { index ->
                     when (index) {
