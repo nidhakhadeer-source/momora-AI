@@ -28,6 +28,8 @@ import com.example.SIMATS.ui.signup.SignUpScreen
 import com.example.SIMATS.ui.signup.SignUpViewModel
 import com.example.SIMATS.ui.splash.SplashScreen
 import com.example.SIMATS.ui.splash.SplashViewModel
+import com.example.SIMATS.ui.symptom.SymptomLoggerScreen
+import com.example.SIMATS.ui.symptom.SymptomLoggerViewModel
 import com.example.SIMATS.ui.weight.WeightTrackerScreen
 import com.example.SIMATS.ui.weight.WeightTrackerViewModel
 
@@ -103,7 +105,7 @@ fun AppNavHost() {
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.BabyDevelopment
+                        1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
                         3 -> currentScreen = Screen.HealthReport
                     }
@@ -120,7 +122,7 @@ fun AppNavHost() {
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.BabyDevelopment
+                        1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
                         4 -> currentScreen = Screen.Profile
                     }
@@ -137,7 +139,7 @@ fun AppNavHost() {
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.BabyDevelopment
+                        1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
                         4 -> currentScreen = Screen.Profile
                     }
@@ -154,7 +156,7 @@ fun AppNavHost() {
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.BabyDevelopment
+                        1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
                         4 -> currentScreen = Screen.Profile
                     }
@@ -171,7 +173,7 @@ fun AppNavHost() {
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.BabyDevelopment
+                        1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
                         4 -> currentScreen = Screen.Profile
                     }
@@ -204,7 +206,24 @@ fun AppNavHost() {
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
+                        1 -> currentScreen = Screen.Symptom
+                        4 -> currentScreen = Screen.Profile
+                    }
+                }
+            )
+        }
+        Screen.Symptom -> {
+            val symptomViewModel: SymptomLoggerViewModel = viewModel()
+            SymptomLoggerScreen(
+                viewModel = symptomViewModel,
+                onNavigateBack = {
+                    currentScreen = Screen.AiChat
+                },
+                onNavTabSelected = { index ->
+                    when (index) {
+                        0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.BabyDevelopment
+                        2 -> currentScreen = Screen.AiChat
                         4 -> currentScreen = Screen.Profile
                     }
                 }
