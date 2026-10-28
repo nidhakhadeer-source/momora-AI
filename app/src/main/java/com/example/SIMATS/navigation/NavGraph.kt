@@ -6,6 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.SIMATS.ui.home.HomeScreen
+import com.example.SIMATS.ui.home.HomeViewModel
 import com.example.SIMATS.ui.login.LoginScreen
 import com.example.SIMATS.ui.login.LoginViewModel
 import com.example.SIMATS.ui.onboarding.OnboardingScreen
@@ -71,9 +73,9 @@ fun AppNavHost() {
                 }
             )
         }
-        else -> {
-            val loginViewModel: LoginViewModel = viewModel()
-            LoginScreen(viewModel = loginViewModel)
+        Screen.Home -> {
+            val homeViewModel: HomeViewModel = viewModel()
+            HomeScreen(viewModel = homeViewModel)
         }
     }
 }
