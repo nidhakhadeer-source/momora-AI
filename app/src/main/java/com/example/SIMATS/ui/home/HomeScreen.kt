@@ -55,22 +55,58 @@ import com.example.SIMATS.ui.theme.MomoraScreenBackground
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onPregnancyDetailsClick: () -> Unit = {},
+    onBloodPressureClick: () -> Unit = {},
+    onWeightClick: () -> Unit = {},
+    onAskAiClick: () -> Unit = {},
+    onBabyGrowthClick: () -> Unit = {},
+    onNutritionClick: () -> Unit = {},
+    onNotificationClick: () -> Unit = {},
+    onViewAllDailyCareClick: () -> Unit = {},
+    onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     HomeScreenContent(
         modifier = modifier,
         uiState = uiState,
-        onNavTabSelected = { index -> viewModel.onEvent(HomeUiEvent.OnNavTabSelected(index)) },
-        onNotificationClick = { viewModel.onEvent(HomeUiEvent.OnNotificationClicked) },
-        onPregnancyDetailsClick = { viewModel.onEvent(HomeUiEvent.OnPregnancyDetailsClicked) },
-        onBloodPressureClick = { viewModel.onEvent(HomeUiEvent.OnBloodPressureCardClicked) },
-        onWeightClick = { viewModel.onEvent(HomeUiEvent.OnWeightCardClicked) },
-        onAskAiClick = { viewModel.onEvent(HomeUiEvent.OnAskAiClicked) },
-        onBabyGrowthClick = { viewModel.onEvent(HomeUiEvent.OnBabyGrowthClicked) },
-        onNutritionClick = { viewModel.onEvent(HomeUiEvent.OnNutritionClicked) },
-        onViewAllDailyCareClick = { viewModel.onEvent(HomeUiEvent.OnViewAllDailyCareClicked) }
+        onNavTabSelected = { index ->
+            viewModel.onEvent(HomeUiEvent.OnNavTabSelected(index))
+            onNavTabSelected(index)
+        },
+        onNotificationClick = {
+            viewModel.onEvent(HomeUiEvent.OnNotificationClicked)
+            onNotificationClick()
+        },
+        onPregnancyDetailsClick = {
+            viewModel.onEvent(HomeUiEvent.OnPregnancyDetailsClicked)
+            onPregnancyDetailsClick()
+        },
+        onBloodPressureClick = {
+            viewModel.onEvent(HomeUiEvent.OnBloodPressureCardClicked)
+            onBloodPressureClick()
+        },
+        onWeightClick = {
+            viewModel.onEvent(HomeUiEvent.OnWeightCardClicked)
+            onWeightClick()
+        },
+        onAskAiClick = {
+            viewModel.onEvent(HomeUiEvent.OnAskAiClicked)
+            onAskAiClick()
+        },
+        onBabyGrowthClick = {
+            viewModel.onEvent(HomeUiEvent.OnBabyGrowthClicked)
+            onBabyGrowthClick()
+        },
+        onNutritionClick = {
+            viewModel.onEvent(HomeUiEvent.OnNutritionClicked)
+            onNutritionClick()
+        },
+        onViewAllDailyCareClick = {
+            viewModel.onEvent(HomeUiEvent.OnViewAllDailyCareClicked)
+            onViewAllDailyCareClick()
+        }
     )
 }
 

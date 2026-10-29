@@ -63,13 +63,13 @@ fun LoginScreen(
     viewModel: LoginViewModel,
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit = {},
-    onLoginSuccess: () -> Unit = {},
+    onLoginSuccess: (UserRole) -> Unit = {},
     onCreateAccountClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     if (uiState.isLoginSuccess) {
-        onLoginSuccess()
+        onLoginSuccess(uiState.selectedRole)
     }
 
     LoginScreenContent(

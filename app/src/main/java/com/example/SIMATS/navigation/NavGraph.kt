@@ -6,6 +6,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.SIMATS.data.model.UserRole
 import com.example.SIMATS.ui.adddoctor.AddDoctorScreen
 import com.example.SIMATS.ui.adddoctor.AddDoctorViewModel
 import com.example.SIMATS.ui.admindashboard.AdminDashboardScreen
@@ -42,6 +43,7 @@ import com.example.SIMATS.ui.medicalreports.MedicalReportsScreen
 import com.example.SIMATS.ui.medicalreports.MedicalReportsViewModel
 import com.example.SIMATS.ui.medication.MedicationRemindersScreen
 import com.example.SIMATS.ui.medication.MedicationRemindersViewModel
+import com.example.SIMATS.ui.menu.ScreenMenuScreen
 import com.example.SIMATS.ui.notifications.NotificationsScreen
 import com.example.SIMATS.ui.notifications.NotificationsViewModel
 import com.example.SIMATS.ui.nutrition.NutritionPlanScreen
@@ -70,6 +72,13 @@ fun AppNavHost() {
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Splash) }
 
     when (currentScreen) {
+        Screen.NavMenu -> {
+            ScreenMenuScreen(
+                onNavigateToScreen = { screen ->
+                    currentScreen = screen
+                }
+            )
+        }
         Screen.Splash -> {
             val splashViewModel: SplashViewModel = viewModel()
             SplashScreen(
@@ -98,8 +107,12 @@ fun AppNavHost() {
                 onNavigateBack = {
                     currentScreen = Screen.Onboarding
                 },
-                onLoginSuccess = {
-                    currentScreen = Screen.Home
+                onLoginSuccess = { role ->
+                    when (role) {
+                        UserRole.PATIENT -> currentScreen = Screen.Home
+                        UserRole.DOCTOR -> currentScreen = Screen.DoctorDashboard
+                        UserRole.ADMIN -> currentScreen = Screen.AdminDashboard
+                    }
                 },
                 onCreateAccountClick = {
                     currentScreen = Screen.SignUp
@@ -124,7 +137,24 @@ fun AppNavHost() {
         Screen.Home -> {
             val homeViewModel: HomeViewModel = viewModel()
             HomeScreen(
-                viewModel = homeViewModel
+                viewModel = homeViewModel,
+                onPregnancyDetailsClick = { currentScreen = Screen.DueDate },
+                onBloodPressureClick = { currentScreen = Screen.BloodPressure },
+                onWeightClick = { currentScreen = Screen.WeightTracker },
+                onAskAiClick = { currentScreen = Screen.AiChat },
+                onBabyGrowthClick = { currentScreen = Screen.BabyDevelopment },
+                onNutritionClick = { currentScreen = Screen.Nutrition },
+                onNotificationClick = { currentScreen = Screen.Notifications },
+                onViewAllDailyCareClick = { currentScreen = Screen.Medication },
+                onNavTabSelected = { index ->
+                    when (index) {
+                        0 -> currentScreen = Screen.Home
+                        1 -> currentScreen = Screen.Symptom
+                        2 -> currentScreen = Screen.AiChat
+                        3 -> currentScreen = Screen.AppointmentsCalendar
+                        4 -> currentScreen = Screen.Profile
+                    }
+                }
             )
         }
         Screen.Profile -> {
@@ -139,7 +169,8 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.DoctorDashboard
+                        3 -> currentScreen = Screen.AppointmentsCalendar
+                        4 -> currentScreen = Screen.Profile
                     }
                 }
             )
@@ -156,7 +187,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.DoctorDashboard
+                        3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -174,7 +205,7 @@ fun AppNavHost() {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.DoctorDashboard
+                        3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -185,14 +216,14 @@ fun AppNavHost() {
             WeightTrackerScreen(
                 viewModel = weightViewModel,
                 onNavigateBack = {
-                    currentScreen = Screen.BloodPressure
+                    currentScreen = Screen.Home
                 },
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.DoctorDashboard
+                        3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -203,14 +234,14 @@ fun AppNavHost() {
             BloodPressureScreen(
                 viewModel = bpViewModel,
                 onNavigateBack = {
-                    currentScreen = Screen.WeightTracker
+                    currentScreen = Screen.Home
                 },
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.DoctorDashboard
+                        3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -221,13 +252,14 @@ fun AppNavHost() {
             BabyDevelopmentScreen(
                 viewModel = babyViewModel,
                 onNavigateBack = {
-                    currentScreen = Screen.BloodPressure
+                    currentScreen = Screen.Home
                 },
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
+                        1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.DoctorDashboard
+                        3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -238,13 +270,14 @@ fun AppNavHost() {
             AiChatScreen(
                 viewModel = aiViewModel,
                 onNavigateBack = {
-                    currentScreen = Screen.BabyDevelopment
+                    currentScreen = Screen.Home
                 },
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
-                        3 -> currentScreen = Screen.DoctorDashboard
+                        2 -> currentScreen = Screen.AiChat
+                        3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -255,14 +288,14 @@ fun AppNavHost() {
             SymptomLoggerScreen(
                 viewModel = symptomViewModel,
                 onNavigateBack = {
-                    currentScreen = Screen.AiChat
+                    currentScreen = Screen.Home
                 },
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.BabyDevelopment
+                        1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.DoctorDashboard
+                        3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -273,14 +306,14 @@ fun AppNavHost() {
             NutritionPlanScreen(
                 viewModel = nutritionViewModel,
                 onNavigateBack = {
-                    currentScreen = Screen.Symptom
+                    currentScreen = Screen.Home
                 },
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.BabyDevelopment
+                        1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.DoctorDashboard
+                        3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -291,14 +324,14 @@ fun AppNavHost() {
             MedicationRemindersScreen(
                 viewModel = medicationViewModel,
                 onNavigateBack = {
-                    currentScreen = Screen.Nutrition
+                    currentScreen = Screen.Home
                 },
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.BabyDevelopment
+                        1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.DoctorDashboard
+                        3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -309,14 +342,14 @@ fun AppNavHost() {
             AppointmentsCalendarScreen(
                 viewModel = calendarViewModel,
                 onNavigateBack = {
-                    currentScreen = Screen.Medication
+                    currentScreen = Screen.Home
                 },
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.BabyDevelopment
+                        1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.DoctorDashboard
+                        3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -327,14 +360,14 @@ fun AppNavHost() {
             MedicalReportsScreen(
                 viewModel = reportsViewModel,
                 onNavigateBack = {
-                    currentScreen = Screen.AppointmentsCalendar
+                    currentScreen = Screen.Home
                 },
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.BabyDevelopment
+                        1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.DoctorDashboard
+                        3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -345,14 +378,14 @@ fun AppNavHost() {
             NotificationsScreen(
                 viewModel = notificationsViewModel,
                 onNavigateBack = {
-                    currentScreen = Screen.MedicalReports
+                    currentScreen = Screen.Home
                 },
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.BabyDevelopment
+                        1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.DoctorDashboard
+                        3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile
                     }
                 }
