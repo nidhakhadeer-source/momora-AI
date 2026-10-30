@@ -12,6 +12,7 @@ object RetrofitClient {
     // Single unified Base URL for all network calls
     const val BASE_URL = "https://rental-starry-charm.ngrok-free.dev/momora-AI/"
 
+
     private val authInterceptor = Interceptor { chain ->
         val original = chain.request()
         val builder = original.newBuilder()
