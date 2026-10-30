@@ -1,5 +1,6 @@
 package com.example.SIMATS.data.repository
 
+import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.UserAuthState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -11,7 +12,11 @@ interface SplashRepository {
 
 class SplashRepositoryImpl : SplashRepository {
     override fun checkAuthState(): Flow<UserAuthState> = flow {
-        delay(2000)
-        emit(UserAuthState.Unauthenticated)
+        delay(1500)
+        if (SessionManager.isLoggedIn()) {
+            emit(UserAuthState.Authenticated)
+        } else {
+            emit(UserAuthState.Unauthenticated)
+        }
     }
 }

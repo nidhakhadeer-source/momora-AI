@@ -1,8 +1,9 @@
 package com.example.SIMATS.data.repository
 
+import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.MedicalReportItem
 import com.example.SIMATS.data.model.ReportCategory
-import kotlinx.coroutines.delay
+import com.example.SIMATS.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -12,7 +13,17 @@ interface MedicalReportsRepository {
 }
 
 class MedicalReportsRepositoryImpl : MedicalReportsRepository {
+    private val apiService = RetrofitClient.apiService
+
     override fun getReports(): Flow<List<MedicalReportItem>> = flow {
+        try {
+            val response = apiService.getReports(SessionManager.getUserId())
+            if (response.success && response.data != null) {
+                emit(response.data)
+                return@flow
+            }
+        } catch (_: Exception) {}
+
         emit(
             listOf(
                 MedicalReportItem(
@@ -41,7 +52,15 @@ class MedicalReportsRepositoryImpl : MedicalReportsRepository {
     }
 
     override fun uploadReport(fileName: String): Flow<Result<Boolean>> = flow {
-        delay(1000)
-        emit(Result.success(true))
+        try {
+            val response = apiService.uploadReport(fileName)
+            if (response.success) {
+                emit(Result.success(true))
+            } else {
+                emit(Result.failure(Exception(response.message ?: "Failed to upload report")))
+            }
+        } catch (e: Exception) {
+            emit(Result.failure(Exception(e.localizedMessage ?: "Network error uploading report")))
+        }
     }
 }

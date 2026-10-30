@@ -1,7 +1,8 @@
 package com.example.SIMATS.data.repository
 
+import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.BloodPressureData
-import kotlinx.coroutines.delay
+import com.example.SIMATS.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -11,11 +12,21 @@ interface BloodPressureRepository {
 }
 
 class BloodPressureRepositoryImpl : BloodPressureRepository {
+    private val apiService = RetrofitClient.apiService
+
     override fun getBloodPressureData(): Flow<BloodPressureData> = flow {
+        try {
+            val response = apiService.getBloodPressureData(SessionManager.getUserId())
+            if (response.success && response.data != null) {
+                emit(response.data)
+                return@flow
+            }
+        } catch (_: Exception) {}
+
         emit(
             BloodPressureData(
                 currentReadingText = "112 / 72 mmHg",
-                timestampText = "27 Oct 2026 · 08:15 · Pulse 78 bpm",
+                timestampText = "29 Oct 2026 · 08:15 · Pulse 78 bpm",
                 yAxisLabels = listOf("120", "100", "80", "60"),
                 xAxisLabels = listOf("21 Oct", "23 Oct", "25 Oct", "27 Oct"),
                 systolicPointsNormalized = listOf(
@@ -35,7 +46,15 @@ class BloodPressureRepositoryImpl : BloodPressureRepository {
     }
 
     override fun saveBloodPressureReading(systolic: String, diastolic: String): Flow<Result<Boolean>> = flow {
-        delay(800)
-        emit(Result.success(true))
+        try {
+            val response = apiService.saveBloodPressure(systolic, diastolic)
+            if (response.success) {
+                emit(Result.success(true))
+            } else {
+                emit(Result.failure(Exception(response.message ?: "Failed to log blood pressure")))
+            }
+        } catch (e: Exception) {
+            emit(Result.failure(Exception(e.localizedMessage ?: "Network error while logging blood pressure")))
+        }
     }
 }

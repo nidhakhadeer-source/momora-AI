@@ -1,7 +1,8 @@
 package com.example.SIMATS.data.repository
 
+import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.WeightTrackerData
-import kotlinx.coroutines.delay
+import com.example.SIMATS.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -11,11 +12,21 @@ interface WeightRepository {
 }
 
 class WeightRepositoryImpl : WeightRepository {
+    private val apiService = RetrofitClient.apiService
+
     override fun getWeightTrackerData(): Flow<WeightTrackerData> = flow {
+        try {
+            val response = apiService.getWeightData(SessionManager.getUserId())
+            if (response.success && response.data != null) {
+                emit(response.data)
+                return@flow
+            }
+        } catch (_: Exception) {}
+
         emit(
             WeightTrackerData(
                 currentWeightKg = "64.2",
-                baselineDeltaText = "+5.2 kg from 59.0 kg baseline · 27 Oct 2026, 08:10",
+                baselineDeltaText = "+5.2 kg from 59.0 kg baseline · 29 Oct 2026, 08:10",
                 timeRangeTabs = listOf("4 weeks", "Pregnancy"),
                 yAxisLabels = listOf("65", "63", "61", "59"),
                 xAxisLabels = listOf("W16", "W18", "W20", "W22", "W24"),
@@ -32,7 +43,15 @@ class WeightRepositoryImpl : WeightRepository {
     }
 
     override fun saveWeightReading(weight: String, date: String): Flow<Result<Boolean>> = flow {
-        delay(800)
-        emit(Result.success(true))
+        try {
+            val response = apiService.saveWeight(weight, date)
+            if (response.success) {
+                emit(Result.success(true))
+            } else {
+                emit(Result.failure(Exception(response.message ?: "Failed to log weight")))
+            }
+        } catch (e: Exception) {
+            emit(Result.failure(Exception(e.localizedMessage ?: "Network error while logging weight")))
+        }
     }
 }

@@ -1,8 +1,10 @@
 package com.example.SIMATS.data.repository
 
+import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.DoctorCompactAppointment
 import com.example.SIMATS.data.model.DoctorMainAppointment
 import com.example.SIMATS.data.model.DoctorScheduleData
+import com.example.SIMATS.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -11,10 +13,20 @@ interface DoctorScheduleRepository {
 }
 
 class DoctorScheduleRepositoryImpl : DoctorScheduleRepository {
+    private val apiService = RetrofitClient.apiService
+
     override fun getScheduleData(): Flow<DoctorScheduleData> = flow {
+        try {
+            val response = apiService.getDoctorSchedule(SessionManager.getUserId())
+            if (response.success && response.data != null) {
+                emit(response.data)
+                return@flow
+            }
+        } catch (_: Exception) {}
+
         emit(
             DoctorScheduleData(
-                doctorName = "Dr Amelia Chen",
+                doctorName = SessionManager.getUserName().ifBlank { "Dr Amelia Chen" },
                 dateText = "Thursday, 29 Oct 2026",
                 dateTabs = listOf("27 Oct", "28 Oct", "29 Oct"),
                 mainAppointment = DoctorMainAppointment(
@@ -43,7 +55,7 @@ class DoctorScheduleRepositoryImpl : DoctorScheduleRepository {
                         isVideo = true
                     )
                 ),
-                visitsSummaryNote = "Today, 27 Oct · 6 visits; 2 completed, 4 upcoming. Next: Nora Williams at 11:30."
+                visitsSummaryNote = "Today, 29 Oct · 6 visits; 2 completed, 4 upcoming. Next: Nora Williams at 11:30."
             )
         )
     }

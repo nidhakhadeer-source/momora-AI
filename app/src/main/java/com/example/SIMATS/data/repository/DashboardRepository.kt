@@ -1,7 +1,9 @@
 package com.example.SIMATS.data.repository
 
+import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.DailyCareItem
 import com.example.SIMATS.data.model.PatientDashboardData
+import com.example.SIMATS.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -10,11 +12,24 @@ interface DashboardRepository {
 }
 
 class DashboardRepositoryImpl : DashboardRepository {
+    private val apiService = RetrofitClient.apiService
+
     override fun getPatientDashboardData(): Flow<PatientDashboardData> = flow {
+        try {
+            val response = apiService.getPatientDashboard(SessionManager.getUserId())
+            if (response.success && response.data != null) {
+                emit(response.data)
+                return@flow
+            }
+        } catch (_: Exception) {
+            // Graceful fallback to initial values if network error
+        }
+
+        // Default initial dashboard state based on session
         emit(
             PatientDashboardData(
-                patientName = "Maya",
-                dateText = "Tuesday, 27 Oct 2026 · A little care, every day.",
+                patientName = SessionManager.getUserName().split(" ").firstOrNull() ?: "Maya",
+                dateText = "Thursday, 29 Oct 2026 · A little care, every day.",
                 trimesterText = "SECOND TRIMESTER",
                 gestationalAgeText = "24 weeks, 3 days",
                 dueDateText = "Due 13 Feb 2027 · Pregnancy details ➔",
@@ -33,7 +48,7 @@ class DashboardRepositoryImpl : DashboardRepository {
                     ),
                     DailyCareItem(
                         id = 2,
-                        title = "Dr Amelia Chen",
+                        title = SessionManager.getDoctorName(),
                         subtitle = "29 Oct 2026 · 10:30 · In-person",
                         isTaken = false,
                         isAppointment = true

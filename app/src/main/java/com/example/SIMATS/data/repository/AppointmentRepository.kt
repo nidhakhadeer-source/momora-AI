@@ -1,8 +1,9 @@
 package com.example.SIMATS.data.repository
 
+import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.AppointmentBookingData
 import com.example.SIMATS.data.model.CalendarDateItem
-import kotlinx.coroutines.delay
+import com.example.SIMATS.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -12,10 +13,20 @@ interface AppointmentRepository {
 }
 
 class AppointmentRepositoryImpl : AppointmentRepository {
+    private val apiService = RetrofitClient.apiService
+
     override fun getBookingData(): Flow<AppointmentBookingData> = flow {
+        try {
+            val response = apiService.getAppointmentBookingData(SessionManager.getUserId())
+            if (response.success && response.data != null) {
+                emit(response.data)
+                return@flow
+            }
+        } catch (_: Exception) {}
+
         emit(
             AppointmentBookingData(
-                doctorName = "Dr Amelia Chen",
+                doctorName = SessionManager.getDoctorName(),
                 doctorSpecialty = "Obstetrician · Willow Maternity Clinic",
                 monthTitle = "October 2026",
                 availableDates = listOf(
@@ -38,7 +49,21 @@ class AppointmentRepositoryImpl : AppointmentRepository {
         timeText: String,
         isInPerson: Boolean
     ): Flow<Result<Boolean>> = flow {
-        delay(800)
-        emit(Result.success(true))
+        try {
+            val fields = mapOf(
+                "doctorName" to doctorName,
+                "dateText" to dateText,
+                "timeText" to timeText,
+                "isInPerson" to if (isInPerson) "1" else "0"
+            )
+            val response = apiService.confirmAppointment(fields)
+            if (response.success) {
+                emit(Result.success(true))
+            } else {
+                emit(Result.failure(Exception(response.message ?: "Failed to confirm appointment")))
+            }
+        } catch (e: Exception) {
+            emit(Result.failure(Exception(e.localizedMessage ?: "Network error while booking appointment")))
+        }
     }
 }

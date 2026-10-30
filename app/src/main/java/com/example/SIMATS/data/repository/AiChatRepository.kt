@@ -1,8 +1,9 @@
 package com.example.SIMATS.data.repository
 
+import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.ChatMessage
 import com.example.SIMATS.data.model.MessageSender
-import kotlinx.coroutines.delay
+import com.example.SIMATS.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -12,7 +13,17 @@ interface AiChatRepository {
 }
 
 class AiChatRepositoryImpl : AiChatRepository {
+    private val apiService = RetrofitClient.apiService
+
     override fun getInitialChatMessages(): Flow<List<ChatMessage>> = flow {
+        try {
+            val response = apiService.getChatMessages(SessionManager.getUserId())
+            if (response.success && response.data != null) {
+                emit(response.data)
+                return@flow
+            }
+        } catch (_: Exception) {}
+
         emit(
             listOf(
                 ChatMessage(
@@ -38,7 +49,15 @@ class AiChatRepositoryImpl : AiChatRepository {
     }
 
     override fun sendMessage(userText: String): Flow<ChatMessage> = flow {
-        delay(1000)
+        try {
+            val response = apiService.sendChatMessage(userText)
+            if (response.success && response.data != null) {
+                emit(response.data)
+                return@flow
+            }
+        } catch (_: Exception) {}
+
+        // Fallback response with explicit educational disclaimer
         emit(
             ChatMessage(
                 id = System.currentTimeMillis().toString(),
@@ -47,7 +66,7 @@ class AiChatRepositoryImpl : AiChatRepository {
                 bulletPoints = listOf(
                     "Stay hydrated with small sips of water.",
                     "Rest comfortably and avoid strenuous activity.",
-                    "Always consult Dr Amelia Chen if you experience unusual symptoms."
+                    "Always consult ${SessionManager.getDoctorName()} if you experience unusual symptoms."
                 ),
                 footerNote = "Check with your maternity team for clinical advice.",
                 timestampText = "Momora AI · Just now"

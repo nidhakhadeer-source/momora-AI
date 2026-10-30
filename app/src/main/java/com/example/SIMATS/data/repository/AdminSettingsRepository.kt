@@ -1,7 +1,8 @@
 package com.example.SIMATS.data.repository
 
+import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.AdminSettingsData
-import kotlinx.coroutines.delay
+import com.example.SIMATS.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -11,11 +12,21 @@ interface AdminSettingsRepository {
 }
 
 class AdminSettingsRepositoryImpl : AdminSettingsRepository {
+    private val apiService = RetrofitClient.apiService
+
     override fun getAdminSettings(): Flow<AdminSettingsData> = flow {
+        try {
+            val response = apiService.getAdminSettings()
+            if (response.success && response.data != null) {
+                emit(response.data)
+                return@flow
+            }
+        } catch (_: Exception) {}
+
         emit(
             AdminSettingsData(
-                adminName = "Alex Morgan",
-                adminEmailText = "admin@willow.example · Administrator",
+                adminName = SessionManager.getUserName().ifBlank { "Alex Morgan" },
+                adminEmailText = "${SessionManager.getUserEmail().ifBlank { "admin@willow.example" }} · Administrator",
                 passwordLastUpdatedText = "Last updated 01 Oct 2026",
                 isMfaEnabled = true,
                 mfaStatusText = "Authenticator app connected",
@@ -27,7 +38,13 @@ class AdminSettingsRepositoryImpl : AdminSettingsRepository {
     }
 
     override fun logout(): Flow<Result<Boolean>> = flow {
-        delay(500)
-        emit(Result.success(true))
+        try {
+            apiService.adminLogout()
+            SessionManager.clearSession()
+            emit(Result.success(true))
+        } catch (_: Exception) {
+            SessionManager.clearSession()
+            emit(Result.success(true))
+        }
     }
 }

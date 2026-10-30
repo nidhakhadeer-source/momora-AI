@@ -1,8 +1,9 @@
 package com.example.SIMATS.data.repository
 
+import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.NotificationItem
 import com.example.SIMATS.data.model.NotificationType
-import kotlinx.coroutines.delay
+import com.example.SIMATS.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -12,13 +13,23 @@ interface NotificationRepository {
 }
 
 class NotificationRepositoryImpl : NotificationRepository {
+    private val apiService = RetrofitClient.apiService
+
     override fun getNotifications(): Flow<List<NotificationItem>> = flow {
+        try {
+            val response = apiService.getNotifications(SessionManager.getUserId())
+            if (response.success && response.data != null) {
+                emit(response.data)
+                return@flow
+            }
+        } catch (_: Exception) {}
+
         emit(
             listOf(
                 NotificationItem(
                     id = "1",
                     title = "Your appointment is confirmed",
-                    subtitle = "Dr Amelia Chen · 29 Oct 2026, 10:30",
+                    subtitle = "${SessionManager.getDoctorName()} · 29 Oct 2026, 10:30",
                     detailText = "09:10 · Willow Maternity Clinic · In person",
                     isNew = true,
                     isRead = false,
@@ -56,7 +67,15 @@ class NotificationRepositoryImpl : NotificationRepository {
     }
 
     override fun markAllAsRead(): Flow<Result<Boolean>> = flow {
-        delay(500)
-        emit(Result.success(true))
+        try {
+            val response = apiService.markAllNotificationsRead()
+            if (response.success) {
+                emit(Result.success(true))
+            } else {
+                emit(Result.failure(Exception(response.message ?: "Failed to mark notifications read")))
+            }
+        } catch (e: Exception) {
+            emit(Result.failure(Exception(e.localizedMessage ?: "Network error marking notifications read")))
+        }
     }
 }

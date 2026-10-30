@@ -1,8 +1,10 @@
 package com.example.SIMATS.data.repository
 
+import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.DoctorDashboardData
 import com.example.SIMATS.data.model.DoctorNextAppointment
 import com.example.SIMATS.data.model.DoctorReviewItem
+import com.example.SIMATS.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -11,12 +13,22 @@ interface DoctorRepository {
 }
 
 class DoctorRepositoryImpl : DoctorRepository {
+    private val apiService = RetrofitClient.apiService
+
     override fun getDoctorDashboardData(): Flow<DoctorDashboardData> = flow {
+        try {
+            val response = apiService.getDoctorDashboard(SessionManager.getUserId())
+            if (response.success && response.data != null) {
+                emit(response.data)
+                return@flow
+            }
+        } catch (_: Exception) {}
+
         emit(
             DoctorDashboardData(
-                doctorName = "Dr Chen",
+                doctorName = SessionManager.getUserName().ifBlank { "Dr Amelia Chen" },
                 clinicName = "Willow Maternity Clinic",
-                dateText = "Tuesday, 27 Oct 2026",
+                dateText = "Thursday, 29 Oct 2026",
                 assignedPatientsCount = 18,
                 visitsTodayCount = 6,
                 upcomingVisitsCount = 4,

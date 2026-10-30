@@ -2,6 +2,7 @@ package com.example.SIMATS.data.repository
 
 import com.example.SIMATS.data.model.PatientMedicalHistoryData
 import com.example.SIMATS.data.model.PatientMedicationItem
+import com.example.SIMATS.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -10,7 +11,17 @@ interface PatientHistoryRepository {
 }
 
 class PatientHistoryRepositoryImpl : PatientHistoryRepository {
+    private val apiService = RetrofitClient.apiService
+
     override fun getPatientHistory(patientId: String): Flow<PatientMedicalHistoryData> = flow {
+        try {
+            val response = apiService.getPatientHistory(patientId)
+            if (response.success && response.data != null) {
+                emit(response.data)
+                return@flow
+            }
+        } catch (_: Exception) {}
+
         emit(
             PatientMedicalHistoryData(
                 patientName = "Maya Patel",

@@ -1,8 +1,9 @@
 package com.example.SIMATS.data.repository
 
+import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.MedicationItem
 import com.example.SIMATS.data.model.MedicationReminderData
-import kotlinx.coroutines.delay
+import com.example.SIMATS.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -12,10 +13,20 @@ interface MedicationRepository {
 }
 
 class MedicationRepositoryImpl : MedicationRepository {
+    private val apiService = RetrofitClient.apiService
+
     override fun getMedicationReminders(): Flow<MedicationReminderData> = flow {
+        try {
+            val response = apiService.getMedicationReminders(SessionManager.getUserId())
+            if (response.success && response.data != null) {
+                emit(response.data)
+                return@flow
+            }
+        } catch (_: Exception) {}
+
         emit(
             MedicationReminderData(
-                dateText = "Tuesday, 27 Oct 2026",
+                dateText = "Thursday, 29 Oct 2026",
                 progressStatusText = "1 OF 2 TAKEN · EVENING REMINDER SET",
                 medications = listOf(
                     MedicationItem(
@@ -39,7 +50,15 @@ class MedicationRepositoryImpl : MedicationRepository {
     }
 
     override fun markAsTaken(medicationId: Int): Flow<Result<Boolean>> = flow {
-        delay(500)
-        emit(Result.success(true))
+        try {
+            val response = apiService.markMedicationTaken(medicationId)
+            if (response.success) {
+                emit(Result.success(true))
+            } else {
+                emit(Result.failure(Exception(response.message ?: "Failed to update medication")))
+            }
+        } catch (e: Exception) {
+            emit(Result.failure(Exception(e.localizedMessage ?: "Network error while updating medication")))
+        }
     }
 }

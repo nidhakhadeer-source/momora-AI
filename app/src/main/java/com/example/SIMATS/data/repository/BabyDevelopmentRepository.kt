@@ -3,6 +3,7 @@ package com.example.SIMATS.data.repository
 import com.example.SIMATS.data.model.BabyDevelopmentData
 import com.example.SIMATS.data.model.BabyDevelopmentHighlight
 import com.example.SIMATS.data.model.HighlightIconType
+import com.example.SIMATS.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -11,7 +12,17 @@ interface BabyDevelopmentRepository {
 }
 
 class BabyDevelopmentRepositoryImpl : BabyDevelopmentRepository {
+    private val apiService = RetrofitClient.apiService
+
     override fun getDevelopmentData(week: Int): Flow<BabyDevelopmentData> = flow {
+        try {
+            val response = apiService.getBabyDevelopment(week)
+            if (response.success && response.data != null) {
+                emit(response.data)
+                return@flow
+            }
+        } catch (_: Exception) {}
+
         emit(
             BabyDevelopmentData(
                 currentWeek = week,

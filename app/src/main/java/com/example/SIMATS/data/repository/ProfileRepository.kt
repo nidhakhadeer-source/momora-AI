@@ -1,7 +1,8 @@
 package com.example.SIMATS.data.repository
 
+import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.PatientProfileData
-import kotlinx.coroutines.delay
+import com.example.SIMATS.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
@@ -11,25 +12,52 @@ interface ProfileRepository {
 }
 
 class ProfileRepositoryImpl : ProfileRepository {
+    private val apiService = RetrofitClient.apiService
+
     override fun getPatientProfile(): Flow<PatientProfileData> = flow {
+        try {
+            val response = apiService.getProfile(SessionManager.getUserId())
+            if (response.success && response.data != null) {
+                emit(response.data)
+                return@flow
+            }
+        } catch (_: Exception) {}
+
+        // Fallback
         emit(
             PatientProfileData(
                 avatarInitials = "MP",
-                patientName = "Maya Patel",
-                patientId = "P-13042",
-                fullName = "Maya Patel",
-                email = "maya.patel@example.com",
+                patientName = SessionManager.getUserName(),
+                patientId = SessionManager.getPatientCode(),
+                fullName = SessionManager.getUserName(),
+                email = SessionManager.getUserEmail(),
                 dateOfBirth = "14 May 1997",
                 bloodGroup = "O positive",
                 isCareTeamSharingOn = true,
-                careTeamDoctorName = "Dr Amelia Chen",
+                careTeamDoctorName = SessionManager.getDoctorName(),
                 reminderSummary = "Medication and appointment alerts"
             )
         )
     }
 
     override fun savePatientProfile(profile: PatientProfileData): Flow<Result<Boolean>> = flow {
-        delay(800)
-        emit(Result.success(true))
+        try {
+            val fields = mapOf(
+                "user_id" to SessionManager.getUserId().toString(),
+                "fullName" to profile.fullName,
+                "email" to profile.email,
+                "dateOfBirth" to profile.dateOfBirth,
+                "bloodGroup" to profile.bloodGroup,
+                "isCareTeamSharingOn" to if (profile.isCareTeamSharingOn) "1" else "0"
+            )
+            val response = apiService.updateProfile(fields)
+            if (response.success) {
+                emit(Result.success(true))
+            } else {
+                emit(Result.failure(Exception(response.message ?: "Failed to save profile")))
+            }
+        } catch (e: Exception) {
+            emit(Result.failure(Exception(e.localizedMessage ?: "Network error while saving profile")))
+        }
     }
 }
