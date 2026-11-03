@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit
 object RetrofitClient {
 
     // Single unified Base URL for all network calls
-    const val BASE_URL = "https://rental-starry-charm.ngrok-free.dev/momora-AI/"
+    private const val BASE_URL = "https://rental-starry-charm.ngrok-free.dev/"
 
 
     private val authInterceptor = Interceptor { chain ->
