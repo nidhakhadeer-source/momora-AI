@@ -1,6 +1,12 @@
 *.iml
 .gradle
 /local.properties
+
+# Environment & Secrets
+.env
+.env.local
+backend/.env
+backend/.env.local
 /.idea/caches
 /.idea/libraries
 /.idea/modules.xml
@@ -13,3 +19,9 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Environment & Secrets
+.env
+.env.local
+backend/.env
+backend/.env.local
