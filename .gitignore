@@ -1,7 +1,7 @@
 *.iml
 .gradle
 /local.properties
-
+gradle/libs.versions.toml
 # Environment & Secrets
 .env
 .env.local
