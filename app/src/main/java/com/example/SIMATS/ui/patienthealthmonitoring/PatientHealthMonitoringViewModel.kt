@@ -17,8 +17,10 @@ class PatientHealthMonitoringViewModel(
     private val _uiState = MutableStateFlow(PatientHealthMonitoringUiState())
     val uiState: StateFlow<PatientHealthMonitoringUiState> = _uiState.asStateFlow()
 
+    private var currentPatientId: String = "1"
+
     init {
-        loadMonitoring("1")
+        loadMonitoring(currentPatientId)
     }
 
     fun onEvent(event: PatientHealthMonitoringUiEvent) {
@@ -27,15 +29,38 @@ class PatientHealthMonitoringViewModel(
                 _uiState.value = _uiState.value.copy(selectedNavIndex = event.index)
             }
             PatientHealthMonitoringUiEvent.OnWriteAdviceClicked -> {}
+            PatientHealthMonitoringUiEvent.OnRetryClicked -> {
+                loadMonitoring(currentPatientId)
+            }
             PatientHealthMonitoringUiEvent.OnBackClicked -> {}
             PatientHealthMonitoringUiEvent.OnNotificationClicked -> {}
         }
     }
 
+    fun setPatientId(id: String) {
+        currentPatientId = id
+        loadMonitoring(id)
+    }
+
     private fun loadMonitoring(id: String) {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getPatientHealthMonitoring(id).collect { data ->
-                _uiState.value = _uiState.value.copy(monitoringData = data)
+            repository.getPatientHealthMonitoring(id).collect { result ->
+                result.fold(
+                    onSuccess = { data ->
+                        _uiState.value = _uiState.value.copy(
+                            monitoringData = data,
+                            isLoading = false,
+                            errorMessage = null
+                        )
+                    },
+                    onFailure = { err ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = err.message ?: "Failed to load health monitoring data"
+                        )
+                    }
+                )
             }
         }
     }

@@ -1,4 +1,4 @@
-package com.example.SIMATS.ui.patientlist
+﻿package com.example.SIMATS.ui.patientlist
 
 import com.example.SIMATS.data.model.AssignedPatientItem
 

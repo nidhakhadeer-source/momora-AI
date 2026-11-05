@@ -1,4 +1,4 @@
-package com.example.SIMATS.ui.patienthistory
+﻿package com.example.SIMATS.ui.patienthistory
 
 import com.example.SIMATS.data.model.PatientMedicalHistoryData
 

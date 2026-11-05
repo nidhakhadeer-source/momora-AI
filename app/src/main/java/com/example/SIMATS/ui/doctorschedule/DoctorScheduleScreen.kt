@@ -21,6 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -72,6 +73,7 @@ fun DoctorScheduleScreen(
         },
         onManageAvailabilityClick = { viewModel.onEvent(DoctorScheduleUiEvent.OnManageAvailabilityClicked) },
         onCalendarClick = { viewModel.onEvent(DoctorScheduleUiEvent.OnCalendarClicked) },
+        onRetryClick = { viewModel.onEvent(DoctorScheduleUiEvent.OnRetryClicked) },
         onBackClick = {
             viewModel.onEvent(DoctorScheduleUiEvent.OnBackClicked)
             onNavigateBack()
@@ -126,6 +128,7 @@ fun DoctorScheduleScreenContent(
     onViewRecordClick: () -> Unit = {},
     onManageAvailabilityClick: () -> Unit = {},
     onCalendarClick: () -> Unit = {},
+    onRetryClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
@@ -185,12 +188,57 @@ fun DoctorScheduleScreenContent(
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.Start
         ) {
-            Text(
-                text = "Your appointment book",
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Bold,
-                color = MomoraPurpleDark
-            )
+            if (uiState.isLoading && data == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 48.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MomoraPurplePrimary)
+                }
+            } else if (uiState.errorMessage != null && data == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFF2DEDE), RoundedCornerShape(16.dp))
+                        .padding(20.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = uiState.errorMessage ?: "Failed to load schedule",
+                            fontSize = 14.sp,
+                            color = Color(0xFFA94442),
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(MomoraPurplePrimary)
+                                .clickable { onRetryClick() }
+                                .padding(horizontal = 20.dp, vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Retry",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+            } else {
+                Text(
+                    text = "Your appointment book",
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MomoraPurpleDark
+                )
 
             Spacer(modifier = Modifier.height(4.dp))
 
@@ -441,6 +489,7 @@ fun DoctorScheduleScreenContent(
                     fontWeight = FontWeight.Bold,
                     color = MomoraPurplePrimary
                 )
+            }
             }
 
             Spacer(modifier = Modifier.height(16.dp))

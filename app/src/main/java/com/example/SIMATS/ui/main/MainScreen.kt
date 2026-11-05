@@ -21,6 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -60,7 +61,12 @@ import com.example.SIMATS.ui.theme.MomoraScreenBackground
 fun MainScreen(
     viewModel: MainViewModel,
     modifier: Modifier = Modifier,
-    onLogoutSuccess: () -> Unit = {}
+    onLogoutSuccess: () -> Unit = {},
+    onViewAssignedPatientsClick: () -> Unit = {},
+    onScheduleClick: () -> Unit = {},
+    onNextAppointmentClick: () -> Unit = {},
+    onReviewPatientClick: (String) -> Unit = {},
+    onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -73,11 +79,27 @@ fun MainScreen(
     MainScreenContent(
         modifier = modifier,
         uiState = uiState,
-        onNavTabSelected = { index -> viewModel.onEvent(MainUiEvent.OnNavTabSelected(index)) },
-        onReviewPatientClick = { id -> viewModel.onEvent(MainUiEvent.OnReviewPatientClicked(id)) },
-        onViewAssignedPatientsClick = { viewModel.onEvent(MainUiEvent.OnViewAssignedPatientsClicked) },
-        onScheduleClick = { viewModel.onEvent(MainUiEvent.OnScheduleClicked) },
-        onNextAppointmentClick = { viewModel.onEvent(MainUiEvent.OnNextAppointmentClicked) },
+        onNavTabSelected = { index ->
+            viewModel.onEvent(MainUiEvent.OnNavTabSelected(index))
+            onNavTabSelected(index)
+        },
+        onReviewPatientClick = { id ->
+            viewModel.onEvent(MainUiEvent.OnReviewPatientClicked(id))
+            onReviewPatientClick(id)
+        },
+        onViewAssignedPatientsClick = {
+            viewModel.onEvent(MainUiEvent.OnViewAssignedPatientsClicked)
+            onViewAssignedPatientsClick()
+        },
+        onScheduleClick = {
+            viewModel.onEvent(MainUiEvent.OnScheduleClicked)
+            onScheduleClick()
+        },
+        onNextAppointmentClick = {
+            viewModel.onEvent(MainUiEvent.OnNextAppointmentClicked)
+            onNextAppointmentClick()
+        },
+        onRetryClick = { viewModel.onEvent(MainUiEvent.OnRetryClicked) },
         onLogoutClick = { viewModel.onEvent(MainUiEvent.OnLogoutClicked) },
         onNotificationClick = { viewModel.onEvent(MainUiEvent.OnNotificationClicked) }
     )
@@ -124,6 +146,7 @@ fun MainScreenContent(
     onViewAssignedPatientsClick: () -> Unit = {},
     onScheduleClick: () -> Unit = {},
     onNextAppointmentClick: () -> Unit = {},
+    onRetryClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {}
 ) {
@@ -204,12 +227,57 @@ fun MainScreenContent(
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.Start
         ) {
-            Text(
-                text = "Good morning, ${data?.doctorName ?: "Dr Chen"}",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = MomoraPurpleDark
-            )
+            if (uiState.isLoading && data == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 48.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MomoraPurplePrimary)
+                }
+            } else if (uiState.errorMessage != null && data == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFF2DEDE), RoundedCornerShape(16.dp))
+                        .padding(20.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = uiState.errorMessage ?: "Failed to load doctor dashboard",
+                            fontSize = 14.sp,
+                            color = Color(0xFFA94442),
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(MomoraPurplePrimary)
+                                .clickable { onRetryClick() }
+                                .padding(horizontal = 20.dp, vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Retry",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+            } else {
+                Text(
+                    text = "Good morning, ${data?.doctorName ?: "Dr Chen"}",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MomoraPurpleDark
+                )
 
             Spacer(modifier = Modifier.height(2.dp))
 
@@ -227,6 +295,7 @@ fun MainScreenContent(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(18.dp))
                     .background(MomoraMintBadgeBg)
+                    .clickable { onViewAssignedPatientsClick() }
                     .padding(16.dp)
             ) {
                 Column {
@@ -260,6 +329,7 @@ fun MainScreenContent(
                         .weight(1f)
                         .clip(RoundedCornerShape(16.dp))
                         .background(MomoraLavenderCircleBg)
+                        .clickable { onScheduleClick() }
                         .padding(14.dp)
                 ) {
                     Column {
@@ -291,6 +361,7 @@ fun MainScreenContent(
                         .weight(1f)
                         .clip(RoundedCornerShape(16.dp))
                         .background(MomoraPinkCircleBg)
+                        .clickable { onViewAssignedPatientsClick() }
                         .padding(14.dp)
                 ) {
                     Column {
@@ -344,21 +415,48 @@ fun MainScreenContent(
             Spacer(modifier = Modifier.height(10.dp))
 
             // Review Items Card List
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.White)
-                    .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
-                    .padding(horizontal = 14.dp, vertical = 6.dp)
-            ) {
-                data?.reviewItems?.forEachIndexed { index, item ->
-                    DoctorReviewRow(
-                        item = item,
-                        onClick = { onReviewPatientClick(item.id) }
-                    )
-                    if (index < (data.reviewItems.size - 1)) {
+            if (data?.reviewItems.isNullOrEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                        .padding(20.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "No items to review",
+                            fontSize = 13.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurpleDark
+                        )
                         Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "New lab and ultrasound reports requiring your review will appear here.",
+                            fontSize = 11.5.sp,
+                            color = MomoraBodyMuted
+                        )
+                    }
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                        .padding(horizontal = 14.dp, vertical = 6.dp)
+                ) {
+                    data?.reviewItems?.forEachIndexed { index, item ->
+                        DoctorReviewRow(
+                            item = item,
+                            onClick = { onReviewPatientClick(item.id) }
+                        )
+                        if (index < (data.reviewItems.size - 1)) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                        }
                     }
                 }
             }
@@ -492,6 +590,7 @@ fun MainScreenContent(
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
         }

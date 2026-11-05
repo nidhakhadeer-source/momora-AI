@@ -33,15 +33,33 @@ class DoctorScheduleViewModel(
             DoctorScheduleUiEvent.OnViewRecordClicked -> {}
             DoctorScheduleUiEvent.OnManageAvailabilityClicked -> {}
             DoctorScheduleUiEvent.OnCalendarClicked -> {}
+            DoctorScheduleUiEvent.OnRetryClicked -> {
+                loadSchedule()
+            }
             DoctorScheduleUiEvent.OnBackClicked -> {}
             DoctorScheduleUiEvent.OnNotificationClicked -> {}
         }
     }
 
     private fun loadSchedule() {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getScheduleData().collect { data ->
-                _uiState.value = _uiState.value.copy(scheduleData = data)
+            repository.getScheduleData().collect { result ->
+                result.fold(
+                    onSuccess = { data ->
+                        _uiState.value = _uiState.value.copy(
+                            scheduleData = data,
+                            isLoading = false,
+                            errorMessage = null
+                        )
+                    },
+                    onFailure = { err ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = err.message ?: "Failed to load schedule"
+                        )
+                    }
+                )
             }
         }
     }

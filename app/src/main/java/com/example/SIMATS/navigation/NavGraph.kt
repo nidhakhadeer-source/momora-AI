@@ -426,6 +426,26 @@ fun AppNavHost() {
                 viewModel = doctorViewModel,
                 onLogoutSuccess = {
                     currentScreen = Screen.Login
+                },
+                onViewAssignedPatientsClick = {
+                    currentScreen = Screen.AssignedPatients
+                },
+                onScheduleClick = {
+                    currentScreen = Screen.DoctorSchedule
+                },
+                onNextAppointmentClick = {
+                    currentScreen = Screen.DoctorSchedule
+                },
+                onReviewPatientClick = { _ ->
+                    currentScreen = Screen.AssignedPatients
+                },
+                onNavTabSelected = { index ->
+                    when (index) {
+                        0 -> currentScreen = Screen.DoctorDashboard
+                        1 -> currentScreen = Screen.AssignedPatients
+                        2 -> currentScreen = Screen.DoctorSchedule
+                        3 -> currentScreen = Screen.DoctorAdvice
+                    }
                 }
             )
         }
@@ -436,9 +456,15 @@ fun AppNavHost() {
                 onNavigateBack = {
                     currentScreen = Screen.DoctorDashboard
                 },
+                onPatientClick = { _ ->
+                    currentScreen = Screen.PatientHistory
+                },
                 onNavTabSelected = { index ->
-                    if (index == 0) {
-                        currentScreen = Screen.DoctorDashboard
+                    when (index) {
+                        0 -> currentScreen = Screen.DoctorDashboard
+                        1 -> currentScreen = Screen.AssignedPatients
+                        2 -> currentScreen = Screen.DoctorSchedule
+                        3 -> currentScreen = Screen.DoctorAdvice
                     }
                 }
             )
@@ -454,8 +480,11 @@ fun AppNavHost() {
                     currentScreen = Screen.PatientHealthMonitoring
                 },
                 onNavTabSelected = { index ->
-                    if (index == 0) {
-                        currentScreen = Screen.DoctorDashboard
+                    when (index) {
+                        0 -> currentScreen = Screen.DoctorDashboard
+                        1 -> currentScreen = Screen.AssignedPatients
+                        2 -> currentScreen = Screen.DoctorSchedule
+                        3 -> currentScreen = Screen.DoctorAdvice
                     }
                 }
             )
@@ -471,8 +500,11 @@ fun AppNavHost() {
                     currentScreen = Screen.DoctorAdvice
                 },
                 onNavTabSelected = { index ->
-                    if (index == 0) {
-                        currentScreen = Screen.DoctorDashboard
+                    when (index) {
+                        0 -> currentScreen = Screen.DoctorDashboard
+                        1 -> currentScreen = Screen.AssignedPatients
+                        2 -> currentScreen = Screen.DoctorSchedule
+                        3 -> currentScreen = Screen.DoctorAdvice
                     }
                 }
             )
@@ -482,13 +514,14 @@ fun AppNavHost() {
             DoctorAdviceScreen(
                 viewModel = adviceViewModel,
                 onNavigateBack = {
-                    currentScreen = Screen.PatientHealthMonitoring
+                    currentScreen = Screen.DoctorDashboard
                 },
                 onNavTabSelected = { index ->
-                    if (index == 0) {
-                        currentScreen = Screen.DoctorDashboard
-                    } else if (index == 2) {
-                        currentScreen = Screen.DoctorSchedule
+                    when (index) {
+                        0 -> currentScreen = Screen.DoctorDashboard
+                        1 -> currentScreen = Screen.AssignedPatients
+                        2 -> currentScreen = Screen.DoctorSchedule
+                        3 -> currentScreen = Screen.DoctorAdvice
                     }
                 }
             )
@@ -498,18 +531,17 @@ fun AppNavHost() {
             DoctorScheduleScreen(
                 viewModel = doctorScheduleViewModel,
                 onNavigateBack = {
-                    currentScreen = Screen.DoctorAdvice
+                    currentScreen = Screen.DoctorDashboard
                 },
                 onViewRecordClick = {
                     currentScreen = Screen.PatientHistory
                 },
                 onNavTabSelected = { index ->
-                    if (index == 0) {
-                        currentScreen = Screen.DoctorDashboard
-                    } else if (index == 1) {
-                        currentScreen = Screen.AssignedPatients
-                    } else if (index == 3) {
-                        currentScreen = Screen.DoctorAdvice
+                    when (index) {
+                        0 -> currentScreen = Screen.DoctorDashboard
+                        1 -> currentScreen = Screen.AssignedPatients
+                        2 -> currentScreen = Screen.DoctorSchedule
+                        3 -> currentScreen = Screen.DoctorAdvice
                     }
                 }
             )

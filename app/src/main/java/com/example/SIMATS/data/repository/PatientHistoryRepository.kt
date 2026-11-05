@@ -1,53 +1,34 @@
 package com.example.SIMATS.data.repository
 
+import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.PatientMedicalHistoryData
-import com.example.SIMATS.data.model.PatientMedicationItem
 import com.example.SIMATS.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import retrofit2.HttpException
 
 interface PatientHistoryRepository {
-    fun getPatientHistory(patientId: String): Flow<PatientMedicalHistoryData>
+    fun getPatientHistory(patientId: String): Flow<Result<PatientMedicalHistoryData>>
 }
 
 class PatientHistoryRepositoryImpl : PatientHistoryRepository {
     private val apiService = RetrofitClient.apiService
 
-    override fun getPatientHistory(patientId: String): Flow<PatientMedicalHistoryData> = flow {
+    override fun getPatientHistory(patientId: String): Flow<Result<PatientMedicalHistoryData>> = flow {
         try {
             val response = apiService.getPatientHistory(patientId)
             if (response.success && response.data != null) {
-                emit(response.data)
-                return@flow
+                emit(Result.success(response.data))
+            } else {
+                emit(Result.failure(Exception(response.message ?: "Failed to load patient medical history")))
             }
-        } catch (_: Exception) {}
-
-        emit(
-            PatientMedicalHistoryData(
-                patientName = "Maya Patel",
-                patientInitials = "MP",
-                gestationalAge = "24w 3d",
-                dueDateText = "Due 13 Feb 2027",
-                patientIdText = "P-13042",
-                clinicalBackgroundText = "Age 29 · O positive · First pregnancy (G1 P0). No known drug allergies or chronic conditions reported.",
-                patientConfirmedDateText = "Patient confirmed · 05 Oct 2026",
-                medications = listOf(
-                    PatientMedicationItem(
-                        id = "1",
-                        name = "Prenatal vitamin",
-                        dosageDetails = "1 tablet daily · 08:00 · Taken today",
-                        isTakenToday = true
-                    ),
-                    PatientMedicationItem(
-                        id = "2",
-                        name = "Vitamin D · 400 IU",
-                        dosageDetails = "1 tablet daily · 20:00",
-                        isTakenToday = false
-                    )
-                ),
-                recentCareRecordTitle = "Complete blood count",
-                recentCareRecordDetails = "28 Oct 2026 · Reviewed 27 Oct 2026"
-            )
-        )
+        } catch (e: Exception) {
+            if (e is HttpException && e.code() == 401) {
+                SessionManager.notifySessionExpired()
+                emit(Result.failure(Exception("Session expired. Please log in again.")))
+            } else {
+                emit(Result.failure(Exception(e.localizedMessage ?: "Network connection error")))
+            }
+        }
     }
 }

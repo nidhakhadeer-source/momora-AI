@@ -31,6 +31,9 @@ class MainViewModel(
             MainUiEvent.OnViewAssignedPatientsClicked -> {}
             MainUiEvent.OnScheduleClicked -> {}
             MainUiEvent.OnNextAppointmentClicked -> {}
+            MainUiEvent.OnRetryClicked -> {
+                loadDashboard()
+            }
             MainUiEvent.OnLogoutClicked -> {
                 SessionManager.clearSession()
                 _uiState.value = _uiState.value.copy(isLoggedOut = true)
@@ -40,9 +43,24 @@ class MainViewModel(
     }
 
     private fun loadDashboard() {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getDoctorDashboardData().collect { data ->
-                _uiState.value = _uiState.value.copy(dashboardData = data)
+            repository.getDoctorDashboardData().collect { result ->
+                result.fold(
+                    onSuccess = { data ->
+                        _uiState.value = _uiState.value.copy(
+                            dashboardData = data,
+                            isLoading = false,
+                            errorMessage = null
+                        )
+                    },
+                    onFailure = { err ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = err.message ?: "Failed to load doctor dashboard"
+                        )
+                    }
+                )
             }
         }
     }

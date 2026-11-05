@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -39,6 +40,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -66,6 +68,7 @@ fun DoctorAdviceScreen(
         onAdviceTextChanged = { t -> viewModel.onEvent(DoctorAdviceUiEvent.OnAdviceTextChanged(t)) },
         onSaveCopyToggled = { c -> viewModel.onEvent(DoctorAdviceUiEvent.OnSaveCopyToggled(c)) },
         onSendAdviceClick = { viewModel.onEvent(DoctorAdviceUiEvent.OnSendAdviceClicked) },
+        onRetryClick = { viewModel.onEvent(DoctorAdviceUiEvent.OnRetryClicked) },
         onBackClick = {
             viewModel.onEvent(DoctorAdviceUiEvent.OnBackClicked)
             onNavigateBack()
@@ -99,6 +102,7 @@ fun DoctorAdviceScreenContent(
     onAdviceTextChanged: (String) -> Unit = {},
     onSaveCopyToggled: (Boolean) -> Unit = {},
     onSendAdviceClick: () -> Unit = {},
+    onRetryClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
@@ -158,12 +162,57 @@ fun DoctorAdviceScreenContent(
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.Start
         ) {
-            Text(
-                text = "Consultation & advice",
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Bold,
-                color = MomoraPurpleDark
-            )
+            if (uiState.isLoading && data == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 48.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MomoraPurplePrimary)
+                }
+            } else if (uiState.errorMessage != null && data == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFF2DEDE), RoundedCornerShape(16.dp))
+                        .padding(20.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = uiState.errorMessage ?: "Failed to load advice details",
+                            fontSize = 14.sp,
+                            color = Color(0xFFA94442),
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(MomoraPurplePrimary)
+                                .clickable { onRetryClick() }
+                                .padding(horizontal = 20.dp, vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Retry",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+            } else {
+                Text(
+                    text = "Consultation & advice",
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MomoraPurpleDark
+                )
 
             Spacer(modifier = Modifier.height(4.dp))
 
@@ -403,6 +452,17 @@ fun DoctorAdviceScreenContent(
                 }
             }
 
+            if (uiState.errorMessage != null && data != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = uiState.errorMessage ?: "Failed to send advice",
+                    fontSize = 12.sp,
+                    color = Color(0xFFA94442),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
             Spacer(modifier = Modifier.height(12.dp))
 
             // Non-Continuous Messaging Warning Banner
@@ -439,6 +499,7 @@ fun DoctorAdviceScreenContent(
                         modifier = Modifier.weight(1f)
                     )
                 }
+            }
             }
 
             Spacer(modifier = Modifier.height(16.dp))

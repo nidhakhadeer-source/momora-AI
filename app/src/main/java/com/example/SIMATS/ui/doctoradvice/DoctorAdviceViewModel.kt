@@ -17,8 +17,10 @@ class DoctorAdviceViewModel(
     private val _uiState = MutableStateFlow(DoctorAdviceUiState())
     val uiState: StateFlow<DoctorAdviceUiState> = _uiState.asStateFlow()
 
+    private var currentPatientId: String = "1"
+
     init {
-        loadData("1")
+        loadData(currentPatientId)
     }
 
     fun onEvent(event: DoctorAdviceUiEvent) {
@@ -38,18 +40,39 @@ class DoctorAdviceViewModel(
             DoctorAdviceUiEvent.OnSendAdviceClicked -> {
                 sendAdvice()
             }
+            DoctorAdviceUiEvent.OnRetryClicked -> {
+                loadData(currentPatientId)
+            }
             DoctorAdviceUiEvent.OnBackClicked -> {}
             DoctorAdviceUiEvent.OnNotificationClicked -> {}
         }
     }
 
+    fun setPatientId(id: String) {
+        currentPatientId = id
+        loadData(id)
+    }
+
     private fun loadData(id: String) {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getAdviceData(id).collect { data ->
-                _uiState.value = _uiState.value.copy(
-                    adviceData = data,
-                    subjectText = data.defaultSubject,
-                    adviceText = data.defaultAdviceText
+            repository.getAdviceData(id).collect { result ->
+                result.fold(
+                    onSuccess = { data ->
+                        _uiState.value = _uiState.value.copy(
+                            adviceData = data,
+                            subjectText = data.defaultSubject,
+                            adviceText = data.defaultAdviceText,
+                            isLoading = false,
+                            errorMessage = null
+                        )
+                    },
+                    onFailure = { err ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = err.message ?: "Failed to load doctor advice data"
+                        )
+                    }
                 )
             }
         }
@@ -61,12 +84,13 @@ class DoctorAdviceViewModel(
             repository.sendAdvice(
                 _uiState.value.subjectText,
                 _uiState.value.adviceText,
-                _uiState.value.isSaveCopyChecked
+                _uiState.value.isSaveCopyChecked,
+                currentPatientId
             ).collect { result ->
                 result.onSuccess {
-                    _uiState.value = _uiState.value.copy(isSending = false, isSentSuccess = true)
+                    _uiState.value = _uiState.value.copy(isSending = false, isSentSuccess = true, errorMessage = null)
                 }.onFailure { err ->
-                    _uiState.value = _uiState.value.copy(isSending = false, errorMessage = err.message)
+                    _uiState.value = _uiState.value.copy(isSending = false, errorMessage = err.message ?: "Failed to send advice")
                 }
             }
         }

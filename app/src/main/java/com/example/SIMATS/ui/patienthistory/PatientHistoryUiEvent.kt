@@ -6,6 +6,7 @@ sealed interface PatientHistoryUiEvent {
     data class OnNavTabSelected(val index: Int) : PatientHistoryUiEvent
     data object OnViewAllReportsClicked : PatientHistoryUiEvent
     data object OnOpenHealthMonitoringClicked : PatientHistoryUiEvent
+    data object OnRetryClicked : PatientHistoryUiEvent
     data object OnBackClicked : PatientHistoryUiEvent
     data object OnNotificationClicked : PatientHistoryUiEvent
 }

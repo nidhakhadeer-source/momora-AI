@@ -17,8 +17,10 @@ class PatientHistoryViewModel(
     private val _uiState = MutableStateFlow(PatientHistoryUiState())
     val uiState: StateFlow<PatientHistoryUiState> = _uiState.asStateFlow()
 
+    private var currentPatientId: String = "1"
+
     init {
-        loadHistory("1")
+        loadHistory(currentPatientId)
     }
 
     fun onEvent(event: PatientHistoryUiEvent) {
@@ -32,15 +34,38 @@ class PatientHistoryViewModel(
             }
             PatientHistoryUiEvent.OnViewAllReportsClicked -> {}
             PatientHistoryUiEvent.OnOpenHealthMonitoringClicked -> {}
+            PatientHistoryUiEvent.OnRetryClicked -> {
+                loadHistory(currentPatientId)
+            }
             PatientHistoryUiEvent.OnBackClicked -> {}
             PatientHistoryUiEvent.OnNotificationClicked -> {}
         }
     }
 
+    fun setPatientId(id: String) {
+        currentPatientId = id
+        loadHistory(id)
+    }
+
     private fun loadHistory(id: String) {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getPatientHistory(id).collect { data ->
-                _uiState.value = _uiState.value.copy(historyData = data)
+            repository.getPatientHistory(id).collect { result ->
+                result.fold(
+                    onSuccess = { data ->
+                        _uiState.value = _uiState.value.copy(
+                            historyData = data,
+                            isLoading = false,
+                            errorMessage = null
+                        )
+                    },
+                    onFailure = { err ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = err.message ?: "Failed to load patient history"
+                        )
+                    }
+                )
             }
         }
     }

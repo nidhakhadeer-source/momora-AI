@@ -7,6 +7,7 @@ sealed interface DoctorScheduleUiEvent {
     data object OnViewRecordClicked : DoctorScheduleUiEvent
     data object OnManageAvailabilityClicked : DoctorScheduleUiEvent
     data object OnCalendarClicked : DoctorScheduleUiEvent
+    data object OnRetryClicked : DoctorScheduleUiEvent
     data object OnBackClicked : DoctorScheduleUiEvent
     data object OnNotificationClicked : DoctorScheduleUiEvent
 }

@@ -35,18 +35,35 @@ class PatientListViewModel(
             }
             PatientListUiEvent.OnPreviousPageClicked -> {}
             PatientListUiEvent.OnNextPageClicked -> {}
+            PatientListUiEvent.OnRetryClicked -> {
+                loadPatients()
+            }
             PatientListUiEvent.OnBackClicked -> {}
             PatientListUiEvent.OnNotificationClicked -> {}
         }
     }
 
     private fun loadPatients() {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getAssignedPatients().collect { list ->
-                val toReview = list.count { it.needsReview }
-                _uiState.value = _uiState.value.copy(
-                    patients = list,
-                    reviewCount = toReview
+            repository.getAssignedPatients().collect { result ->
+                result.fold(
+                    onSuccess = { list ->
+                        val toReview = list.count { it.needsReview }
+                        _uiState.value = _uiState.value.copy(
+                            patients = list,
+                            totalCount = list.size,
+                            reviewCount = toReview,
+                            isLoading = false,
+                            errorMessage = null
+                        )
+                    },
+                    onFailure = { err ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = err.message ?: "Failed to load assigned patients"
+                        )
+                    }
                 )
             }
         }

@@ -7,6 +7,7 @@ sealed interface PatientListUiEvent {
     data class OnNavTabSelected(val index: Int) : PatientListUiEvent
     data object OnPreviousPageClicked : PatientListUiEvent
     data object OnNextPageClicked : PatientListUiEvent
+    data object OnRetryClicked : PatientListUiEvent
     data object OnBackClicked : PatientListUiEvent
     data object OnNotificationClicked : PatientListUiEvent
 }

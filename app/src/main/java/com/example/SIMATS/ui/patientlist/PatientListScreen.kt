@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -59,6 +60,7 @@ fun PatientListScreen(
     viewModel: PatientListViewModel,
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit = {},
+    onPatientClick: (String) -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -68,9 +70,13 @@ fun PatientListScreen(
         uiState = uiState,
         onSearchQueryChanged = { q -> viewModel.onEvent(PatientListUiEvent.OnSearchQueryChanged(q)) },
         onFilterTabSelected = { index -> viewModel.onEvent(PatientListUiEvent.OnFilterTabSelected(index)) },
-        onPatientClick = { id -> viewModel.onEvent(PatientListUiEvent.OnPatientClicked(id)) },
+        onPatientClick = { id ->
+            viewModel.onEvent(PatientListUiEvent.OnPatientClicked(id))
+            onPatientClick(id)
+        },
         onPreviousPageClick = { viewModel.onEvent(PatientListUiEvent.OnPreviousPageClicked) },
         onNextPageClick = { viewModel.onEvent(PatientListUiEvent.OnNextPageClicked) },
+        onRetryClick = { viewModel.onEvent(PatientListUiEvent.OnRetryClicked) },
         onBackClick = {
             viewModel.onEvent(PatientListUiEvent.OnBackClicked)
             onNavigateBack()
@@ -136,6 +142,7 @@ fun PatientListScreenContent(
     onPatientClick: (String) -> Unit = {},
     onPreviousPageClick: () -> Unit = {},
     onNextPageClick: () -> Unit = {},
+    onRetryClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
@@ -309,15 +316,86 @@ fun PatientListScreenContent(
                 uiState.patients
             }
 
-            Column(
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                filteredList.forEach { patient ->
-                    PatientCardItem(
-                        item = patient,
-                        onClick = { onPatientClick(patient.id) }
-                    )
+            if (uiState.isLoading && uiState.patients.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MomoraPurplePrimary)
+                }
+            } else if (uiState.errorMessage != null && uiState.patients.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFF2DEDE), RoundedCornerShape(16.dp))
+                        .padding(20.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = uiState.errorMessage ?: "Failed to load assigned patients",
+                            fontSize = 13.5.sp,
+                            color = Color(0xFFA94442),
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(MomoraPurplePrimary)
+                                .clickable { onRetryClick() }
+                                .padding(horizontal = 18.dp, vertical = 7.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Retry",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+            } else if (filteredList.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = if (uiState.selectedFilterTab == 1) "No patients need review" else "No assigned patients found",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurpleDark
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = if (uiState.selectedFilterTab == 1) "All patient reports have been reviewed." else "Patients assigned to you will appear here.",
+                            fontSize = 12.sp,
+                            color = MomoraBodyMuted
+                        )
+                    }
+                }
+            } else {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    filteredList.forEach { patient ->
+                        PatientCardItem(
+                            item = patient,
+                            onClick = { onPatientClick(patient.id) }
+                        )
+                    }
                 }
             }
 
