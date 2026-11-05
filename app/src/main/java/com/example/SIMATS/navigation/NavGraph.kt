@@ -6,6 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.SIMATS.data.local.SessionManager
+import com.example.SIMATS.data.model.UserAuthState
 import com.example.SIMATS.data.model.UserRole
 import com.example.SIMATS.ui.adddoctor.AddDoctorScreen
 import com.example.SIMATS.ui.adddoctor.AddDoctorViewModel
@@ -83,8 +85,23 @@ fun AppNavHost() {
             val splashViewModel: SplashViewModel = viewModel()
             SplashScreen(
                 viewModel = splashViewModel,
-                onNavigateNext = {
-                    currentScreen = Screen.Onboarding
+                onNavigateNext = { authState ->
+                    when (authState) {
+                        is UserAuthState.Authenticated -> {
+                            when (authState.role) {
+                                UserRole.PATIENT -> currentScreen = Screen.Home
+                                UserRole.DOCTOR -> currentScreen = Screen.DoctorDashboard
+                                UserRole.ADMIN -> currentScreen = Screen.AdminDashboard
+                            }
+                        }
+                        else -> {
+                            if (SessionManager.isOnboardingCompleted()) {
+                                currentScreen = Screen.Login
+                            } else {
+                                currentScreen = Screen.Onboarding
+                            }
+                        }
+                    }
                 }
             )
         }
@@ -93,9 +110,11 @@ fun AppNavHost() {
             OnboardingScreen(
                 viewModel = onboardingViewModel,
                 onNavigateToLogin = {
+                    SessionManager.setOnboardingCompleted(true)
                     currentScreen = Screen.Login
                 },
                 onGetStartedComplete = {
+                    SessionManager.setOnboardingCompleted(true)
                     currentScreen = Screen.SignUp
                 }
             )
@@ -163,6 +182,9 @@ fun AppNavHost() {
                 viewModel = profileViewModel,
                 onNavigateBack = {
                     currentScreen = Screen.Home
+                },
+                onLogoutSuccess = {
+                    currentScreen = Screen.Login
                 },
                 onNavTabSelected = { index ->
                     when (index) {
@@ -394,7 +416,10 @@ fun AppNavHost() {
         Screen.DoctorDashboard -> {
             val doctorViewModel: MainViewModel = viewModel()
             MainScreen(
-                viewModel = doctorViewModel
+                viewModel = doctorViewModel,
+                onLogoutSuccess = {
+                    currentScreen = Screen.Login
+                }
             )
         }
         Screen.AssignedPatients -> {

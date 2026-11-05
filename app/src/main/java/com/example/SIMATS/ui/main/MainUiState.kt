@@ -6,5 +6,6 @@ data class MainUiState(
     val dashboardData: DoctorDashboardData? = null,
     val selectedNavIndex: Int = 0,
     val isLoading: Boolean = false,
+    val isLoggedOut: Boolean = false,
     val errorMessage: String? = null
 )

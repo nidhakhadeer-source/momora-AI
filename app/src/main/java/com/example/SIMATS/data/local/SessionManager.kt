@@ -3,6 +3,9 @@ package com.example.SIMATS.data.local
 import android.content.Context
 import android.content.SharedPreferences
 import com.example.SIMATS.data.model.UserRole
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 object SessionManager {
     private const val PREF_NAME = "momora_session_pref"
@@ -13,6 +16,8 @@ object SessionManager {
     private const val KEY_ROLE = "key_user_role"
     private const val KEY_PATIENT_CODE = "key_patient_code"
     private const val KEY_DOCTOR_NAME = "key_doctor_name"
+    private const val KEY_EXPIRES_AT = "key_auth_expires_at"
+    private const val KEY_ONBOARDING_COMPLETED = "key_onboarding_completed"
     private const val KEY_PHONE = "key_user_phone"
     private const val KEY_GENDER = "key_user_gender"
     private const val KEY_DOB = "key_user_dob"
@@ -24,12 +29,13 @@ object SessionManager {
 
     // In-memory fallback if preferences not yet initialized
     private var memToken: String? = null
-    private var memUserId: Int = 5 // Defaults to Maya Patel if initial test
-    private var memName: String = "Maya Patel"
-    private var memEmail: String = "maya.patel@example.com"
+    private var memUserId: Int = 0
+    private var memName: String = ""
+    private var memEmail: String = ""
     private var memRole: UserRole = UserRole.PATIENT
-    private var memPatientCode: String = "P-13042"
-    private var memDoctorName: String = "Dr Amelia Chen"
+    private var memPatientCode: String = ""
+    private var memDoctorName: String = ""
+    private var memExpiresAt: String? = null
     private var memPhone: String? = null
     private var memGender: String = "Female"
     private var memDob: String = "14 May 1997"
@@ -48,12 +54,14 @@ object SessionManager {
         email: String,
         role: String,
         patientCode: String? = null,
-        doctorName: String? = null
+        doctorName: String? = null,
+        expiresAt: String? = null
     ) {
         memToken = token
         memUserId = userId
         memName = name
         memEmail = email
+        memExpiresAt = expiresAt
         memRole = when (role.lowercase()) {
             "doctor" -> UserRole.DOCTOR
             "admin" -> UserRole.ADMIN
@@ -70,8 +78,9 @@ object SessionManager {
             putString(KEY_ROLE, role)
             putString(KEY_PATIENT_CODE, memPatientCode)
             putString(KEY_DOCTOR_NAME, memDoctorName)
-            apply()
-        }
+            putString(KEY_EXPIRES_AT, expiresAt)
+            putBoolean(KEY_ONBOARDING_COMPLETED, true)
+        }?.commit()
     }
 
     fun getToken(): String? {
@@ -111,6 +120,31 @@ object SessionManager {
         return sharedPreferences?.getString(KEY_DOCTOR_NAME, memDoctorName) ?: memDoctorName
     }
 
+    fun getExpiresAt(): String? {
+        return sharedPreferences?.getString(KEY_EXPIRES_AT, memExpiresAt) ?: memExpiresAt
+    }
+
+    fun isTokenExpired(): Boolean {
+        val expiresAtStr = getExpiresAt() ?: return false
+        return try {
+            val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
+            val expiryDate = sdf.parse(expiresAtStr)
+            expiryDate != null && expiryDate.before(Date())
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    fun isOnboardingCompleted(): Boolean {
+        return sharedPreferences?.getBoolean(KEY_ONBOARDING_COMPLETED, false) ?: false
+    }
+
+    fun setOnboardingCompleted(completed: Boolean) {
+        sharedPreferences?.edit()?.apply {
+            putBoolean(KEY_ONBOARDING_COMPLETED, completed)
+        }?.commit()
+    }
+
     fun getPhone(): String? {
         return sharedPreferences?.getString(KEY_PHONE, memPhone) ?: memPhone
     }
@@ -139,8 +173,7 @@ object SessionManager {
         memPhotoUrl = url
         sharedPreferences?.edit()?.apply {
             putString(KEY_PHOTO_URL, url)
-            apply()
-        }
+        }?.commit()
     }
 
     fun saveUserProfileDetails(
@@ -165,12 +198,20 @@ object SessionManager {
             photoUrl?.let { putString(KEY_PHOTO_URL, it) }
             dob?.let { putString(KEY_DOB, it) }
             bloodGroup?.let { putString(KEY_BLOOD_GROUP, it) }
-            apply()
-        }
+        }?.commit()
     }
 
     fun isLoggedIn(): Boolean {
-        return getToken() != null || sharedPreferences?.contains(KEY_USER_ID) == true
+        val token = getToken()
+        val userId = getUserId()
+        if (token.isNullOrBlank() || userId <= 0) {
+            return false
+        }
+        if (isTokenExpired()) {
+            clearSession()
+            return false
+        }
+        return true
     }
 
     fun clearSession() {
@@ -178,6 +219,7 @@ object SessionManager {
         memUserId = 0
         memName = ""
         memEmail = ""
+        memExpiresAt = null
         memPhone = null
         memGender = "Female"
         memDob = "14 May 1997"
@@ -185,6 +227,21 @@ object SessionManager {
         memAddress = null
         memPhotoUrl = null
         memRole = UserRole.PATIENT
-        sharedPreferences?.edit()?.clear()?.apply()
+        sharedPreferences?.edit()?.apply {
+            remove(KEY_TOKEN)
+            remove(KEY_USER_ID)
+            remove(KEY_NAME)
+            remove(KEY_EMAIL)
+            remove(KEY_ROLE)
+            remove(KEY_PATIENT_CODE)
+            remove(KEY_DOCTOR_NAME)
+            remove(KEY_EXPIRES_AT)
+            remove(KEY_PHONE)
+            remove(KEY_GENDER)
+            remove(KEY_DOB)
+            remove(KEY_BLOOD_GROUP)
+            remove(KEY_ADDRESS)
+            remove(KEY_PHOTO_URL)
+        }?.commit()
     }
 }

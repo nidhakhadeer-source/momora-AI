@@ -19,6 +19,7 @@ data class ProfileSetupUiState(
     val isLoading: Boolean = false,
     val isUploadingPhoto: Boolean = false,
     val isSavedSuccess: Boolean = false,
+    val isLoggedOut: Boolean = false,
     val errorMessage: String? = null,
     val successMessage: String? = null
 )

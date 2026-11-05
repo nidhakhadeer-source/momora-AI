@@ -30,7 +30,8 @@ class AuthRepositoryImpl : AuthRepository {
                     email = response.user.email,
                     role = response.user.role,
                     patientCode = response.user.patient_code,
-                    doctorName = response.user.doctor_name
+                    doctorName = response.user.doctor_name,
+                    expiresAt = response.expires_at
                 )
                 emit(Result.success(true))
             } else {

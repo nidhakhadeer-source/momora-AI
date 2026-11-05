@@ -65,6 +65,10 @@ class ProfileSetupViewModel(
             ProfileSetupUiEvent.OnNotificationClicked -> {}
             ProfileSetupUiEvent.OnReminderPreferencesClicked -> {}
             ProfileSetupUiEvent.OnExportHealthInfoClicked -> {}
+            ProfileSetupUiEvent.OnLogoutClicked -> {
+                SessionManager.clearSession()
+                _uiState.value = _uiState.value.copy(isLoggedOut = true)
+            }
         }
     }
 

@@ -77,10 +77,17 @@ fun ProfileSetupScreen(
     viewModel: ProfileSetupViewModel,
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit = {},
+    onLogoutSuccess: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
+
+    LaunchedEffect(uiState.isLoggedOut) {
+        if (uiState.isLoggedOut) {
+            onLogoutSuccess()
+        }
+    }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
@@ -107,6 +114,7 @@ fun ProfileSetupScreen(
         },
         onCareTeamSharingToggled = { enabled -> viewModel.onEvent(ProfileSetupUiEvent.OnCareTeamSharingToggled(enabled)) },
         onSaveClick = { viewModel.onEvent(ProfileSetupUiEvent.OnSaveClicked) },
+        onLogoutClick = { viewModel.onEvent(ProfileSetupUiEvent.OnLogoutClicked) },
         onBackClick = {
             viewModel.onEvent(ProfileSetupUiEvent.OnBackClicked)
             onNavigateBack()
@@ -149,6 +157,7 @@ fun ProfileSetupScreenContent(
     onPhotoClick: () -> Unit = {},
     onCareTeamSharingToggled: (Boolean) -> Unit = {},
     onSaveClick: () -> Unit = {},
+    onLogoutClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
@@ -485,6 +494,27 @@ fun ProfileSetupScreenContent(
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Logout Button
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(Color(0xFFFFF0F0))
+                    .border(1.dp, Color(0xFFFFD2D2), RoundedCornerShape(50))
+                    .clickable { onLogoutClick() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Log out",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFD32F2F)
                 )
             }
 

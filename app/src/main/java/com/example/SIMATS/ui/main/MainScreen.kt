@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -58,9 +59,16 @@ import com.example.SIMATS.ui.theme.MomoraScreenBackground
 @Composable
 fun MainScreen(
     viewModel: MainViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onLogoutSuccess: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState.isLoggedOut) {
+        if (uiState.isLoggedOut) {
+            onLogoutSuccess()
+        }
+    }
 
     MainScreenContent(
         modifier = modifier,
@@ -70,6 +78,7 @@ fun MainScreen(
         onViewAssignedPatientsClick = { viewModel.onEvent(MainUiEvent.OnViewAssignedPatientsClicked) },
         onScheduleClick = { viewModel.onEvent(MainUiEvent.OnScheduleClicked) },
         onNextAppointmentClick = { viewModel.onEvent(MainUiEvent.OnNextAppointmentClicked) },
+        onLogoutClick = { viewModel.onEvent(MainUiEvent.OnLogoutClicked) },
         onNotificationClick = { viewModel.onEvent(MainUiEvent.OnNotificationClicked) }
     )
 }
@@ -115,6 +124,7 @@ fun MainScreenContent(
     onViewAssignedPatientsClick: () -> Unit = {},
     onScheduleClick: () -> Unit = {},
     onNextAppointmentClick: () -> Unit = {},
+    onLogoutClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -149,17 +159,40 @@ fun MainScreenContent(
                 )
             }
 
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .clickable { onNotificationClick() },
-                contentAlignment = Alignment.Center
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                BellIcon(
-                    color = MomoraPurplePrimary,
-                    modifier = Modifier.size(20.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .height(36.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(Color(0xFFFFF0F0))
+                        .border(1.dp, Color(0xFFFFD2D2), RoundedCornerShape(18.dp))
+                        .clickable { onLogoutClick() }
+                        .padding(horizontal = 12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Log out",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFD32F2F)
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .clickable { onNotificationClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    BellIcon(
+                        color = MomoraPurplePrimary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
         }
 

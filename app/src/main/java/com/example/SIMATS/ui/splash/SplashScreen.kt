@@ -50,6 +50,7 @@ import com.example.SIMATS.ui.theme.MomoraPinkCircleBg
 import com.example.SIMATS.ui.theme.MomoraPurpleDark
 import com.example.SIMATS.ui.theme.MomoraPurplePrimary
 import com.example.SIMATS.ui.theme.MomoraPurpleText
+import com.example.SIMATS.data.model.UserAuthState
 import com.example.SIMATS.ui.theme.MomoraScreenBackground
 import kotlinx.coroutines.delay
 
@@ -57,14 +58,15 @@ import kotlinx.coroutines.delay
 fun SplashScreen(
     viewModel: SplashViewModel,
     modifier: Modifier = Modifier,
-    onNavigateNext: () -> Unit = {}
+    onNavigateNext: (UserAuthState) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(uiState) {
         if (uiState is SplashUiState.Success) {
-            delay(1500)
-            onNavigateNext()
+            val state = (uiState as SplashUiState.Success).authState
+            delay(500)
+            onNavigateNext(state)
         }
     }
 
@@ -72,7 +74,10 @@ fun SplashScreen(
         modifier = modifier,
         onFavoriteClick = { viewModel.onEvent(SplashUiEvent.OnFavoriteClicked) },
         onHelpClick = { viewModel.onEvent(SplashUiEvent.OnHelpClicked) },
-        onNextClick = { onNavigateNext() }
+        onNextClick = {
+            val state = (uiState as? SplashUiState.Success)?.authState ?: UserAuthState.Unauthenticated
+            onNavigateNext(state)
+        }
     )
 }
 

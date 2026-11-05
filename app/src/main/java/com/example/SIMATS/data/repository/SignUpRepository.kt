@@ -34,7 +34,8 @@ class SignUpRepositoryImpl : SignUpRepository {
                     name = response.user.name,
                     email = response.user.email,
                     role = response.user.role,
-                    patientCode = response.user.patient_code
+                    patientCode = response.user.patient_code,
+                    expiresAt = response.expires_at
                 )
                 emit(Result.success(true))
             } else {

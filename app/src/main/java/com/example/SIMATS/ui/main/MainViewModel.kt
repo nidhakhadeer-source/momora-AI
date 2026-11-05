@@ -3,6 +3,7 @@ package com.example.SIMATS.ui.main
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.repository.DoctorRepository
 import com.example.SIMATS.data.repository.DoctorRepositoryImpl
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,6 +31,10 @@ class MainViewModel(
             MainUiEvent.OnViewAssignedPatientsClicked -> {}
             MainUiEvent.OnScheduleClicked -> {}
             MainUiEvent.OnNextAppointmentClicked -> {}
+            MainUiEvent.OnLogoutClicked -> {
+                SessionManager.clearSession()
+                _uiState.value = _uiState.value.copy(isLoggedOut = true)
+            }
             MainUiEvent.OnNotificationClicked -> {}
         }
     }
