@@ -3,6 +3,7 @@ package com.example.SIMATS.ui.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.PatientProfileData
 import com.example.SIMATS.data.repository.ProfileRepository
 import com.example.SIMATS.data.repository.ProfileRepositoryImpl
@@ -30,11 +31,23 @@ class ProfileSetupViewModel(
             is ProfileSetupUiEvent.OnEmailChanged -> {
                 _uiState.value = _uiState.value.copy(email = event.email)
             }
+            is ProfileSetupUiEvent.OnPhoneChanged -> {
+                _uiState.value = _uiState.value.copy(phone = event.phone)
+            }
             is ProfileSetupUiEvent.OnDateOfBirthChanged -> {
                 _uiState.value = _uiState.value.copy(dateOfBirth = event.dob)
             }
+            is ProfileSetupUiEvent.OnGenderChanged -> {
+                _uiState.value = _uiState.value.copy(gender = event.gender)
+            }
             is ProfileSetupUiEvent.OnBloodGroupChanged -> {
                 _uiState.value = _uiState.value.copy(bloodGroup = event.bloodGroup)
+            }
+            is ProfileSetupUiEvent.OnAddressChanged -> {
+                _uiState.value = _uiState.value.copy(address = event.address)
+            }
+            is ProfileSetupUiEvent.OnPhotoSelected -> {
+                uploadPhoto(event)
             }
             is ProfileSetupUiEvent.OnCareTeamSharingToggled -> {
                 _uiState.value = _uiState.value.copy(isCareTeamSharingOn = event.enabled)
@@ -45,6 +58,9 @@ class ProfileSetupViewModel(
             ProfileSetupUiEvent.OnSaveClicked -> {
                 saveProfile()
             }
+            ProfileSetupUiEvent.DismissMessages -> {
+                _uiState.value = _uiState.value.copy(errorMessage = null, successMessage = null)
+            }
             ProfileSetupUiEvent.OnBackClicked -> {}
             ProfileSetupUiEvent.OnNotificationClicked -> {}
             ProfileSetupUiEvent.OnReminderPreferencesClicked -> {}
@@ -52,51 +68,127 @@ class ProfileSetupViewModel(
         }
     }
 
-    private fun loadProfileData() {
+    fun loadProfileData() {
         viewModelScope.launch {
             repository.getPatientProfile().collect { profile ->
+                val userName = profile.fullName.ifBlank { SessionManager.getUserName() }
+                val userEmail = profile.email.ifBlank { SessionManager.getUserEmail() }
+                val userPhone = profile.phone ?: SessionManager.getPhone() ?: ""
+                val userDob = profile.dateOfBirth.ifBlank { SessionManager.getDateOfBirth() }
+                val userGender = profile.gender ?: SessionManager.getGender()
+                val userBloodGroup = profile.bloodGroup.ifBlank { SessionManager.getBloodGroup() }
+                val userAddress = profile.address ?: SessionManager.getAddress() ?: ""
+                val userPhoto = profile.photoUrl ?: profile.profilePhoto ?: SessionManager.getPhotoUrl()
+
                 _uiState.value = _uiState.value.copy(
-                    profileData = profile,
-                    fullName = profile.fullName,
-                    email = profile.email,
-                    dateOfBirth = profile.dateOfBirth,
-                    bloodGroup = profile.bloodGroup,
+                    profileData = profile.copy(
+                        avatarInitials = generateInitials(userName),
+                        patientName = userName,
+                        fullName = userName,
+                        email = userEmail,
+                        phone = userPhone,
+                        dateOfBirth = userDob,
+                        gender = userGender,
+                        bloodGroup = userBloodGroup,
+                        address = userAddress,
+                        photoUrl = userPhoto
+                    ),
+                    fullName = userName,
+                    email = userEmail,
+                    phone = userPhone,
+                    dateOfBirth = userDob,
+                    gender = userGender,
+                    bloodGroup = userBloodGroup,
+                    address = userAddress,
+                    profilePhotoUrl = userPhoto,
                     isCareTeamSharingOn = profile.isCareTeamSharingOn
                 )
             }
         }
     }
 
-    private fun saveProfile() {
-        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+    private fun uploadPhoto(event: ProfileSetupUiEvent.OnPhotoSelected) {
+        _uiState.value = _uiState.value.copy(
+            localPhotoUri = event.uri,
+            isUploadingPhoto = true,
+            errorMessage = null,
+            successMessage = null
+        )
         viewModelScope.launch {
-            val updatedProfile = _uiState.value.profileData?.copy(
-                fullName = _uiState.value.fullName,
-                email = _uiState.value.email,
-                dateOfBirth = _uiState.value.dateOfBirth,
-                bloodGroup = _uiState.value.bloodGroup,
-                isCareTeamSharingOn = _uiState.value.isCareTeamSharingOn
-            ) ?: PatientProfileData(
-                avatarInitials = "MP",
+            repository.uploadProfilePhoto(event.context, event.uri).collect { result ->
+                result.onSuccess { url ->
+                    _uiState.value = _uiState.value.copy(
+                        isUploadingPhoto = false,
+                        profilePhotoUrl = url,
+                        successMessage = "Profile photo uploaded successfully"
+                    )
+                    loadProfileData()
+                }.onFailure { err ->
+                    _uiState.value = _uiState.value.copy(
+                        isUploadingPhoto = false,
+                        errorMessage = err.message ?: "Failed to upload photo"
+                    )
+                }
+            }
+        }
+    }
+
+    private fun saveProfile() {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null, successMessage = null)
+        viewModelScope.launch {
+            val currentProfile = _uiState.value.profileData
+            val initials = generateInitials(_uiState.value.fullName)
+            val updatedProfile = currentProfile?.copy(
+                avatarInitials = initials,
                 patientName = _uiState.value.fullName,
-                patientId = "P-13042",
                 fullName = _uiState.value.fullName,
                 email = _uiState.value.email,
+                phone = _uiState.value.phone,
                 dateOfBirth = _uiState.value.dateOfBirth,
+                gender = _uiState.value.gender,
                 bloodGroup = _uiState.value.bloodGroup,
+                address = _uiState.value.address,
                 isCareTeamSharingOn = _uiState.value.isCareTeamSharingOn,
-                careTeamDoctorName = "Dr Amelia Chen",
+                photoUrl = _uiState.value.profilePhotoUrl
+            ) ?: PatientProfileData(
+                avatarInitials = initials,
+                patientName = _uiState.value.fullName,
+                patientId = SessionManager.getPatientCode(),
+                fullName = _uiState.value.fullName,
+                email = _uiState.value.email,
+                phone = _uiState.value.phone,
+                dateOfBirth = _uiState.value.dateOfBirth,
+                gender = _uiState.value.gender,
+                bloodGroup = _uiState.value.bloodGroup,
+                address = _uiState.value.address,
+                photoUrl = _uiState.value.profilePhotoUrl,
+                isCareTeamSharingOn = _uiState.value.isCareTeamSharingOn,
+                careTeamDoctorName = SessionManager.getDoctorName(),
                 reminderSummary = "Medication and appointment alerts"
             )
 
             repository.savePatientProfile(updatedProfile).collect { result ->
                 result.onSuccess {
-                    _uiState.value = _uiState.value.copy(isLoading = false, isSavedSuccess = true)
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        isSavedSuccess = true,
+                        successMessage = "Profile details saved successfully"
+                    )
+                    loadProfileData()
                 }.onFailure { err ->
-                    _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = err.message)
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = err.message ?: "Failed to save profile"
+                    )
                 }
             }
         }
+    }
+
+    private fun generateInitials(name: String): String {
+        val words = name.trim().split(Regex("\\s+")).filter { it.isNotBlank() }
+        val initials = words.take(2).map { it.first().uppercaseChar() }.joinToString("")
+        return initials.ifBlank { "PT" }
     }
 
     class Factory(private val repository: ProfileRepository) : ViewModelProvider.Factory {

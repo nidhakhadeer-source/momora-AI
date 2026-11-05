@@ -1,6 +1,13 @@
 package com.example.SIMATS.ui.profile
 
+import android.content.Context
+import android.graphics.BitmapFactory
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -23,26 +30,35 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.PatientProfileData
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraMintBadgeBg
@@ -51,6 +67,10 @@ import com.example.SIMATS.ui.theme.MomoraPurpleDark
 import com.example.SIMATS.ui.theme.MomoraPurplePrimary
 import com.example.SIMATS.ui.theme.MomoraPurpleText
 import com.example.SIMATS.ui.theme.MomoraScreenBackground
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.net.HttpURLConnection
+import java.net.URL
 
 @Composable
 fun ProfileSetupScreen(
@@ -60,14 +80,31 @@ fun ProfileSetupScreen(
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            viewModel.onEvent(ProfileSetupUiEvent.OnPhotoSelected(uri, context))
+        }
+    }
 
     ProfileSetupScreenContent(
         modifier = modifier,
         uiState = uiState,
         onFullNameChanged = { name -> viewModel.onEvent(ProfileSetupUiEvent.OnFullNameChanged(name)) },
         onEmailChanged = { email -> viewModel.onEvent(ProfileSetupUiEvent.OnEmailChanged(email)) },
+        onPhoneChanged = { phone -> viewModel.onEvent(ProfileSetupUiEvent.OnPhoneChanged(phone)) },
         onDateOfBirthChanged = { dob -> viewModel.onEvent(ProfileSetupUiEvent.OnDateOfBirthChanged(dob)) },
+        onGenderChanged = { gender -> viewModel.onEvent(ProfileSetupUiEvent.OnGenderChanged(gender)) },
         onBloodGroupChanged = { bg -> viewModel.onEvent(ProfileSetupUiEvent.OnBloodGroupChanged(bg)) },
+        onAddressChanged = { addr -> viewModel.onEvent(ProfileSetupUiEvent.OnAddressChanged(addr)) },
+        onPhotoClick = {
+            photoPickerLauncher.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            )
+        },
         onCareTeamSharingToggled = { enabled -> viewModel.onEvent(ProfileSetupUiEvent.OnCareTeamSharingToggled(enabled)) },
         onSaveClick = { viewModel.onEvent(ProfileSetupUiEvent.OnSaveClicked) },
         onBackClick = {
@@ -92,8 +129,11 @@ fun ProfileSetupScreenContent(
             patientId = "P-13042",
             fullName = "Maya Patel",
             email = "maya.patel@example.com",
+            phone = "+1 555-0199",
             dateOfBirth = "14 May 1997",
+            gender = "Female",
             bloodGroup = "O positive",
+            address = "123 Willow Lane",
             isCareTeamSharingOn = true,
             careTeamDoctorName = "Dr Amelia Chen",
             reminderSummary = "Medication and appointment alerts"
@@ -101,8 +141,12 @@ fun ProfileSetupScreenContent(
     ),
     onFullNameChanged: (String) -> Unit = {},
     onEmailChanged: (String) -> Unit = {},
+    onPhoneChanged: (String) -> Unit = {},
     onDateOfBirthChanged: (String) -> Unit = {},
+    onGenderChanged: (String) -> Unit = {},
     onBloodGroupChanged: (String) -> Unit = {},
+    onAddressChanged: (String) -> Unit = {},
+    onPhotoClick: () -> Unit = {},
     onCareTeamSharingToggled: (Boolean) -> Unit = {},
     onSaveClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
@@ -180,47 +224,88 @@ fun ProfileSetupScreenContent(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // User Avatar Header Card
+            // User Avatar Header Card with Clickable Photo Picker
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFF4ECF8)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = uiState.profileData?.avatarInitials ?: "MP",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MomoraPurplePrimary
-                    )
-                }
+                ProfileAvatar(
+                    photoUrl = uiState.profilePhotoUrl,
+                    localUri = uiState.localPhotoUri,
+                    initials = uiState.profileData?.avatarInitials ?: "PT",
+                    isUploading = uiState.isUploadingPhoto,
+                    onClick = onPhotoClick
+                )
 
                 Spacer(modifier = Modifier.width(14.dp))
 
-                Column {
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { onPhotoClick() }
+                ) {
                     Text(
-                        text = uiState.profileData?.patientName ?: uiState.fullName,
+                        text = uiState.fullName.ifBlank { uiState.profileData?.patientName ?: SessionManager.getUserName() },
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = MomoraPurpleDark
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Patient ID · ${uiState.profileData?.patientId ?: "P-13042"}",
+                        text = "Patient ID · ${uiState.profileData?.patientId ?: SessionManager.getPatientCode()}",
                         fontSize = 12.sp,
                         color = MomoraBodyMuted
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = if (uiState.isUploadingPhoto) "Uploading photo..." else "Tap photo to change",
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MomoraPurplePrimary
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // Personal Details Form Fields
+            // Feedback Messages
+            if (!uiState.successMessage.isNullOrBlank()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MomoraMintBadgeBg)
+                        .padding(horizontal = 14.dp, vertical = 10.dp)
+                ) {
+                    Text(
+                        text = uiState.successMessage,
+                        fontSize = 12.5.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MomoraMintBadgeText
+                    )
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            if (!uiState.errorMessage.isNullOrBlank()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFFDE8E8))
+                        .padding(horizontal = 14.dp, vertical = 10.dp)
+                ) {
+                    Text(
+                        text = uiState.errorMessage,
+                        fontSize = 12.5.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFFC81E1E)
+                    )
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            // Field 1: Full Name
             FormFieldLabel(text = "Full name")
             CustomInputField(
                 value = uiState.fullName,
@@ -230,6 +315,7 @@ fun ProfileSetupScreenContent(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // Field 2: Email Address
             FormFieldLabel(text = "Email address")
             CustomInputField(
                 value = uiState.email,
@@ -240,7 +326,18 @@ fun ProfileSetupScreenContent(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Date of Birth & Blood Group Row
+            // Field 3: Phone Number
+            FormFieldLabel(text = "Phone number")
+            CustomInputField(
+                value = uiState.phone,
+                onValueChange = onPhoneChanged,
+                placeholder = "e.g. +1 555-0199",
+                keyboardType = KeyboardType.Phone
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Field 4 & 5: Date of Birth & Blood Group Row
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -263,6 +360,26 @@ fun ProfileSetupScreenContent(
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Field 6: Gender
+            FormFieldLabel(text = "Gender")
+            CustomInputField(
+                value = uiState.gender,
+                onValueChange = onGenderChanged,
+                placeholder = "e.g. Female"
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Field 7: Residential Address
+            FormFieldLabel(text = "Address")
+            CustomInputField(
+                value = uiState.address,
+                onValueChange = onAddressChanged,
+                placeholder = "Enter residential address"
+            )
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -287,7 +404,7 @@ fun ProfileSetupScreenContent(
                 // Item 1: Care-team sharing
                 PrivacyPreferenceRow(
                     title = "Care-team sharing",
-                    subtitle = "${uiState.profileData?.careTeamDoctorName ?: "Dr Amelia Chen"} · Enabled with consent",
+                    subtitle = "${uiState.profileData?.careTeamDoctorName ?: SessionManager.getDoctorName()} · Enabled with consent",
                     icon = {
                         ShieldIcon(color = MomoraMintBadgeText, modifier = Modifier.size(16.dp))
                     },
@@ -379,6 +496,123 @@ fun ProfileSetupScreenContent(
             selectedIndex = uiState.selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
+    }
+}
+
+/**
+ * Clickable Profile Avatar Composable.
+ * Displays photo from network or local Uri when available; displays initials when no photo exists.
+ */
+@Composable
+private fun ProfileAvatar(
+    photoUrl: String?,
+    localUri: Uri?,
+    initials: String,
+    isUploading: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    var bitmap by remember(photoUrl, localUri) { mutableStateOf<ImageBitmap?>(null) }
+
+    LaunchedEffect(photoUrl, localUri) {
+        if (localUri != null) {
+            withContext(Dispatchers.IO) {
+                try {
+                    context.contentResolver.openInputStream(localUri)?.use { stream ->
+                        val bmp = BitmapFactory.decodeStream(stream)
+                        bitmap = bmp?.asImageBitmap()
+                    }
+                } catch (_: Exception) {}
+            }
+        } else if (!photoUrl.isNullOrBlank()) {
+            withContext(Dispatchers.IO) {
+                try {
+                    val connection = URL(photoUrl).openConnection() as HttpURLConnection
+                    connection.connectTimeout = 8000
+                    connection.readTimeout = 8000
+                    connection.setRequestProperty("ngrok-skip-browser-warning", "true")
+                    SessionManager.getToken()?.let {
+                        connection.setRequestProperty("Authorization", "Bearer $it")
+                    }
+                    connection.doInput = true
+                    connection.connect()
+                    if (connection.responseCode in 200..299) {
+                        connection.inputStream.use { stream ->
+                            val bmp = BitmapFactory.decodeStream(stream)
+                            bitmap = bmp?.asImageBitmap()
+                        }
+                    }
+                } catch (_: Exception) {}
+            }
+        } else {
+            bitmap = null
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .size(56.dp)
+            .clickable { onClick() }
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(CircleShape)
+                .background(Color(0xFFF4ECF8))
+                .border(2.dp, MomoraPurplePrimary.copy(alpha = 0.25f), CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            if (bitmap != null) {
+                Image(
+                    bitmap = bitmap!!,
+                    contentDescription = "Profile Photo",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Text(
+                    text = initials,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MomoraPurplePrimary
+                )
+            }
+
+            if (isUploading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.45f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(22.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                }
+            }
+        }
+
+        // Camera edit icon badge
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .size(18.dp)
+                .clip(CircleShape)
+                .background(MomoraPurplePrimary)
+                .border(1.5.dp, Color.White, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "+",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
     }
 }
 

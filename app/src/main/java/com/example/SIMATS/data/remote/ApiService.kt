@@ -25,12 +25,23 @@ import com.example.SIMATS.data.model.PatientProfileData
 import com.example.SIMATS.data.model.PregnancyDetailsData
 import com.example.SIMATS.data.model.SymptomEntryData
 import com.example.SIMATS.data.model.WeightTrackerData
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.http.Field
 import retrofit2.http.FieldMap
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.POST
+import retrofit2.http.Part
 import retrofit2.http.Query
+
+data class ProfilePhotoUploadData(
+    val user_id: Int? = null,
+    val profile_photo: String? = null,
+    val photo_url: String? = null,
+    val filename: String? = null
+)
 
 interface ApiService {
 
@@ -63,10 +74,17 @@ interface ApiService {
     ): DataResponse<PatientProfileData>
 
     @FormUrlEncoded
-    @POST("profile/profile_edit.php")
+    @POST("profile/profile_update.php")
     suspend fun updateProfile(
         @FieldMap fields: Map<String, String>
     ): BaseResponse
+
+    @Multipart
+    @POST("profile/profile_photo_upload.php")
+    suspend fun uploadProfilePhoto(
+        @Part("user_id") userId: RequestBody,
+        @Part photo: MultipartBody.Part
+    ): DataResponse<ProfilePhotoUploadData>
 
     // -------------------------------------------------------------------------
     // Patient Dashboard
