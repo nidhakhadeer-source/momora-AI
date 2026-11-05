@@ -1,4 +1,4 @@
-package com.example.SIMATS.data.remote
+﻿package com.example.SIMATS.data.remote
 
 import com.example.SIMATS.data.model.AddDoctorData
 import com.example.SIMATS.data.model.AdminDashboardData
@@ -11,6 +11,7 @@ import com.example.SIMATS.data.model.ChatMessage
 import com.example.SIMATS.data.model.DoctorAccountItem
 import com.example.SIMATS.data.model.DoctorAdviceData
 import com.example.SIMATS.data.model.DoctorDashboardData
+import com.example.SIMATS.data.model.DoctorProfileData
 import com.example.SIMATS.data.model.DoctorScheduleData
 import com.example.SIMATS.data.model.HealthMonitoringData
 import com.example.SIMATS.data.model.MedicalReportItem
@@ -271,6 +272,18 @@ interface ApiService {
     suspend fun getDoctorSchedule(
         @Query("user_id") userId: Int? = null
     ): DataResponse<DoctorScheduleData>
+
+    @GET("doctor/profile_fetch.php")
+    suspend fun getDoctorProfile(
+        @Query("user_id") userId: Int? = null
+    ): DataResponse<DoctorProfileData>
+
+    @FormUrlEncoded
+    @POST("doctor/profile_update.php")
+    suspend fun updateDoctorProfile(
+        @Query("user_id") userId: Int? = null,
+        @FieldMap fields: Map<String, String>
+    ): DataResponse<DoctorProfileData>
 
     // -------------------------------------------------------------------------
     // Admin Portal

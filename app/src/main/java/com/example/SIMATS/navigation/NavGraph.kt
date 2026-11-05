@@ -27,6 +27,8 @@ import com.example.SIMATS.ui.calendar.AppointmentsCalendarViewModel
 import com.example.SIMATS.ui.doctoradvice.DoctorAdviceScreen
 import com.example.SIMATS.ui.doctoradvice.DoctorAdviceViewModel
 import com.example.SIMATS.ui.doctorschedule.DoctorScheduleScreen
+import com.example.SIMATS.ui.doctorprofile.DoctorProfileScreen
+import com.example.SIMATS.ui.doctorprofile.DoctorProfileViewModel
 import com.example.SIMATS.ui.doctorschedule.DoctorScheduleViewModel
 import com.example.SIMATS.ui.duedate.DueDateScreen
 import com.example.SIMATS.ui.duedate.DueDateViewModel
@@ -427,6 +429,9 @@ fun AppNavHost() {
                 onLogoutSuccess = {
                     currentScreen = Screen.Login
                 },
+                onProfileClick = {
+                    currentScreen = Screen.DoctorProfile
+                },
                 onViewAssignedPatientsClick = {
                     currentScreen = Screen.AssignedPatients
                 },
@@ -535,6 +540,26 @@ fun AppNavHost() {
                 },
                 onViewRecordClick = {
                     currentScreen = Screen.PatientHistory
+                },
+                onNavTabSelected = { index ->
+                    when (index) {
+                        0 -> currentScreen = Screen.DoctorDashboard
+                        1 -> currentScreen = Screen.AssignedPatients
+                        2 -> currentScreen = Screen.DoctorSchedule
+                        3 -> currentScreen = Screen.DoctorAdvice
+                    }
+                }
+            )
+        }
+        Screen.DoctorProfile -> {
+            val doctorProfileViewModel: DoctorProfileViewModel = viewModel()
+            DoctorProfileScreen(
+                viewModel = doctorProfileViewModel,
+                onNavigateBack = {
+                    currentScreen = Screen.DoctorDashboard
+                },
+                onLogoutSuccess = {
+                    currentScreen = Screen.Login
                 },
                 onNavTabSelected = { index ->
                     when (index) {

@@ -66,6 +66,7 @@ fun MainScreen(
     onScheduleClick: () -> Unit = {},
     onNextAppointmentClick: () -> Unit = {},
     onReviewPatientClick: (String) -> Unit = {},
+    onProfileClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -100,6 +101,7 @@ fun MainScreen(
             onNextAppointmentClick()
         },
         onRetryClick = { viewModel.onEvent(MainUiEvent.OnRetryClicked) },
+        onProfileClick = onProfileClick,
         onLogoutClick = { viewModel.onEvent(MainUiEvent.OnLogoutClicked) },
         onNotificationClick = { viewModel.onEvent(MainUiEvent.OnNotificationClicked) }
     )
@@ -147,6 +149,7 @@ fun MainScreenContent(
     onScheduleClick: () -> Unit = {},
     onNextAppointmentClick: () -> Unit = {},
     onRetryClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {}
 ) {
@@ -186,6 +189,21 @@ fun MainScreenContent(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(MomoraPurplePrimary)
+                        .clickable { onProfileClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Dr",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
                 Box(
                     modifier = Modifier
                         .height(36.dp)
