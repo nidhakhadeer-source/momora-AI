@@ -36,13 +36,31 @@ class AdminSettingsViewModel(
             }
             AdminSettingsUiEvent.OnBackClicked -> {}
             AdminSettingsUiEvent.OnNotificationClicked -> {}
+            AdminSettingsUiEvent.OnRetryClicked -> {
+                loadSettings()
+            }
         }
     }
 
-    private fun loadSettings() {
+    fun loadSettings() {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getAdminSettings().collect { data ->
-                _uiState.value = _uiState.value.copy(settingsData = data)
+            repository.getAdminSettings().collect { result ->
+                result.fold(
+                    onSuccess = { data ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = null,
+                            settingsData = data
+                        )
+                    },
+                    onFailure = { error ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = error.localizedMessage ?: "Failed to load admin settings"
+                        )
+                    }
+                )
             }
         }
     }

@@ -11,6 +11,7 @@ data class AddDoctorUiState(
     val clinicInput: String = "Willow Maternity Clinic",
     val isSendActivationChecked: Boolean = true,
     val selectedNavIndex: Int = 1, // Doctors tab active (index 1)
+    val isLoading: Boolean = false,
     val isCreating: Boolean = false,
     val isCreatedSuccess: Boolean = false,
     val errorMessage: String? = null

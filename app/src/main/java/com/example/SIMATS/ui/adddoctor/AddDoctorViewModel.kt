@@ -49,19 +49,35 @@ class AddDoctorViewModel(
             }
             AddDoctorUiEvent.OnBackClicked -> {}
             AddDoctorUiEvent.OnNotificationClicked -> {}
+            AddDoctorUiEvent.OnRetryClicked -> {
+                loadData()
+            }
         }
     }
 
-    private fun loadData() {
+    fun loadData() {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getDefaultDoctorFormData().collect { data ->
-                _uiState.value = _uiState.value.copy(
-                    formData = data,
-                    nameInput = data.defaultName,
-                    emailInput = data.defaultEmail,
-                    specialtyInput = data.defaultSpecialty,
-                    licenseIdInput = data.defaultLicenseId,
-                    clinicInput = data.defaultClinic
+            repository.getDefaultDoctorFormData().collect { result ->
+                result.fold(
+                    onSuccess = { data ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = null,
+                            formData = data,
+                            nameInput = data.defaultName,
+                            emailInput = data.defaultEmail,
+                            specialtyInput = data.defaultSpecialty,
+                            licenseIdInput = data.defaultLicenseId,
+                            clinicInput = data.defaultClinic
+                        )
+                    },
+                    onFailure = { error ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = error.localizedMessage ?: "Failed to load doctor form data"
+                        )
+                    }
                 )
             }
         }

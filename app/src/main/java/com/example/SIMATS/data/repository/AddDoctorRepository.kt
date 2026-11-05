@@ -1,12 +1,14 @@
 package com.example.SIMATS.data.repository
 
+import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.AddDoctorData
 import com.example.SIMATS.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import retrofit2.HttpException
 
 interface AddDoctorRepository {
-    fun getDefaultDoctorFormData(): Flow<AddDoctorData>
+    fun getDefaultDoctorFormData(): Flow<Result<AddDoctorData>>
     fun createDoctorAccount(
         name: String,
         email: String,
@@ -20,29 +22,22 @@ interface AddDoctorRepository {
 class AddDoctorRepositoryImpl : AddDoctorRepository {
     private val apiService = RetrofitClient.apiService
 
-    override fun getDefaultDoctorFormData(): Flow<AddDoctorData> = flow {
+    override fun getDefaultDoctorFormData(): Flow<Result<AddDoctorData>> = flow {
         try {
             val response = apiService.getAddDoctorFormData()
             if (response.success && response.data != null) {
-                emit(response.data)
-                return@flow
+                emit(Result.success(response.data))
+            } else {
+                emit(Result.failure(Exception(response.message ?: "Failed to load doctor form data")))
             }
-        } catch (_: Exception) {}
-
-        emit(
-            AddDoctorData(
-                defaultName = "Dr Olivia Bennett",
-                defaultEmail = "olivia.bennett@willow.example",
-                defaultSpecialty = "Obstetrics",
-                defaultLicenseId = "OBS-28482",
-                defaultClinic = "Willow Maternity Clinic",
-                availableClinics = listOf(
-                    "Willow Maternity Clinic",
-                    "SIMATS Women's Care",
-                    "City Central Maternity Center"
-                )
-            )
-        )
+        } catch (e: Exception) {
+            if (e is HttpException && e.code() == 401) {
+                SessionManager.notifySessionExpired()
+                emit(Result.failure(Exception("Session expired. Please log in again.")))
+            } else {
+                emit(Result.failure(Exception(e.localizedMessage ?: "Network connection error")))
+            }
+        }
     }
 
     override fun createDoctorAccount(
@@ -69,7 +64,12 @@ class AddDoctorRepositoryImpl : AddDoctorRepository {
                 emit(Result.failure(Exception(response.message ?: "Failed to create doctor account")))
             }
         } catch (e: Exception) {
-            emit(Result.failure(Exception(e.localizedMessage ?: "Network error while creating doctor account")))
+            if (e is HttpException && e.code() == 401) {
+                SessionManager.notifySessionExpired()
+                emit(Result.failure(Exception("Session expired. Please log in again.")))
+            } else {
+                emit(Result.failure(Exception(e.localizedMessage ?: "Network error while creating doctor account")))
+            }
         }
     }
 }

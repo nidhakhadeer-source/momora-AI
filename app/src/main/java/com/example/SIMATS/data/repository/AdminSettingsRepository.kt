@@ -5,36 +5,32 @@ import com.example.SIMATS.data.model.AdminSettingsData
 import com.example.SIMATS.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import retrofit2.HttpException
 
 interface AdminSettingsRepository {
-    fun getAdminSettings(): Flow<AdminSettingsData>
+    fun getAdminSettings(): Flow<Result<AdminSettingsData>>
     fun logout(): Flow<Result<Boolean>>
 }
 
 class AdminSettingsRepositoryImpl : AdminSettingsRepository {
     private val apiService = RetrofitClient.apiService
 
-    override fun getAdminSettings(): Flow<AdminSettingsData> = flow {
+    override fun getAdminSettings(): Flow<Result<AdminSettingsData>> = flow {
         try {
             val response = apiService.getAdminSettings()
             if (response.success && response.data != null) {
-                emit(response.data)
-                return@flow
+                emit(Result.success(response.data))
+            } else {
+                emit(Result.failure(Exception(response.message ?: "Failed to load admin settings")))
             }
-        } catch (_: Exception) {}
-
-        emit(
-            AdminSettingsData(
-                adminName = SessionManager.getUserName().ifBlank { "Alex Morgan" },
-                adminEmailText = "${SessionManager.getUserEmail().ifBlank { "admin@willow.example" }} · Administrator",
-                passwordLastUpdatedText = "Last updated 01 Oct 2026",
-                isMfaEnabled = true,
-                mfaStatusText = "Authenticator app connected",
-                sessionTimeoutText = "Automatically sign out after 15 minutes",
-                activeSessionsText = "1 device · This Android device",
-                appVersionText = "Momora AI · v1.0.0 · Ends your session on this device."
-            )
-        )
+        } catch (e: Exception) {
+            if (e is HttpException && e.code() == 401) {
+                SessionManager.notifySessionExpired()
+                emit(Result.failure(Exception("Session expired. Please log in again.")))
+            } else {
+                emit(Result.failure(Exception(e.localizedMessage ?: "Network connection error")))
+            }
+        }
     }
 
     override fun logout(): Flow<Result<Boolean>> = flow {

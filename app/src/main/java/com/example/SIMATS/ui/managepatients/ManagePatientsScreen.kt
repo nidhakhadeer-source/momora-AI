@@ -48,6 +48,7 @@ import com.example.SIMATS.data.model.PatientAccountItem
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraMintBadgeBg
 import com.example.SIMATS.ui.theme.MomoraMintBadgeText
+import androidx.compose.material3.CircularProgressIndicator
 import com.example.SIMATS.ui.theme.MomoraPinkCircleBg
 import com.example.SIMATS.ui.theme.MomoraPurpleDark
 import com.example.SIMATS.ui.theme.MomoraPurplePrimary
@@ -70,6 +71,7 @@ fun ManagePatientsScreen(
         onFilterTabSelected = { index -> viewModel.onEvent(ManagePatientsUiEvent.OnFilterTabSelected(index)) },
         onEditAccountClick = { id -> viewModel.onEvent(ManagePatientsUiEvent.OnEditAccountClicked(id)) },
         onManageAccessClick = { id -> viewModel.onEvent(ManagePatientsUiEvent.OnManageAccessClicked(id)) },
+        onRetryClick = { viewModel.onEvent(ManagePatientsUiEvent.OnRetryClicked) },
         onNextPageClick = { viewModel.onEvent(ManagePatientsUiEvent.OnNextPageClicked) },
         onBackClick = {
             viewModel.onEvent(ManagePatientsUiEvent.OnBackClicked)
@@ -124,6 +126,7 @@ fun ManagePatientsScreenContent(
     onFilterTabSelected: (Int) -> Unit = {},
     onEditAccountClick: (String) -> Unit = {},
     onManageAccessClick: (String) -> Unit = {},
+    onRetryClick: () -> Unit = {},
     onNextPageClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
@@ -302,16 +305,88 @@ fun ManagePatientsScreenContent(
                 else -> uiState.patients
             }
 
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                filteredPatients.forEach { patient ->
-                    PatientAccountCardItem(
-                        item = patient,
-                        onEditClick = { onEditAccountClick(patient.id) },
-                        onManageAccessClick = { onManageAccessClick(patient.id) }
-                    )
+            if (uiState.isLoading && uiState.patients.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 40.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MomoraPurplePrimary)
+                }
+            } else if (uiState.errorMessage != null && uiState.patients.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFF2DEDE), RoundedCornerShape(16.dp))
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = uiState.errorMessage ?: "Failed to load patient accounts",
+                            fontSize = 14.sp,
+                            color = Color(0xFFA94442),
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(MomoraPurplePrimary)
+                                .clickable { onRetryClick() }
+                                .padding(horizontal = 20.dp, vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Retry",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+            } else if (filteredPatients.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                        .padding(28.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "No patient accounts found",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurpleDark
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = if (uiState.selectedFilterTab == 2) "No inactive patient accounts." else "Patients registered in Momora AI will appear here.",
+                            fontSize = 12.sp,
+                            color = MomoraBodyMuted,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            } else {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    filteredPatients.forEach { patient ->
+                        PatientAccountCardItem(
+                            item = patient,
+                            onEditClick = { onEditAccountClick(patient.id) },
+                            onManageAccessClick = { onManageAccessClick(patient.id) }
+                        )
+                    }
                 }
             }
 

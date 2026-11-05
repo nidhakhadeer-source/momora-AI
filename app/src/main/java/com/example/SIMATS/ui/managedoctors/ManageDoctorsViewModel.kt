@@ -40,13 +40,36 @@ class ManageDoctorsViewModel(
             ManageDoctorsUiEvent.OnNextPageClicked -> {}
             ManageDoctorsUiEvent.OnBackClicked -> {}
             ManageDoctorsUiEvent.OnNotificationClicked -> {}
+            ManageDoctorsUiEvent.OnRetryClicked -> {
+                loadDoctors()
+            }
         }
     }
 
-    private fun loadDoctors() {
+    fun loadDoctors() {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getDoctors().collect { list ->
-                _uiState.value = _uiState.value.copy(doctors = list)
+            repository.getDoctors().collect { result ->
+                result.fold(
+                    onSuccess = { list ->
+                        val active = list.count { it.isActive }
+                        val inactive = list.count { !it.isActive }
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = null,
+                            doctors = list,
+                            totalCount = list.size,
+                            activeCount = active,
+                            inactiveCount = inactive
+                        )
+                    },
+                    onFailure = { error ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = error.localizedMessage ?: "Failed to load doctors list"
+                        )
+                    }
+                )
             }
         }
     }
@@ -57,13 +80,20 @@ class ManageDoctorsViewModel(
                 result.onSuccess {
                     val updated = _uiState.value.doctors.map { doc ->
                         if (doc.id == id) {
+                            val newActive = !doc.isActive
                             doc.copy(
-                                isActive = !doc.isActive,
-                                specialtyAndPatientsText = if (doc.isActive) "Maternal medicine · Access disabled" else "Obstetrics · 18 assigned patients"
+                                isActive = newActive,
+                                specialtyAndPatientsText = if (newActive) "Obstetrics · 18 assigned patients" else "Maternal medicine · Access disabled"
                             )
                         } else doc
                     }
-                    _uiState.value = _uiState.value.copy(doctors = updated)
+                    val active = updated.count { it.isActive }
+                    val inactive = updated.count { !it.isActive }
+                    _uiState.value = _uiState.value.copy(
+                        doctors = updated,
+                        activeCount = active,
+                        inactiveCount = inactive
+                    )
                 }
             }
         }

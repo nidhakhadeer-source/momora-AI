@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -73,6 +74,7 @@ fun AddDoctorScreen(
         onClinicChanged = { c -> viewModel.onEvent(AddDoctorUiEvent.OnClinicChanged(c)) },
         onSendActivationToggled = { a -> viewModel.onEvent(AddDoctorUiEvent.OnSendActivationToggled(a)) },
         onCreateAccountClick = { viewModel.onEvent(AddDoctorUiEvent.OnCreateAccountClicked) },
+        onRetryClick = { viewModel.onEvent(AddDoctorUiEvent.OnRetryClicked) },
         onBackClick = {
             viewModel.onEvent(AddDoctorUiEvent.OnBackClicked)
             onNavigateBack()
@@ -105,6 +107,7 @@ fun AddDoctorScreenContent(
     onClinicChanged: (String) -> Unit = {},
     onSendActivationToggled: (Boolean) -> Unit = {},
     onCreateAccountClick: () -> Unit = {},
+    onRetryClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
@@ -197,6 +200,53 @@ fun AddDoctorScreenContent(
             }
 
             Spacer(modifier = Modifier.height(14.dp))
+
+            if (uiState.isLoading && uiState.formData == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 40.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MomoraPurplePrimary)
+                }
+            } else if (uiState.errorMessage != null && uiState.formData == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFF2DEDE), RoundedCornerShape(16.dp))
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = uiState.errorMessage ?: "Failed to load doctor form defaults",
+                            fontSize = 14.sp,
+                            color = Color(0xFFA94442),
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(MomoraPurplePrimary)
+                                .clickable { onRetryClick() }
+                                .padding(horizontal = 20.dp, vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Retry",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(14.dp))
+            }
 
             // Doctor's Full Name Field
             Text(

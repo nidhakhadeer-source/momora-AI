@@ -5,6 +5,7 @@ import com.example.SIMATS.data.model.AdminSettingsData
 data class AdminSettingsUiState(
     val settingsData: AdminSettingsData? = null,
     val selectedNavIndex: Int = 3, // Settings tab active (index 3)
+    val isLoading: Boolean = false,
     val isLoggingOut: Boolean = false,
     val isLoggedOutSuccess: Boolean = false,
     val errorMessage: String? = null

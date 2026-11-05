@@ -30,13 +30,31 @@ class AdminDashboardViewModel(
             AdminDashboardUiEvent.OnManagePatientsClicked -> {}
             AdminDashboardUiEvent.OnAddDoctorClicked -> {}
             AdminDashboardUiEvent.OnNotificationClicked -> {}
+            AdminDashboardUiEvent.OnRetryClicked -> {
+                loadDashboard()
+            }
         }
     }
 
-    private fun loadDashboard() {
+    fun loadDashboard() {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getAdminDashboardData().collect { data ->
-                _uiState.value = _uiState.value.copy(dashboardData = data)
+            repository.getAdminDashboardData().collect { result ->
+                result.fold(
+                    onSuccess = { data ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = null,
+                            dashboardData = data
+                        )
+                    },
+                    onFailure = { error ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = error.localizedMessage ?: "Failed to load admin dashboard"
+                        )
+                    }
+                )
             }
         }
     }

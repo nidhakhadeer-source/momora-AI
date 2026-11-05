@@ -6,4 +6,5 @@ sealed interface AdminDashboardUiEvent {
     data object OnManagePatientsClicked : AdminDashboardUiEvent
     data object OnAddDoctorClicked : AdminDashboardUiEvent
     data object OnNotificationClicked : AdminDashboardUiEvent
+    data object OnRetryClicked : AdminDashboardUiEvent
 }

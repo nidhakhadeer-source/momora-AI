@@ -9,4 +9,5 @@ sealed interface ManagePatientsUiEvent {
     data object OnNextPageClicked : ManagePatientsUiEvent
     data object OnBackClicked : ManagePatientsUiEvent
     data object OnNotificationClicked : ManagePatientsUiEvent
+    data object OnRetryClicked : ManagePatientsUiEvent
 }

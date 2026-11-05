@@ -10,4 +10,5 @@ sealed interface AdminSettingsUiEvent {
     data object OnLogoutClicked : AdminSettingsUiEvent
     data object OnBackClicked : AdminSettingsUiEvent
     data object OnNotificationClicked : AdminSettingsUiEvent
+    data object OnRetryClicked : AdminSettingsUiEvent
 }

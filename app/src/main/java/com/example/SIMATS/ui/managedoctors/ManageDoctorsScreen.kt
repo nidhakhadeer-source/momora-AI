@@ -49,6 +49,7 @@ import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraFooterText
 import com.example.SIMATS.ui.theme.MomoraMintBadgeBg
 import com.example.SIMATS.ui.theme.MomoraMintBadgeText
+import androidx.compose.material3.CircularProgressIndicator
 import com.example.SIMATS.ui.theme.MomoraPinkCircleBg
 import com.example.SIMATS.ui.theme.MomoraPurpleDark
 import com.example.SIMATS.ui.theme.MomoraPurplePrimary
@@ -72,6 +73,7 @@ fun ManageDoctorsScreen(
         onFilterTabSelected = { index -> viewModel.onEvent(ManageDoctorsUiEvent.OnFilterTabSelected(index)) },
         onToggleDoctorStatus = { id -> viewModel.onEvent(ManageDoctorsUiEvent.OnToggleDoctorStatusClicked(id)) },
         onEditDetailsClick = { id -> viewModel.onEvent(ManageDoctorsUiEvent.OnEditDetailsClicked(id)) },
+        onRetryClick = { viewModel.onEvent(ManageDoctorsUiEvent.OnRetryClicked) },
         onAddDoctorClick = {
             viewModel.onEvent(ManageDoctorsUiEvent.OnAddDoctorClicked)
             onAddDoctorClick()
@@ -121,6 +123,7 @@ fun ManageDoctorsScreenContent(
     onToggleDoctorStatus: (String) -> Unit = {},
     onEditDetailsClick: (String) -> Unit = {},
     onAddDoctorClick: () -> Unit = {},
+    onRetryClick: () -> Unit = {},
     onNextPageClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
@@ -299,16 +302,88 @@ fun ManageDoctorsScreenContent(
                 else -> uiState.doctors
             }
 
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                filteredDoctors.forEach { doctor ->
-                    DoctorCardItem(
-                        item = doctor,
-                        onEditClick = { onEditDetailsClick(doctor.id) },
-                        onToggleStatusClick = { onToggleDoctorStatus(doctor.id) }
-                    )
+            if (uiState.isLoading && uiState.doctors.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 40.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MomoraPurplePrimary)
+                }
+            } else if (uiState.errorMessage != null && uiState.doctors.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFF2DEDE), RoundedCornerShape(16.dp))
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = uiState.errorMessage ?: "Failed to load doctors list",
+                            fontSize = 14.sp,
+                            color = Color(0xFFA94442),
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(MomoraPurplePrimary)
+                                .clickable { onRetryClick() }
+                                .padding(horizontal = 20.dp, vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Retry",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+            } else if (filteredDoctors.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                        .padding(28.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "No doctors found",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurpleDark
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = if (uiState.selectedFilterTab == 2) "No inactive doctors." else "Doctors added by the administrator will appear here.",
+                            fontSize = 12.sp,
+                            color = MomoraBodyMuted,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            } else {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    filteredDoctors.forEach { doctor ->
+                        DoctorCardItem(
+                            item = doctor,
+                            onEditClick = { onEditDetailsClick(doctor.id) },
+                            onToggleStatusClick = { onToggleDoctorStatus(doctor.id) }
+                        )
+                    }
                 }
             }
 

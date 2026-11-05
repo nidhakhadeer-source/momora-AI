@@ -585,8 +585,11 @@ fun AppNavHost() {
                     currentScreen = Screen.AddDoctor
                 },
                 onNavTabSelected = { index ->
-                    if (index == 3) {
-                        currentScreen = Screen.AdminSettings
+                    when (index) {
+                        0 -> currentScreen = Screen.AdminDashboard
+                        1 -> currentScreen = Screen.ManageDoctors
+                        2 -> currentScreen = Screen.ManagePatients
+                        3 -> currentScreen = Screen.AdminSettings
                     }
                 }
             )
@@ -596,17 +599,14 @@ fun AppNavHost() {
             AddDoctorScreen(
                 viewModel = addDoctorViewModel,
                 onNavigateBack = {
-                    currentScreen = Screen.AdminDashboard
+                    currentScreen = Screen.ManageDoctors
                 },
                 onNavTabSelected = { index ->
-                    if (index == 0) {
-                        currentScreen = Screen.AdminDashboard
-                    } else if (index == 1) {
-                        currentScreen = Screen.ManageDoctors
-                    } else if (index == 2) {
-                        currentScreen = Screen.ManagePatients
-                    } else if (index == 3) {
-                        currentScreen = Screen.AdminSettings
+                    when (index) {
+                        0 -> currentScreen = Screen.AdminDashboard
+                        1 -> currentScreen = Screen.ManageDoctors
+                        2 -> currentScreen = Screen.ManagePatients
+                        3 -> currentScreen = Screen.AdminSettings
                     }
                 }
             )
@@ -616,18 +616,17 @@ fun AppNavHost() {
             ManageDoctorsScreen(
                 viewModel = manageDoctorsViewModel,
                 onNavigateBack = {
-                    currentScreen = Screen.AddDoctor
+                    currentScreen = Screen.AdminDashboard
                 },
                 onAddDoctorClick = {
                     currentScreen = Screen.AddDoctor
                 },
                 onNavTabSelected = { index ->
-                    if (index == 0) {
-                        currentScreen = Screen.AdminDashboard
-                    } else if (index == 2) {
-                        currentScreen = Screen.ManagePatients
-                    } else if (index == 3) {
-                        currentScreen = Screen.AdminSettings
+                    when (index) {
+                        0 -> currentScreen = Screen.AdminDashboard
+                        1 -> currentScreen = Screen.ManageDoctors
+                        2 -> currentScreen = Screen.ManagePatients
+                        3 -> currentScreen = Screen.AdminSettings
                     }
                 }
             )
@@ -637,15 +636,14 @@ fun AppNavHost() {
             ManagePatientsScreen(
                 viewModel = managePatientsViewModel,
                 onNavigateBack = {
-                    currentScreen = Screen.ManageDoctors
+                    currentScreen = Screen.AdminDashboard
                 },
                 onNavTabSelected = { index ->
-                    if (index == 0) {
-                        currentScreen = Screen.AdminDashboard
-                    } else if (index == 1) {
-                        currentScreen = Screen.ManageDoctors
-                    } else if (index == 3) {
-                        currentScreen = Screen.AdminSettings
+                    when (index) {
+                        0 -> currentScreen = Screen.AdminDashboard
+                        1 -> currentScreen = Screen.ManageDoctors
+                        2 -> currentScreen = Screen.ManagePatients
+                        3 -> currentScreen = Screen.AdminSettings
                     }
                 }
             )
@@ -655,18 +653,17 @@ fun AppNavHost() {
             AdminSettingsScreen(
                 viewModel = adminSettingsViewModel,
                 onNavigateBack = {
-                    currentScreen = Screen.ManagePatients
+                    currentScreen = Screen.AdminDashboard
                 },
                 onLogoutSuccess = {
                     currentScreen = Screen.Login
                 },
                 onNavTabSelected = { index ->
-                    if (index == 0) {
-                        currentScreen = Screen.AdminDashboard
-                    } else if (index == 1) {
-                        currentScreen = Screen.ManageDoctors
-                    } else if (index == 2) {
-                        currentScreen = Screen.ManagePatients
+                    when (index) {
+                        0 -> currentScreen = Screen.AdminDashboard
+                        1 -> currentScreen = Screen.ManageDoctors
+                        2 -> currentScreen = Screen.ManagePatients
+                        3 -> currentScreen = Screen.AdminSettings
                     }
                 }
             )

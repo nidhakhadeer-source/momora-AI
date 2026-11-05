@@ -39,13 +39,36 @@ class ManagePatientsViewModel(
             ManagePatientsUiEvent.OnNextPageClicked -> {}
             ManagePatientsUiEvent.OnBackClicked -> {}
             ManagePatientsUiEvent.OnNotificationClicked -> {}
+            ManagePatientsUiEvent.OnRetryClicked -> {
+                loadPatients()
+            }
         }
     }
 
-    private fun loadPatients() {
+    fun loadPatients() {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getPatientAccounts().collect { list ->
-                _uiState.value = _uiState.value.copy(patients = list)
+            repository.getPatientAccounts().collect { result ->
+                result.fold(
+                    onSuccess = { list ->
+                        val active = list.count { it.isActive }
+                        val inactive = list.count { !it.isActive }
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = null,
+                            patients = list,
+                            totalCount = list.size,
+                            activeCount = active,
+                            inactiveCount = inactive
+                        )
+                    },
+                    onFailure = { error ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = error.localizedMessage ?: "Failed to load patient accounts"
+                        )
+                    }
+                )
             }
         }
     }
@@ -56,13 +79,20 @@ class ManagePatientsViewModel(
                 result.onSuccess {
                     val updated = _uiState.value.patients.map { p ->
                         if (p.id == id) {
+                            val newActive = !p.isActive
                             p.copy(
-                                isActive = !p.isActive,
-                                assignedDoctorText = if (p.isActive) "Account access disabled" else "Assigned doctor: Dr Amelia Chen"
+                                isActive = newActive,
+                                assignedDoctorText = if (newActive) "Assigned doctor: Dr Amelia Chen" else "Account access disabled"
                             )
                         } else p
                     }
-                    _uiState.value = _uiState.value.copy(patients = updated)
+                    val active = updated.count { it.isActive }
+                    val inactive = updated.count { !it.isActive }
+                    _uiState.value = _uiState.value.copy(
+                        patients = updated,
+                        activeCount = active,
+                        inactiveCount = inactive
+                    )
                 }
             }
         }

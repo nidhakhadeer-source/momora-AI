@@ -47,6 +47,7 @@ import com.example.SIMATS.ui.theme.MomoraIconBtnBg
 import com.example.SIMATS.ui.theme.MomoraMintBadgeBg
 import com.example.SIMATS.ui.theme.MomoraMintBadgeText
 import com.example.SIMATS.ui.theme.MomoraPinkCircleBg
+import androidx.compose.material3.CircularProgressIndicator
 import com.example.SIMATS.ui.theme.MomoraPurpleDark
 import com.example.SIMATS.ui.theme.MomoraPurplePrimary
 import com.example.SIMATS.ui.theme.MomoraPurpleText
@@ -78,6 +79,7 @@ fun AdminDashboardScreen(
             viewModel.onEvent(AdminDashboardUiEvent.OnAddDoctorClicked)
             onAddDoctorClick()
         },
+        onRetryClick = { viewModel.onEvent(AdminDashboardUiEvent.OnRetryClicked) },
         onNotificationClick = { viewModel.onEvent(AdminDashboardUiEvent.OnNotificationClicked) },
         onNavTabSelected = { index ->
             viewModel.onEvent(AdminDashboardUiEvent.OnNavTabSelected(index))
@@ -105,6 +107,7 @@ fun AdminDashboardScreenContent(
     onManageDoctorsClick: () -> Unit = {},
     onManagePatientsClick: () -> Unit = {},
     onAddDoctorClick: () -> Unit = {},
+    onRetryClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
@@ -162,6 +165,51 @@ fun AdminDashboardScreenContent(
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.Start
         ) {
+            if (uiState.isLoading && data == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 48.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MomoraPurplePrimary)
+                }
+            } else if (uiState.errorMessage != null && data == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFF2DEDE), RoundedCornerShape(16.dp))
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = uiState.errorMessage ?: "Failed to load admin dashboard",
+                            fontSize = 14.sp,
+                            color = Color(0xFFA94442),
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(MomoraPurplePrimary)
+                                .clickable { onRetryClick() }
+                                .padding(horizontal = 20.dp, vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Retry",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+            } else {
             Text(
                 text = "Care, well organized",
                 fontSize = 26.sp,
@@ -481,6 +529,7 @@ fun AdminDashboardScreenContent(
             )
 
             Spacer(modifier = Modifier.height(16.dp))
+            }
         }
 
         // 3. Admin Bottom Navigation Bar (4 Admin Tabs)

@@ -1,53 +1,36 @@
 package com.example.SIMATS.data.repository
 
+import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.DoctorAccountItem
 import com.example.SIMATS.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import retrofit2.HttpException
 
 interface ManageDoctorsRepository {
-    fun getDoctors(): Flow<List<DoctorAccountItem>>
+    fun getDoctors(): Flow<Result<List<DoctorAccountItem>>>
     fun toggleDoctorStatus(doctorId: String): Flow<Result<Boolean>>
 }
 
 class ManageDoctorsRepositoryImpl : ManageDoctorsRepository {
     private val apiService = RetrofitClient.apiService
 
-    override fun getDoctors(): Flow<List<DoctorAccountItem>> = flow {
+    override fun getDoctors(): Flow<Result<List<DoctorAccountItem>>> = flow {
         try {
             val response = apiService.getManageDoctors()
             if (response.success && response.data != null) {
-                emit(response.data)
-                return@flow
+                emit(Result.success(response.data))
+            } else {
+                emit(Result.failure(Exception(response.message ?: "Failed to load doctors list")))
             }
-        } catch (_: Exception) {}
-
-        emit(
-            listOf(
-                DoctorAccountItem(
-                    id = "3",
-                    name = "Dr Amelia Chen",
-                    specialtyAndPatientsText = "Obstetrics · 18 assigned patients",
-                    emailAndLicenseText = "amelia.chen@willow.example · OBS-19382",
-                    isActive = true,
-                    isHighlighted = true
-                ),
-                DoctorAccountItem(
-                    id = "201",
-                    name = "Dr Daniel Okafor",
-                    specialtyAndPatientsText = "Obstetrics · 14 assigned patients",
-                    emailAndLicenseText = "daniel.okafor@willow.example · OBS-20491",
-                    isActive = true
-                ),
-                DoctorAccountItem(
-                    id = "202",
-                    name = "Dr Priya Shah",
-                    specialtyAndPatientsText = "Maternal medicine · Access disabled",
-                    emailAndLicenseText = "priya.shah@willow.example · OBS-11029",
-                    isActive = false
-                )
-            )
-        )
+        } catch (e: Exception) {
+            if (e is HttpException && e.code() == 401) {
+                SessionManager.notifySessionExpired()
+                emit(Result.failure(Exception("Session expired. Please log in again.")))
+            } else {
+                emit(Result.failure(Exception(e.localizedMessage ?: "Network connection error")))
+            }
+        }
     }
 
     override fun toggleDoctorStatus(doctorId: String): Flow<Result<Boolean>> = flow {
@@ -59,7 +42,12 @@ class ManageDoctorsRepositoryImpl : ManageDoctorsRepository {
                 emit(Result.failure(Exception(response.message ?: "Failed to toggle status")))
             }
         } catch (e: Exception) {
-            emit(Result.failure(Exception(e.localizedMessage ?: "Network error toggling doctor status")))
+            if (e is HttpException && e.code() == 401) {
+                SessionManager.notifySessionExpired()
+                emit(Result.failure(Exception("Session expired. Please log in again.")))
+            } else {
+                emit(Result.failure(Exception(e.localizedMessage ?: "Network error toggling doctor status")))
+            }
         }
     }
 }

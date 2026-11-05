@@ -11,4 +11,5 @@ sealed interface AddDoctorUiEvent {
     data object OnCreateAccountClicked : AddDoctorUiEvent
     data object OnBackClicked : AddDoctorUiEvent
     data object OnNotificationClicked : AddDoctorUiEvent
+    data object OnRetryClicked : AddDoctorUiEvent
 }
