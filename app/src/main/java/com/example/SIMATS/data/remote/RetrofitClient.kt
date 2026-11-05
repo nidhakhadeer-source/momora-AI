@@ -24,7 +24,11 @@ object RetrofitClient {
         // Bypass ngrok free tier browser interstitial warning
         builder.addHeader("ngrok-skip-browser-warning", "true")
 
-        chain.proceed(builder.build())
+        val response = chain.proceed(builder.build())
+        if (response.code() == 401) {
+            SessionManager.notifySessionExpired()
+        }
+        response
     }
 
     private val okHttpClient: OkHttpClient by lazy {

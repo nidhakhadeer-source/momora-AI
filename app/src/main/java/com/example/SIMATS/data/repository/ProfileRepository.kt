@@ -10,9 +10,10 @@ import kotlinx.coroutines.flow.flow
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import retrofit2.HttpException
 
 interface ProfileRepository {
-    fun getPatientProfile(): Flow<PatientProfileData>
+    fun getPatientProfile(): Flow<Result<PatientProfileData>>
     fun savePatientProfile(profile: PatientProfileData): Flow<Result<PatientProfileData>>
     fun uploadProfilePhoto(context: Context, uri: Uri): Flow<Result<String>>
 }
@@ -20,7 +21,7 @@ interface ProfileRepository {
 class ProfileRepositoryImpl : ProfileRepository {
     private val apiService = RetrofitClient.apiService
 
-    override fun getPatientProfile(): Flow<PatientProfileData> = flow {
+    override fun getPatientProfile(): Flow<Result<PatientProfileData>> = flow {
         val userId = SessionManager.getUserId()
         try {
             val response = apiService.getProfile(userId)
@@ -63,32 +64,19 @@ class ProfileRepositoryImpl : ProfileRepository {
                     bloodGroup = resolvedBloodGroup
                 )
 
-                emit(merged)
+                emit(Result.success(merged))
                 return@flow
+            } else {
+                emit(Result.failure(Exception(response.message ?: "Failed to load profile")))
             }
-        } catch (_: Exception) {}
-
-        // Fallback using SessionManager values
-        val userName = SessionManager.getUserName()
-        emit(
-            PatientProfileData(
-                avatarInitials = generateInitials(userName),
-                patientName = userName,
-                patientId = SessionManager.getPatientCode(),
-                fullName = userName,
-                email = SessionManager.getUserEmail(),
-                phone = SessionManager.getPhone(),
-                dateOfBirth = SessionManager.getDateOfBirth(),
-                gender = SessionManager.getGender(),
-                bloodGroup = SessionManager.getBloodGroup(),
-                address = SessionManager.getAddress(),
-                photoUrl = SessionManager.getPhotoUrl(),
-                profilePhoto = SessionManager.getPhotoUrl(),
-                isCareTeamSharingOn = true,
-                careTeamDoctorName = SessionManager.getDoctorName(),
-                reminderSummary = "Medication and appointment alerts"
-            )
-        )
+        } catch (e: Exception) {
+            if (e is HttpException && e.code() == 401) {
+                SessionManager.notifySessionExpired()
+                emit(Result.failure(Exception("Session expired. Please log in again.")))
+            } else {
+                emit(Result.failure(Exception(e.localizedMessage ?: "Network connection error")))
+            }
+        }
     }
 
     override fun savePatientProfile(profile: PatientProfileData): Flow<Result<PatientProfileData>> = flow {

@@ -9,4 +9,5 @@ sealed interface AppointmentsCalendarUiEvent {
     data object OnNextMonthClicked : AppointmentsCalendarUiEvent
     data object OnBackClicked : AppointmentsCalendarUiEvent
     data object OnNotificationClicked : AppointmentsCalendarUiEvent
+    data object OnRetryClicked : AppointmentsCalendarUiEvent
 }

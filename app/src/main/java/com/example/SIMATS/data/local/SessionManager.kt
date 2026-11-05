@@ -3,6 +3,9 @@ package com.example.SIMATS.data.local
 import android.content.Context
 import android.content.SharedPreferences
 import com.example.SIMATS.data.model.UserRole
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -42,6 +45,14 @@ object SessionManager {
     private var memBloodGroup: String = "O positive"
     private var memAddress: String? = null
     private var memPhotoUrl: String? = null
+
+    private val _sessionExpiredEvent = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val sessionExpiredEvent: SharedFlow<Unit> = _sessionExpiredEvent.asSharedFlow()
+
+    fun notifySessionExpired() {
+        clearSession()
+        _sessionExpiredEvent.tryEmit(Unit)
+    }
 
     fun init(context: Context) {
         sharedPreferences = context.applicationContext.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)

@@ -7,6 +7,7 @@ data class MedicalReportsUiState(
     val reports: List<MedicalReportItem> = emptyList(),
     val selectedCategory: ReportCategory = ReportCategory.ALL,
     val selectedNavIndex: Int = 3, // Care tab active
+    val isLoading: Boolean = false,
     val isUploading: Boolean = false,
     val errorMessage: String? = null
 )

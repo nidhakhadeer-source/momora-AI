@@ -8,4 +8,5 @@ sealed interface HealthReportUiEvent {
     data object OnSymptomCheckerClicked : HealthReportUiEvent
     data object OnBackClicked : HealthReportUiEvent
     data object OnNotificationClicked : HealthReportUiEvent
+    data object OnRetryClicked : HealthReportUiEvent
 }

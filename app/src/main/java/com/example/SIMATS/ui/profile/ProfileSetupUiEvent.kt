@@ -20,5 +20,6 @@ sealed interface ProfileSetupUiEvent {
     data object OnReminderPreferencesClicked : ProfileSetupUiEvent
     data object OnExportHealthInfoClicked : ProfileSetupUiEvent
     data object OnLogoutClicked : ProfileSetupUiEvent
+    data object OnRetryClicked : ProfileSetupUiEvent
     data object DismissMessages : ProfileSetupUiEvent
 }

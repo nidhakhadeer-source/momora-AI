@@ -34,15 +34,34 @@ class NotificationsViewModel(
                 _uiState.value = _uiState.value.copy(selectedNavIndex = event.index)
             }
             NotificationsUiEvent.OnPrivacySettingsClicked -> {}
+            NotificationsUiEvent.OnRetryClicked -> {
+                loadNotifications()
+            }
             NotificationsUiEvent.OnBackClicked -> {}
         }
     }
 
     private fun loadNotifications() {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getNotifications().collect { list ->
-                val unread = list.count { !it.isRead }
-                _uiState.value = _uiState.value.copy(notifications = list, unreadCount = unread)
+            repository.getNotifications().collect { result ->
+                result.fold(
+                    onSuccess = { list ->
+                        val unread = list.count { !it.isRead }
+                        _uiState.value = _uiState.value.copy(
+                            notifications = list,
+                            unreadCount = unread,
+                            isLoading = false,
+                            errorMessage = null
+                        )
+                    },
+                    onFailure = { err ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = err.message ?: "Failed to load notifications"
+                        )
+                    }
+                )
             }
         }
     }

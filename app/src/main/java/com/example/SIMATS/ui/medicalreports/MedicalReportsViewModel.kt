@@ -35,15 +35,26 @@ class MedicalReportsViewModel(
             MedicalReportsUiEvent.OnChooseFileClicked -> {
                 chooseFile()
             }
+            MedicalReportsUiEvent.OnRetryClicked -> {
+                loadReports()
+            }
             MedicalReportsUiEvent.OnBackClicked -> {}
             MedicalReportsUiEvent.OnNotificationClicked -> {}
         }
     }
 
     private fun loadReports() {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getReports().collect { list ->
-                _uiState.value = _uiState.value.copy(reports = list)
+            repository.getReports().collect { result ->
+                result.fold(
+                    onSuccess = { list ->
+                        _uiState.value = _uiState.value.copy(reports = list, isLoading = false, errorMessage = null)
+                    },
+                    onFailure = { err ->
+                        _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = err.message ?: "Failed to load medical reports")
+                    }
+                )
             }
         }
     }

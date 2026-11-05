@@ -21,6 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -70,6 +71,7 @@ fun AppointmentsCalendarScreen(
             onNavigateBack()
         },
         onNotificationClick = { viewModel.onEvent(AppointmentsCalendarUiEvent.OnNotificationClicked) },
+        onRetryClick = { viewModel.onEvent(AppointmentsCalendarUiEvent.OnRetryClicked) },
         onNavTabSelected = { index ->
             viewModel.onEvent(AppointmentsCalendarUiEvent.OnNavTabSelected(index))
             onNavTabSelected(index)
@@ -104,6 +106,7 @@ fun AppointmentsCalendarScreenContent(
     onNextMonthClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
+    onRetryClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -153,14 +156,68 @@ fun AppointmentsCalendarScreenContent(
             }
         }
 
-        // 2. Scrollable Body Content
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(scrollState)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.Start
-        ) {
+        // 2. Body
+        if (uiState.isLoading && data == null) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = MomoraPurplePrimary)
+            }
+        } else if (uiState.errorMessage != null && data == null) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Unable to load appointments",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurpleDark
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = uiState.errorMessage ?: "Please check your network and try again.",
+                        fontSize = 13.sp,
+                        color = Color(0xFFD32F2F),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(MomoraPurplePrimary)
+                            .clickable { onRetryClick() }
+                            .padding(horizontal = 24.dp, vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Retry",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+        } else {
+            // Scrollable Body Content
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.Start
+            ) {
             Text(
                 text = "Make time for your care",
                 fontSize = 26.sp,
@@ -317,45 +374,55 @@ fun AppointmentsCalendarScreenContent(
             Spacer(modifier = Modifier.height(10.dp))
 
             // Horizontal Calendar Dates Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                val dates = data?.availableDates ?: listOf(
-                    CalendarDateItem("Tue", 27, false),
-                    CalendarDateItem("Wed", 28, false),
-                    CalendarDateItem("Thu", 29, true),
-                    CalendarDateItem("Fri", 30, false),
-                    CalendarDateItem("Sat", 31, false)
-                )
-
-                dates.forEach { item ->
-                    val isSelected = uiState.selectedDayOfMonth == item.dayOfMonth
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(64.dp)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(if (isSelected) MomoraPurplePrimary else Color.White)
-                            .border(1.dp, if (isSelected) MomoraPurplePrimary else Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
-                            .clickable { onDateSelected(item.dayOfMonth) },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
+            if (data?.availableDates.isNullOrEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No appointment dates available",
+                        fontSize = 13.sp,
+                        color = MomoraBodyMuted
+                    )
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    data?.availableDates?.forEach { item ->
+                        val isSelected = uiState.selectedDayOfMonth == item.dayOfMonth
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(64.dp)
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(if (isSelected) MomoraPurplePrimary else Color.White)
+                                .border(1.dp, if (isSelected) MomoraPurplePrimary else Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
+                                .clickable { onDateSelected(item.dayOfMonth) },
+                            contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = item.dayOfWeek,
-                                fontSize = 11.sp,
-                                color = if (isSelected) Color.White.copy(alpha = 0.8f) else MomoraBodyMuted
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "${item.dayOfMonth}",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (isSelected) Color.White else MomoraPurpleDark
-                            )
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = item.dayOfWeek,
+                                    fontSize = 11.sp,
+                                    color = if (isSelected) Color.White.copy(alpha = 0.8f) else MomoraBodyMuted
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "${item.dayOfMonth}",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) Color.White else MomoraPurpleDark
+                                )
+                            }
                         }
                     }
                 }
@@ -374,29 +441,46 @@ fun AppointmentsCalendarScreenContent(
             Spacer(modifier = Modifier.height(8.dp))
 
             // Time Slots Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                val slots = data?.availableTimeSlots ?: listOf("09:00", "10:30", "14:00")
-                slots.forEach { slot ->
-                    val isSelected = uiState.selectedTimeSlot == slot
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(42.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(if (isSelected) Color.White else Color(0xFFF4ECF8))
-                            .border(1.dp, if (isSelected) MomoraPurplePrimary else Color.Transparent, RoundedCornerShape(12.dp))
-                            .clickable { onTimeSlotSelected(slot) },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = slot,
-                            fontSize = 13.sp,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isSelected) MomoraPurpleDark else MomoraBodyMuted
-                        )
+            if (data?.availableTimeSlots.isNullOrEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No time slots available for this date",
+                        fontSize = 13.sp,
+                        color = MomoraBodyMuted
+                    )
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    data?.availableTimeSlots?.forEach { slot ->
+                        val isSelected = uiState.selectedTimeSlot == slot
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(42.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (isSelected) Color.White else Color(0xFFF4ECF8))
+                                .border(1.dp, if (isSelected) MomoraPurplePrimary else Color.Transparent, RoundedCornerShape(12.dp))
+                                .clickable { onTimeSlotSelected(slot) },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = slot,
+                                fontSize = 13.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) MomoraPurpleDark else MomoraBodyMuted
+                            )
+                        }
                     }
                 }
             }
@@ -499,6 +583,7 @@ fun AppointmentsCalendarScreenContent(
 
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
 
         // 3. Bottom Dashboard Navigation Bar
         DashboardBottomNavBar(

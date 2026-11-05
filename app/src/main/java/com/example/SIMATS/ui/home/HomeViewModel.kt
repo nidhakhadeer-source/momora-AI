@@ -34,13 +34,24 @@ class HomeViewModel(
             HomeUiEvent.OnBabyGrowthClicked -> {}
             HomeUiEvent.OnNutritionClicked -> {}
             HomeUiEvent.OnViewAllDailyCareClicked -> {}
+            HomeUiEvent.OnRetryClicked -> {
+                loadDashboardData()
+            }
         }
     }
 
     private fun loadDashboardData() {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getPatientDashboardData().collect { dashboardData ->
-                _uiState.value = _uiState.value.copy(data = dashboardData)
+            repository.getPatientDashboardData().collect { result ->
+                result.fold(
+                    onSuccess = { dashboardData ->
+                        _uiState.value = _uiState.value.copy(data = dashboardData, isLoading = false, errorMessage = null)
+                    },
+                    onFailure = { err ->
+                        _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = err.message ?: "Failed to load dashboard data")
+                    }
+                )
             }
         }
     }

@@ -6,5 +6,6 @@ sealed interface NotificationsUiEvent {
     data class OnNotificationItemClicked(val id: String) : NotificationsUiEvent
     data class OnNavTabSelected(val index: Int) : NotificationsUiEvent
     data object OnPrivacySettingsClicked : NotificationsUiEvent
+    data object OnRetryClicked : NotificationsUiEvent
     data object OnBackClicked : NotificationsUiEvent
 }

@@ -69,43 +69,59 @@ class ProfileSetupViewModel(
                 SessionManager.clearSession()
                 _uiState.value = _uiState.value.copy(isLoggedOut = true)
             }
+            ProfileSetupUiEvent.OnRetryClicked -> {
+                loadProfileData()
+            }
         }
     }
 
     fun loadProfileData() {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getPatientProfile().collect { profile ->
-                val userName = profile.fullName.ifBlank { SessionManager.getUserName() }
-                val userEmail = profile.email.ifBlank { SessionManager.getUserEmail() }
-                val userPhone = profile.phone ?: SessionManager.getPhone() ?: ""
-                val userDob = profile.dateOfBirth.ifBlank { SessionManager.getDateOfBirth() }
-                val userGender = profile.gender ?: SessionManager.getGender()
-                val userBloodGroup = profile.bloodGroup.ifBlank { SessionManager.getBloodGroup() }
-                val userAddress = profile.address ?: SessionManager.getAddress() ?: ""
-                val userPhoto = profile.photoUrl ?: profile.profilePhoto ?: SessionManager.getPhotoUrl()
+            repository.getPatientProfile().collect { result ->
+                result.fold(
+                    onSuccess = { profile ->
+                        val userName = profile.fullName.ifBlank { SessionManager.getUserName() }
+                        val userEmail = profile.email.ifBlank { SessionManager.getUserEmail() }
+                        val userPhone = profile.phone ?: SessionManager.getPhone() ?: ""
+                        val userDob = profile.dateOfBirth.ifBlank { SessionManager.getDateOfBirth() }
+                        val userGender = profile.gender ?: SessionManager.getGender()
+                        val userBloodGroup = profile.bloodGroup.ifBlank { SessionManager.getBloodGroup() }
+                        val userAddress = profile.address ?: SessionManager.getAddress() ?: ""
+                        val userPhoto = profile.photoUrl ?: profile.profilePhoto ?: SessionManager.getPhotoUrl()
 
-                _uiState.value = _uiState.value.copy(
-                    profileData = profile.copy(
-                        avatarInitials = generateInitials(userName),
-                        patientName = userName,
-                        fullName = userName,
-                        email = userEmail,
-                        phone = userPhone,
-                        dateOfBirth = userDob,
-                        gender = userGender,
-                        bloodGroup = userBloodGroup,
-                        address = userAddress,
-                        photoUrl = userPhoto
-                    ),
-                    fullName = userName,
-                    email = userEmail,
-                    phone = userPhone,
-                    dateOfBirth = userDob,
-                    gender = userGender,
-                    bloodGroup = userBloodGroup,
-                    address = userAddress,
-                    profilePhotoUrl = userPhoto,
-                    isCareTeamSharingOn = profile.isCareTeamSharingOn
+                        _uiState.value = _uiState.value.copy(
+                            profileData = profile.copy(
+                                avatarInitials = generateInitials(userName),
+                                patientName = userName,
+                                fullName = userName,
+                                email = userEmail,
+                                phone = userPhone,
+                                dateOfBirth = userDob,
+                                gender = userGender,
+                                bloodGroup = userBloodGroup,
+                                address = userAddress,
+                                photoUrl = userPhoto
+                            ),
+                            fullName = userName,
+                            email = userEmail,
+                            phone = userPhone,
+                            dateOfBirth = userDob,
+                            gender = userGender,
+                            bloodGroup = userBloodGroup,
+                            address = userAddress,
+                            profilePhotoUrl = userPhoto,
+                            isCareTeamSharingOn = profile.isCareTeamSharingOn,
+                            isLoading = false,
+                            errorMessage = null
+                        )
+                    },
+                    onFailure = { err ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = err.message ?: "Failed to load profile"
+                        )
+                    }
                 )
             }
         }

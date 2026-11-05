@@ -2,45 +2,35 @@ package com.example.SIMATS.data.repository
 
 import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.AppointmentBookingData
-import com.example.SIMATS.data.model.CalendarDateItem
 import com.example.SIMATS.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import retrofit2.HttpException
 
 interface AppointmentRepository {
-    fun getBookingData(): Flow<AppointmentBookingData>
+    fun getBookingData(): Flow<Result<AppointmentBookingData>>
     fun confirmAppointment(doctorName: String, dateText: String, timeText: String, isInPerson: Boolean): Flow<Result<Boolean>>
 }
 
 class AppointmentRepositoryImpl : AppointmentRepository {
     private val apiService = RetrofitClient.apiService
 
-    override fun getBookingData(): Flow<AppointmentBookingData> = flow {
+    override fun getBookingData(): Flow<Result<AppointmentBookingData>> = flow {
         try {
             val response = apiService.getAppointmentBookingData(SessionManager.getUserId())
             if (response.success && response.data != null) {
-                emit(response.data)
-                return@flow
+                emit(Result.success(response.data))
+            } else {
+                emit(Result.failure(Exception(response.message ?: "Failed to load appointments")))
             }
-        } catch (_: Exception) {}
-
-        emit(
-            AppointmentBookingData(
-                doctorName = SessionManager.getDoctorName(),
-                doctorSpecialty = "Obstetrician · Willow Maternity Clinic",
-                monthTitle = "October 2026",
-                availableDates = listOf(
-                    CalendarDateItem("Tue", 27, false),
-                    CalendarDateItem("Wed", 28, false),
-                    CalendarDateItem("Thu", 29, true),
-                    CalendarDateItem("Fri", 30, false),
-                    CalendarDateItem("Sat", 31, false)
-                ),
-                availableTimeSlots = listOf("09:00", "10:30", "14:00"),
-                defaultType = "Routine antenatal check",
-                defaultLocationNotes = "Willow Maternity Clinic · Room 3. Bring your pregnancy notes and recent reports."
-            )
-        )
+        } catch (e: Exception) {
+            if (e is HttpException && e.code() == 401) {
+                SessionManager.notifySessionExpired()
+                emit(Result.failure(Exception("Session expired. Please log in again.")))
+            } else {
+                emit(Result.failure(Exception(e.localizedMessage ?: "Network connection error")))
+            }
+        }
     }
 
     override fun confirmAppointment(

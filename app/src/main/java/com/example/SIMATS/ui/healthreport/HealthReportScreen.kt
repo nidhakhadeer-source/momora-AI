@@ -21,6 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -75,6 +76,7 @@ fun HealthReportScreen(
             onNavigateBack()
         },
         onNotificationClick = { viewModel.onEvent(HealthReportUiEvent.OnNotificationClicked) },
+        onRetryClick = { viewModel.onEvent(HealthReportUiEvent.OnRetryClicked) },
         onNavTabSelected = { index ->
             viewModel.onEvent(HealthReportUiEvent.OnNavTabSelected(index))
             onNavTabSelected(index)
@@ -105,6 +107,7 @@ fun HealthReportScreenContent(
     onSymptomCheckerClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
+    onRetryClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -154,14 +157,68 @@ fun HealthReportScreenContent(
             }
         }
 
-        // 2. Scrollable Body Content
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(scrollState)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.Start
-        ) {
+        // 2. Body
+        if (uiState.isLoading && data == null) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = MomoraPurplePrimary)
+            }
+        } else if (uiState.errorMessage != null && data == null) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Unable to load health vitals",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurpleDark
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = uiState.errorMessage ?: "Please check your network and try again.",
+                        fontSize = 13.sp,
+                        color = Color(0xFFD32F2F),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(MomoraPurplePrimary)
+                            .clickable { onRetryClick() }
+                            .padding(horizontal = 24.dp, vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Retry",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+        } else {
+            // Scrollable Body Content
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.Start
+            ) {
             Text(
                 text = "Your health, at a glance",
                 fontSize = 25.sp,
@@ -371,6 +428,7 @@ fun HealthReportScreenContent(
 
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
 
         // 3. Bottom Dashboard Navigation Bar
         DashboardBottomNavBar(

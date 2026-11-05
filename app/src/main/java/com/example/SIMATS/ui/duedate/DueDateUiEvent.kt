@@ -8,4 +8,5 @@ sealed interface DueDateUiEvent {
     data object OnNotificationClicked : DueDateUiEvent
     data object OnDoctorCardClicked : DueDateUiEvent
     data object OnNextVisitClicked : DueDateUiEvent
+    data object OnRetryClicked : DueDateUiEvent
 }

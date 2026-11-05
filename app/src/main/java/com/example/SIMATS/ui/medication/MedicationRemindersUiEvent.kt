@@ -8,4 +8,5 @@ sealed interface MedicationRemindersUiEvent {
     data object OnSettingsClicked : MedicationRemindersUiEvent
     data object OnBackClicked : MedicationRemindersUiEvent
     data object OnNotificationClicked : MedicationRemindersUiEvent
+    data object OnRetryClicked : MedicationRemindersUiEvent
 }

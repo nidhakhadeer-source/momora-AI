@@ -7,6 +7,7 @@ sealed interface MedicalReportsUiEvent {
     data class OnViewReportClicked(val reportId: String) : MedicalReportsUiEvent
     data class OnNavTabSelected(val index: Int) : MedicalReportsUiEvent
     data object OnChooseFileClicked : MedicalReportsUiEvent
+    data object OnRetryClicked : MedicalReportsUiEvent
     data object OnBackClicked : MedicalReportsUiEvent
     data object OnNotificationClicked : MedicalReportsUiEvent
 }

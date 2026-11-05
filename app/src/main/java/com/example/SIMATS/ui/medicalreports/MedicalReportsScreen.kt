@@ -21,6 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -36,6 +37,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -65,6 +67,7 @@ fun MedicalReportsScreen(
         onCategorySelected = { cat -> viewModel.onEvent(MedicalReportsUiEvent.OnCategorySelected(cat)) },
         onViewReportClick = { id -> viewModel.onEvent(MedicalReportsUiEvent.OnViewReportClicked(id)) },
         onChooseFileClick = { viewModel.onEvent(MedicalReportsUiEvent.OnChooseFileClicked) },
+        onRetryClick = { viewModel.onEvent(MedicalReportsUiEvent.OnRetryClicked) },
         onBackClick = {
             viewModel.onEvent(MedicalReportsUiEvent.OnBackClicked)
             onNavigateBack()
@@ -108,6 +111,7 @@ fun MedicalReportsScreenContent(
     onCategorySelected: (ReportCategory) -> Unit = {},
     onViewReportClick: (String) -> Unit = {},
     onChooseFileClick: () -> Unit = {},
+    onRetryClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
@@ -264,19 +268,86 @@ fun MedicalReportsScreenContent(
                     .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
                     .padding(horizontal = 14.dp, vertical = 6.dp)
             ) {
-                val filteredReports = when (uiState.selectedCategory) {
-                    ReportCategory.ALL -> uiState.reports
-                    ReportCategory.ULTRASOUND -> uiState.reports.filter { it.category == ReportCategory.ULTRASOUND }
-                    ReportCategory.LAB_RESULTS -> uiState.reports.filter { it.category == ReportCategory.LAB_RESULTS }
-                }
+                if (uiState.isLoading && uiState.reports.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(color = MomoraPurplePrimary)
+                    }
+                } else if (uiState.errorMessage != null && uiState.reports.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(18.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = uiState.errorMessage ?: "Failed to load medical reports",
+                                fontSize = 13.5.sp,
+                                color = Color(0xFFA94442),
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(50))
+                                    .background(MomoraPurplePrimary)
+                                    .clickable { onRetryClick() }
+                                    .padding(horizontal = 18.dp, vertical = 7.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "Retry",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    val filteredReports = when (uiState.selectedCategory) {
+                        ReportCategory.ALL -> uiState.reports
+                        ReportCategory.ULTRASOUND -> uiState.reports.filter { it.category == ReportCategory.ULTRASOUND }
+                        ReportCategory.LAB_RESULTS -> uiState.reports.filter { it.category == ReportCategory.LAB_RESULTS }
+                    }
 
-                filteredReports.forEachIndexed { index, report ->
-                    ReportRowItem(
-                        report = report,
-                        onViewClick = { onViewReportClick(report.id) }
-                    )
-                    if (index < (filteredReports.size - 1)) {
-                        Spacer(modifier = Modifier.height(4.dp))
+                    if (filteredReports.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 24.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "No medical reports uploaded yet",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MomoraPurpleDark
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Upload lab results or ultrasound scans above.",
+                                    fontSize = 12.sp,
+                                    color = MomoraBodyMuted
+                                )
+                            }
+                        }
+                    } else {
+                        filteredReports.forEachIndexed { index, report ->
+                            ReportRowItem(
+                                report = report,
+                                onViewClick = { onViewReportClick(report.id) }
+                            )
+                            if (index < (filteredReports.size - 1)) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                            }
+                        }
                     }
                 }
             }

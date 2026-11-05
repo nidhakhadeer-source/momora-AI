@@ -36,13 +36,24 @@ class MedicationRemindersViewModel(
             MedicationRemindersUiEvent.OnSettingsClicked -> {}
             MedicationRemindersUiEvent.OnBackClicked -> {}
             MedicationRemindersUiEvent.OnNotificationClicked -> {}
+            MedicationRemindersUiEvent.OnRetryClicked -> {
+                loadData()
+            }
         }
     }
 
     private fun loadData() {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getMedicationReminders().collect { data ->
-                _uiState.value = _uiState.value.copy(data = data)
+            repository.getMedicationReminders().collect { result ->
+                result.fold(
+                    onSuccess = { data ->
+                        _uiState.value = _uiState.value.copy(data = data, isLoading = false, errorMessage = null)
+                    },
+                    onFailure = { err ->
+                        _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = err.message ?: "Failed to load medication reminders")
+                    }
+                )
             }
         }
     }

@@ -37,15 +37,31 @@ class DueDateViewModel(
             DueDateUiEvent.OnNotificationClicked -> {}
             DueDateUiEvent.OnDoctorCardClicked -> {}
             DueDateUiEvent.OnNextVisitClicked -> {}
+            DueDateUiEvent.OnRetryClicked -> {
+                loadPregnancyDetails()
+            }
         }
     }
 
     private fun loadPregnancyDetails() {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getPregnancyDetails().collect { data ->
-                _uiState.value = _uiState.value.copy(
-                    pregnancyData = data,
-                    estimatedDueDate = data.estimatedDueDate
+            repository.getPregnancyDetails().collect { result ->
+                result.fold(
+                    onSuccess = { data ->
+                        _uiState.value = _uiState.value.copy(
+                            pregnancyData = data,
+                            estimatedDueDate = data.estimatedDueDate,
+                            isLoading = false,
+                            errorMessage = null
+                        )
+                    },
+                    onFailure = { err ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = err.message ?: "Failed to load pregnancy details"
+                        )
+                    }
                 )
             }
         }

@@ -21,6 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -70,6 +71,7 @@ fun MedicationRemindersScreen(
             onNavigateBack()
         },
         onNotificationClick = { viewModel.onEvent(MedicationRemindersUiEvent.OnNotificationClicked) },
+        onRetryClick = { viewModel.onEvent(MedicationRemindersUiEvent.OnRetryClicked) },
         onNavTabSelected = { index ->
             viewModel.onEvent(MedicationRemindersUiEvent.OnNavTabSelected(index))
             onNavTabSelected(index)
@@ -109,6 +111,7 @@ fun MedicationRemindersScreenContent(
     onSettingsClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
+    onRetryClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -158,14 +161,68 @@ fun MedicationRemindersScreenContent(
             }
         }
 
-        // 2. Scrollable Body Content
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(scrollState)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.Start
-        ) {
+        // 2. Body
+        if (uiState.isLoading && data == null) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = MomoraPurplePrimary)
+            }
+        } else if (uiState.errorMessage != null && data == null) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Unable to load medication reminders",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurpleDark
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = uiState.errorMessage ?: "Please check your network and try again.",
+                        fontSize = 13.sp,
+                        color = Color(0xFFD32F2F),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(MomoraPurplePrimary)
+                            .clickable { onRetryClick() }
+                            .padding(horizontal = 24.dp, vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Retry",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+        } else {
+            // Scrollable Body Content
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.Start
+            ) {
             Text(
                 text = "A little daily routine",
                 fontSize = 26.sp,
@@ -253,11 +310,38 @@ fun MedicationRemindersScreenContent(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                data?.medications?.forEach { item ->
-                    MedicationCard(
-                        item = item,
-                        onMarkAsTakenClick = { onMarkAsTakenClick(item.id) }
-                    )
+                if (data?.medications.isNullOrEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color.White)
+                            .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                            .padding(20.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "No medications scheduled",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MomoraPurpleDark
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "You have no active medication reminders for today.",
+                                fontSize = 12.sp,
+                                color = MomoraBodyMuted
+                            )
+                        }
+                    }
+                } else {
+                    data?.medications?.forEach { item ->
+                        MedicationCard(
+                            item = item,
+                            onMarkAsTakenClick = { onMarkAsTakenClick(item.id) }
+                        )
+                    }
                 }
             }
 
@@ -344,6 +428,7 @@ fun MedicationRemindersScreenContent(
 
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
 
         // 3. Bottom Dashboard Navigation Bar
         DashboardBottomNavBar(

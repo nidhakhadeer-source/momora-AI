@@ -5,37 +5,32 @@ import com.example.SIMATS.data.model.PregnancyDetailsData
 import com.example.SIMATS.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import retrofit2.HttpException
 
 interface PregnancyRepository {
-    fun getPregnancyDetails(): Flow<PregnancyDetailsData>
+    fun getPregnancyDetails(): Flow<Result<PregnancyDetailsData>>
     fun savePregnancyDetails(details: PregnancyDetailsData): Flow<Result<Boolean>>
 }
 
 class PregnancyRepositoryImpl : PregnancyRepository {
     private val apiService = RetrofitClient.apiService
 
-    override fun getPregnancyDetails(): Flow<PregnancyDetailsData> = flow {
+    override fun getPregnancyDetails(): Flow<Result<PregnancyDetailsData>> = flow {
         try {
             val response = apiService.getPregnancyDetails(SessionManager.getUserId())
             if (response.success && response.data != null) {
-                emit(response.data)
-                return@flow
+                emit(Result.success(response.data))
+            } else {
+                emit(Result.failure(Exception(response.message ?: "Failed to load pregnancy details")))
             }
-        } catch (_: Exception) {}
-
-        emit(
-            PregnancyDetailsData(
-                trimesterText = "SECOND TRIMESTER",
-                gestationalAgeText = "24 weeks, 3 days",
-                countdownText = "15 weeks, 4 days until your estimated due date.",
-                estimatedDueDate = "13 Feb 2027",
-                lastMenstrualPeriod = "09 May 2026",
-                assignedDoctorName = SessionManager.getDoctorName(),
-                assignedDoctorSpecialty = "Obstetrics · Your assigned doctor",
-                nextVisitDate = "29 Oct 2026 · 10:30",
-                nextVisitClinic = "Willow Clinic"
-            )
-        )
+        } catch (e: Exception) {
+            if (e is HttpException && e.code() == 401) {
+                SessionManager.notifySessionExpired()
+                emit(Result.failure(Exception("Session expired. Please log in again.")))
+            } else {
+                emit(Result.failure(Exception(e.localizedMessage ?: "Network connection error")))
+            }
+        }
     }
 
     override fun savePregnancyDetails(details: PregnancyDetailsData): Flow<Result<Boolean>> = flow {

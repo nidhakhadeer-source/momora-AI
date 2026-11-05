@@ -1,6 +1,7 @@
 package com.example.SIMATS.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -72,6 +73,12 @@ import com.example.SIMATS.ui.weight.WeightTrackerViewModel
 @Composable
 fun AppNavHost() {
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Splash) }
+
+    LaunchedEffect(Unit) {
+        SessionManager.sessionExpiredEvent.collect {
+            currentScreen = Screen.Login
+        }
+    }
 
     when (currentScreen) {
         Screen.NavMenu -> {

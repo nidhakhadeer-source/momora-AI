@@ -42,13 +42,24 @@ class AppointmentsCalendarViewModel(
             AppointmentsCalendarUiEvent.OnNextMonthClicked -> {}
             AppointmentsCalendarUiEvent.OnBackClicked -> {}
             AppointmentsCalendarUiEvent.OnNotificationClicked -> {}
+            AppointmentsCalendarUiEvent.OnRetryClicked -> {
+                loadData()
+            }
         }
     }
 
     private fun loadData() {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getBookingData().collect { data ->
-                _uiState.value = _uiState.value.copy(bookingData = data)
+            repository.getBookingData().collect { result ->
+                result.fold(
+                    onSuccess = { data ->
+                        _uiState.value = _uiState.value.copy(bookingData = data, isLoading = false, errorMessage = null)
+                    },
+                    onFailure = { err ->
+                        _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = err.message ?: "Failed to load appointments")
+                    }
+                )
             }
         }
     }

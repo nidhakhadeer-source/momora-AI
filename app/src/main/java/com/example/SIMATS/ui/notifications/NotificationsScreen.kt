@@ -21,6 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -66,6 +67,7 @@ fun NotificationsScreen(
         onMarkAllReadClick = { viewModel.onEvent(NotificationsUiEvent.OnMarkAllReadClicked) },
         onNotificationItemClick = { id -> viewModel.onEvent(NotificationsUiEvent.OnNotificationItemClicked(id)) },
         onPrivacySettingsClick = { viewModel.onEvent(NotificationsUiEvent.OnPrivacySettingsClicked) },
+        onRetryClick = { viewModel.onEvent(NotificationsUiEvent.OnRetryClicked) },
         onBackClick = {
             viewModel.onEvent(NotificationsUiEvent.OnBackClicked)
             onNavigateBack()
@@ -124,6 +126,7 @@ fun NotificationsScreenContent(
     onMarkAllReadClick: () -> Unit = {},
     onNotificationItemClick: (String) -> Unit = {},
     onPrivacySettingsClick: () -> Unit = {},
+    onRetryClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
@@ -266,15 +269,86 @@ fun NotificationsScreenContent(
                 uiState.notifications
             }
 
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                filteredList.forEach { item ->
-                    NotificationCardItem(
-                        item = item,
-                        onClick = { onNotificationItemClick(item.id) }
-                    )
+            if (uiState.isLoading && uiState.notifications.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MomoraPurplePrimary)
+                }
+            } else if (uiState.errorMessage != null && uiState.notifications.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFF2DEDE), RoundedCornerShape(16.dp))
+                        .padding(18.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = uiState.errorMessage ?: "Failed to load notifications",
+                            fontSize = 13.5.sp,
+                            color = Color(0xFFA94442),
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(MomoraPurplePrimary)
+                                .clickable { onRetryClick() }
+                                .padding(horizontal = 18.dp, vertical = 7.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Retry",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+            } else if (filteredList.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "No notifications yet",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurpleDark
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "You're all caught up! Updates and reminders will appear here.",
+                            fontSize = 12.sp,
+                            color = MomoraBodyMuted
+                        )
+                    }
+                }
+            } else {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    filteredList.forEach { item ->
+                        NotificationCardItem(
+                            item = item,
+                            onClick = { onNotificationItemClick(item.id) }
+                        )
+                    }
                 }
             }
 

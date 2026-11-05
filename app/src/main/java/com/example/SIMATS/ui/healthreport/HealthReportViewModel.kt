@@ -32,13 +32,24 @@ class HealthReportViewModel(
             HealthReportUiEvent.OnSymptomCheckerClicked -> {}
             HealthReportUiEvent.OnBackClicked -> {}
             HealthReportUiEvent.OnNotificationClicked -> {}
+            HealthReportUiEvent.OnRetryClicked -> {
+                loadData()
+            }
         }
     }
 
     private fun loadData() {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getHealthMonitoringData().collect { data ->
-                _uiState.value = _uiState.value.copy(healthData = data)
+            repository.getHealthMonitoringData().collect { result ->
+                result.fold(
+                    onSuccess = { data ->
+                        _uiState.value = _uiState.value.copy(healthData = data, isLoading = false, errorMessage = null)
+                    },
+                    onFailure = { err ->
+                        _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = err.message ?: "Failed to load health vitals")
+                    }
+                )
             }
         }
     }
