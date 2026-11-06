@@ -16,7 +16,8 @@ object RetrofitClient {
         val builder = original.newBuilder()
 
         // Attach bearer token if present
-        SessionManager.getToken()?.let { token ->
+        val token = SessionManager.getToken()
+        if (!token.isNullOrBlank()) {
             builder.addHeader("Authorization", "Bearer $token")
         }
 
@@ -24,8 +25,14 @@ object RetrofitClient {
         // Bypass ngrok free tier browser interstitial warning
         builder.addHeader("ngrok-skip-browser-warning", "true")
 
-        val response = chain.proceed(builder.build())
-        if (response.code() == 401) {
+        val newRequest = builder.build()
+        val response = chain.proceed(newRequest)
+
+        val path = original.url().encodedPath()
+        val isAuthEndpoint = path.contains("auth/login.php") || path.contains("auth/signup.php")
+        val isExplicitlyAuthenticated = newRequest.header("Authorization") != null
+
+        if (response.code() == 401 && !isAuthEndpoint && isExplicitlyAuthenticated) {
             SessionManager.notifySessionExpired()
         }
         response

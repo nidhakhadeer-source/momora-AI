@@ -28,6 +28,7 @@ object SessionManager {
     private const val KEY_ADDRESS = "key_user_address"
     private const val KEY_PHOTO_URL = "key_user_photo_url"
 
+    @Volatile
     private var sharedPreferences: SharedPreferences? = null
 
     // In-memory fallback if preferences not yet initialized
@@ -55,7 +56,9 @@ object SessionManager {
     }
 
     fun init(context: Context) {
-        sharedPreferences = context.applicationContext.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        if (sharedPreferences == null) {
+            sharedPreferences = context.applicationContext.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        }
     }
 
     fun saveSession(
@@ -81,17 +84,19 @@ object SessionManager {
         memPatientCode = patientCode ?: "P-$userId"
         memDoctorName = doctorName ?: "Dr Amelia Chen"
 
-        sharedPreferences?.edit()?.apply {
-            putString(KEY_TOKEN, token)
-            putInt(KEY_USER_ID, userId)
-            putString(KEY_NAME, name)
-            putString(KEY_EMAIL, email)
-            putString(KEY_ROLE, role)
-            putString(KEY_PATIENT_CODE, memPatientCode)
-            putString(KEY_DOCTOR_NAME, memDoctorName)
-            putString(KEY_EXPIRES_AT, expiresAt)
-            putBoolean(KEY_ONBOARDING_COMPLETED, true)
-        }?.commit()
+        sharedPreferences?.let { prefs ->
+            prefs.edit()
+                .putString(KEY_TOKEN, token)
+                .putInt(KEY_USER_ID, userId)
+                .putString(KEY_NAME, name)
+                .putString(KEY_EMAIL, email)
+                .putString(KEY_ROLE, role)
+                .putString(KEY_PATIENT_CODE, memPatientCode)
+                .putString(KEY_DOCTOR_NAME, memDoctorName)
+                .putString(KEY_EXPIRES_AT, expiresAt)
+                .putBoolean(KEY_ONBOARDING_COMPLETED, true)
+                .commit()
+        }
     }
 
     fun getToken(): String? {
@@ -136,7 +141,10 @@ object SessionManager {
     }
 
     fun isTokenExpired(): Boolean {
-        val expiresAtStr = getExpiresAt() ?: return false
+        val expiresAtStr = getExpiresAt()?.trim()
+        if (expiresAtStr.isNullOrEmpty()) {
+            return false
+        }
         return try {
             val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
             val expiryDate = sdf.parse(expiresAtStr)
@@ -151,9 +159,11 @@ object SessionManager {
     }
 
     fun setOnboardingCompleted(completed: Boolean) {
-        sharedPreferences?.edit()?.apply {
-            putBoolean(KEY_ONBOARDING_COMPLETED, completed)
-        }?.commit()
+        sharedPreferences?.let { prefs ->
+            prefs.edit()
+                .putBoolean(KEY_ONBOARDING_COMPLETED, completed)
+                .commit()
+        }
     }
 
     fun getPhone(): String? {
@@ -182,9 +192,11 @@ object SessionManager {
 
     fun setPhotoUrl(url: String?) {
         memPhotoUrl = url
-        sharedPreferences?.edit()?.apply {
-            putString(KEY_PHOTO_URL, url)
-        }?.commit()
+        sharedPreferences?.let { prefs ->
+            prefs.edit()
+                .putString(KEY_PHOTO_URL, url)
+                .commit()
+        }
     }
 
     fun saveUserProfileDetails(
@@ -202,14 +214,16 @@ object SessionManager {
         dob?.let { memDob = it }
         bloodGroup?.let { memBloodGroup = it }
 
-        sharedPreferences?.edit()?.apply {
-            phone?.let { putString(KEY_PHONE, it) }
-            gender?.let { putString(KEY_GENDER, it) }
-            address?.let { putString(KEY_ADDRESS, it) }
-            photoUrl?.let { putString(KEY_PHOTO_URL, it) }
-            dob?.let { putString(KEY_DOB, it) }
-            bloodGroup?.let { putString(KEY_BLOOD_GROUP, it) }
-        }?.commit()
+        sharedPreferences?.let { prefs ->
+            val editor = prefs.edit()
+            phone?.let { editor.putString(KEY_PHONE, it) }
+            gender?.let { editor.putString(KEY_GENDER, it) }
+            address?.let { editor.putString(KEY_ADDRESS, it) }
+            photoUrl?.let { editor.putString(KEY_PHOTO_URL, it) }
+            dob?.let { editor.putString(KEY_DOB, it) }
+            bloodGroup?.let { editor.putString(KEY_BLOOD_GROUP, it) }
+            editor.commit()
+        }
     }
 
     fun isLoggedIn(): Boolean {
@@ -238,21 +252,23 @@ object SessionManager {
         memAddress = null
         memPhotoUrl = null
         memRole = UserRole.PATIENT
-        sharedPreferences?.edit()?.apply {
-            remove(KEY_TOKEN)
-            remove(KEY_USER_ID)
-            remove(KEY_NAME)
-            remove(KEY_EMAIL)
-            remove(KEY_ROLE)
-            remove(KEY_PATIENT_CODE)
-            remove(KEY_DOCTOR_NAME)
-            remove(KEY_EXPIRES_AT)
-            remove(KEY_PHONE)
-            remove(KEY_GENDER)
-            remove(KEY_DOB)
-            remove(KEY_BLOOD_GROUP)
-            remove(KEY_ADDRESS)
-            remove(KEY_PHOTO_URL)
-        }?.commit()
+        sharedPreferences?.let { prefs ->
+            prefs.edit()
+                .remove(KEY_TOKEN)
+                .remove(KEY_USER_ID)
+                .remove(KEY_NAME)
+                .remove(KEY_EMAIL)
+                .remove(KEY_ROLE)
+                .remove(KEY_PATIENT_CODE)
+                .remove(KEY_DOCTOR_NAME)
+                .remove(KEY_EXPIRES_AT)
+                .remove(KEY_PHONE)
+                .remove(KEY_GENDER)
+                .remove(KEY_DOB)
+                .remove(KEY_BLOOD_GROUP)
+                .remove(KEY_ADDRESS)
+                .remove(KEY_PHOTO_URL)
+                .commit()
+        }
     }
 }
