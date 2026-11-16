@@ -5,22 +5,32 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.SIMATS.data.repository.PatientHealthMonitoringRepository
 import com.example.SIMATS.data.repository.PatientHealthMonitoringRepositoryImpl
+import com.example.SIMATS.navigation.SelectedPatientHolder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class PatientHealthMonitoringViewModel(
-    private val repository: PatientHealthMonitoringRepository = PatientHealthMonitoringRepositoryImpl()
+    private val repository: PatientHealthMonitoringRepository = PatientHealthMonitoringRepositoryImpl(),
+    patientId: String? = SelectedPatientHolder.selectedPatientId
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PatientHealthMonitoringUiState())
     val uiState: StateFlow<PatientHealthMonitoringUiState> = _uiState.asStateFlow()
 
-    private var currentPatientId: String = "1"
+    private var currentPatientId: String? = patientId ?: SelectedPatientHolder.selectedPatientId
 
     init {
-        loadMonitoring(currentPatientId)
+        val id = currentPatientId
+        if (!id.isNullOrBlank()) {
+            loadMonitoring(id)
+        } else {
+            _uiState.value = _uiState.value.copy(
+                isLoading = false,
+                errorMessage = "No patient selected"
+            )
+        }
     }
 
     fun onEvent(event: PatientHealthMonitoringUiEvent) {
@@ -30,7 +40,16 @@ class PatientHealthMonitoringViewModel(
             }
             PatientHealthMonitoringUiEvent.OnWriteAdviceClicked -> {}
             PatientHealthMonitoringUiEvent.OnRetryClicked -> {
-                loadMonitoring(currentPatientId)
+                val id = currentPatientId ?: SelectedPatientHolder.selectedPatientId
+                if (!id.isNullOrBlank()) {
+                    currentPatientId = id
+                    loadMonitoring(id)
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "No patient selected"
+                    )
+                }
             }
             PatientHealthMonitoringUiEvent.OnBackClicked -> {}
             PatientHealthMonitoringUiEvent.OnNotificationClicked -> {}
@@ -38,8 +57,11 @@ class PatientHealthMonitoringViewModel(
     }
 
     fun setPatientId(id: String) {
-        currentPatientId = id
-        loadMonitoring(id)
+        if (id.isNotBlank() && (id != currentPatientId || _uiState.value.monitoringData == null)) {
+            currentPatientId = id
+            SelectedPatientHolder.selectedPatientId = id
+            loadMonitoring(id)
+        }
     }
 
     private fun loadMonitoring(id: String) {
@@ -65,10 +87,13 @@ class PatientHealthMonitoringViewModel(
         }
     }
 
-    class Factory(private val repository: PatientHealthMonitoringRepository) : ViewModelProvider.Factory {
+    class Factory(
+        private val repository: PatientHealthMonitoringRepository = PatientHealthMonitoringRepositoryImpl(),
+        private val patientId: String? = null
+    ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return PatientHealthMonitoringViewModel(repository) as T
+            return PatientHealthMonitoringViewModel(repository, patientId) as T
         }
     }
 }

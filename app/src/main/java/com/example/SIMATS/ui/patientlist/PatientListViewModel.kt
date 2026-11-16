@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.SIMATS.data.repository.PatientListRepository
 import com.example.SIMATS.data.repository.PatientListRepositoryImpl
+import com.example.SIMATS.navigation.SelectedPatientHolder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,7 +30,9 @@ class PatientListViewModel(
             is PatientListUiEvent.OnFilterTabSelected -> {
                 _uiState.value = _uiState.value.copy(selectedFilterTab = event.index)
             }
-            is PatientListUiEvent.OnPatientClicked -> {}
+            is PatientListUiEvent.OnPatientClicked -> {
+                SelectedPatientHolder.selectedPatientId = event.patientId
+            }
             is PatientListUiEvent.OnNavTabSelected -> {
                 _uiState.value = _uiState.value.copy(selectedNavIndex = event.index)
             }

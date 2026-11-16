@@ -6,6 +6,7 @@ import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.DoctorProfileData
 import com.example.SIMATS.data.repository.DoctorProfileRepository
 import com.example.SIMATS.data.repository.DoctorProfileRepositoryImpl
+import com.example.SIMATS.navigation.SelectedPatientHolder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -71,6 +72,7 @@ class DoctorProfileViewModel(
                 loadProfile()
             }
             DoctorProfileUiEvent.OnLogoutClicked -> {
+                SelectedPatientHolder.clear()
                 SessionManager.clearSession()
                 _uiState.value = _uiState.value.copy(isLoggedOut = true)
             }

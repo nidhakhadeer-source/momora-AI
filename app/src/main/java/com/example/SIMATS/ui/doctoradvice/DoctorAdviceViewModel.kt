@@ -5,22 +5,32 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.SIMATS.data.repository.DoctorAdviceRepository
 import com.example.SIMATS.data.repository.DoctorAdviceRepositoryImpl
+import com.example.SIMATS.navigation.SelectedPatientHolder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class DoctorAdviceViewModel(
-    private val repository: DoctorAdviceRepository = DoctorAdviceRepositoryImpl()
+    private val repository: DoctorAdviceRepository = DoctorAdviceRepositoryImpl(),
+    patientId: String? = SelectedPatientHolder.selectedPatientId
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(DoctorAdviceUiState())
     val uiState: StateFlow<DoctorAdviceUiState> = _uiState.asStateFlow()
 
-    private var currentPatientId: String = "1"
+    private var currentPatientId: String? = patientId ?: SelectedPatientHolder.selectedPatientId
 
     init {
-        loadData(currentPatientId)
+        val id = currentPatientId
+        if (!id.isNullOrBlank()) {
+            loadData(id)
+        } else {
+            _uiState.value = _uiState.value.copy(
+                isLoading = false,
+                errorMessage = "No patient selected"
+            )
+        }
     }
 
     fun onEvent(event: DoctorAdviceUiEvent) {
@@ -41,7 +51,16 @@ class DoctorAdviceViewModel(
                 sendAdvice()
             }
             DoctorAdviceUiEvent.OnRetryClicked -> {
-                loadData(currentPatientId)
+                val id = currentPatientId ?: SelectedPatientHolder.selectedPatientId
+                if (!id.isNullOrBlank()) {
+                    currentPatientId = id
+                    loadData(id)
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = "No patient selected"
+                    )
+                }
             }
             DoctorAdviceUiEvent.OnBackClicked -> {}
             DoctorAdviceUiEvent.OnNotificationClicked -> {}
@@ -49,8 +68,11 @@ class DoctorAdviceViewModel(
     }
 
     fun setPatientId(id: String) {
-        currentPatientId = id
-        loadData(id)
+        if (id.isNotBlank() && (id != currentPatientId || _uiState.value.adviceData == null)) {
+            currentPatientId = id
+            SelectedPatientHolder.selectedPatientId = id
+            loadData(id)
+        }
     }
 
     private fun loadData(id: String) {
@@ -79,13 +101,18 @@ class DoctorAdviceViewModel(
     }
 
     private fun sendAdvice() {
+        val targetPatientId = currentPatientId ?: SelectedPatientHolder.selectedPatientId
+        if (targetPatientId.isNullOrBlank()) {
+            _uiState.value = _uiState.value.copy(errorMessage = "Cannot send advice: no patient selected")
+            return
+        }
         _uiState.value = _uiState.value.copy(isSending = true, errorMessage = null)
         viewModelScope.launch {
             repository.sendAdvice(
                 _uiState.value.subjectText,
                 _uiState.value.adviceText,
                 _uiState.value.isSaveCopyChecked,
-                currentPatientId
+                targetPatientId
             ).collect { result ->
                 result.onSuccess {
                     _uiState.value = _uiState.value.copy(isSending = false, isSentSuccess = true, errorMessage = null)
@@ -96,10 +123,13 @@ class DoctorAdviceViewModel(
         }
     }
 
-    class Factory(private val repository: DoctorAdviceRepository) : ViewModelProvider.Factory {
+    class Factory(
+        private val repository: DoctorAdviceRepository = DoctorAdviceRepositoryImpl(),
+        private val patientId: String? = null
+    ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return DoctorAdviceViewModel(repository) as T
+            return DoctorAdviceViewModel(repository, patientId) as T
         }
     }
 }

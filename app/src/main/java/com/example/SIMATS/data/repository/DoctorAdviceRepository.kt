@@ -9,7 +9,7 @@ import retrofit2.HttpException
 
 interface DoctorAdviceRepository {
     fun getAdviceData(patientId: String): Flow<Result<DoctorAdviceData>>
-    fun sendAdvice(subject: String, adviceText: String, saveCopy: Boolean, patientId: String = "1"): Flow<Result<Boolean>>
+    fun sendAdvice(subject: String, adviceText: String, saveCopy: Boolean, patientId: String): Flow<Result<Boolean>>
 }
 
 class DoctorAdviceRepositoryImpl : DoctorAdviceRepository {

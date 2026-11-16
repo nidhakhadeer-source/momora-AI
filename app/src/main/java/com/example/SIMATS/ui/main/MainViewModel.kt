@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.repository.DoctorRepository
 import com.example.SIMATS.data.repository.DoctorRepositoryImpl
+import com.example.SIMATS.navigation.SelectedPatientHolder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -27,7 +28,9 @@ class MainViewModel(
             is MainUiEvent.OnNavTabSelected -> {
                 _uiState.value = _uiState.value.copy(selectedNavIndex = event.index)
             }
-            is MainUiEvent.OnReviewPatientClicked -> {}
+            is MainUiEvent.OnReviewPatientClicked -> {
+                SelectedPatientHolder.selectedPatientId = event.patientId
+            }
             MainUiEvent.OnViewAssignedPatientsClicked -> {}
             MainUiEvent.OnScheduleClicked -> {}
             MainUiEvent.OnNextAppointmentClicked -> {}
@@ -35,6 +38,7 @@ class MainViewModel(
                 loadDashboard()
             }
             MainUiEvent.OnLogoutClicked -> {
+                SelectedPatientHolder.clear()
                 SessionManager.clearSession()
                 _uiState.value = _uiState.value.copy(isLoggedOut = true)
             }
