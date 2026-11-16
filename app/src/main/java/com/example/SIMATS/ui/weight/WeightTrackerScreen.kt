@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -44,6 +45,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.SIMATS.data.model.WeightTrackerData
+import com.example.SIMATS.data.model.ChartPoint
+import com.example.SIMATS.data.model.toPairList
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraFooterText
 import com.example.SIMATS.ui.theme.MomoraLavenderCircleBg
@@ -68,6 +71,7 @@ fun WeightTrackerScreen(
         onWeightInputChanged = { w -> viewModel.onEvent(WeightTrackerUiEvent.OnWeightInputChanged(w)) },
         onDateInputChanged = { d -> viewModel.onEvent(WeightTrackerUiEvent.OnDateInputChanged(d)) },
         onSaveReadingClick = { viewModel.onEvent(WeightTrackerUiEvent.OnSaveReadingClicked) },
+        onRetryClick = { viewModel.onEvent(WeightTrackerUiEvent.OnRetryClicked) },
         onBackClick = {
             viewModel.onEvent(WeightTrackerUiEvent.OnBackClicked)
             onNavigateBack()
@@ -91,11 +95,11 @@ fun WeightTrackerScreenContent(
             yAxisLabels = listOf("65", "63", "61", "59"),
             xAxisLabels = listOf("W16", "W18", "W20", "W22", "W24"),
             chartPointsNormalized = listOf(
-                0.00f to 0.88f,
-                0.25f to 0.72f,
-                0.50f to 0.48f,
-                0.75f to 0.30f,
-                1.00f to 0.12f
+                ChartPoint(0.00f, 0.88f),
+                ChartPoint(0.25f, 0.72f),
+                ChartPoint(0.50f, 0.48f),
+                ChartPoint(0.75f, 0.30f),
+                ChartPoint(1.00f, 0.12f)
             ),
             lastReadingText = "Previous - 63.8 kg on 20 Oct 2026 · Change +0.4 kg"
         )
@@ -104,6 +108,7 @@ fun WeightTrackerScreenContent(
     onWeightInputChanged: (String) -> Unit = {},
     onDateInputChanged: (String) -> Unit = {},
     onSaveReadingClick: () -> Unit = {},
+    onRetryClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
@@ -180,129 +185,186 @@ fun WeightTrackerScreenContent(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Current Weight Banner Card
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(MomoraLavenderCircleBg)
-                    .padding(16.dp)
-            ) {
-                Column {
-                    Text(
-                        text = "${data?.currentWeightKg ?: "64.2"} kg",
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MomoraPurpleDark
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = data?.baselineDeltaText ?: "+5.2 kg from 59.0 kg baseline · 27 Oct 2026, 08:10",
-                        fontSize = 12.sp,
-                        color = MomoraBodyMuted
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Time Range Switcher Tabs (4 weeks vs Pregnancy)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color(0xFFF4ECF8))
-                    .padding(4.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+            if (uiState.isLoading && data == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 48.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    val tabs = data?.timeRangeTabs ?: listOf("4 weeks", "Pregnancy")
-                    tabs.forEachIndexed { index, label ->
-                        val isSelected = uiState.selectedTimeRangeIndex == index
+                    CircularProgressIndicator(color = MomoraPurplePrimary)
+                }
+            } else if (uiState.errorMessage != null && data == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFF2DEDE), RoundedCornerShape(16.dp))
+                        .padding(20.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = uiState.errorMessage ?: "Failed to load weight data",
+                            fontSize = 14.sp,
+                            color = Color(0xFFA94442),
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
                         Box(
                             modifier = Modifier
-                                .weight(1f)
-                                .height(38.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(if (isSelected) Color.White else Color.Transparent)
-                                .clickable { onTimeRangeSelected(index) },
+                                .clip(RoundedCornerShape(50))
+                                .background(MomoraPurplePrimary)
+                                .clickable { onRetryClick() }
+                                .padding(horizontal = 20.dp, vertical = 8.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = label,
+                                text = "Retry",
                                 fontSize = 13.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSelected) MomoraPurpleDark else MomoraBodyMuted
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
                             )
                         }
                     }
                 }
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Interactive Weight Line Chart Card
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.White)
-                    .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
-                    .padding(16.dp)
-            ) {
-                Column {
-                    // Header dot + label
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(MomoraPurplePrimary)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
+            } else {
+                // Current Weight Banner Card
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(MomoraLavenderCircleBg)
+                        .padding(16.dp)
+                ) {
+                    Column {
+                        val hasWeight = !data?.currentWeightKg.isNullOrBlank()
                         Text(
-                            text = "Weight - kg",
-                            fontSize = 11.5.sp,
-                            fontWeight = FontWeight.Medium,
+                            text = if (hasWeight) "${data!!.currentWeightKg} kg" else "No reading",
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurpleDark
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = if (!data?.baselineDeltaText.isNullOrBlank()) data!!.baselineDeltaText!! else "Log your first weight reading below",
+                            fontSize = 12.sp,
                             color = MomoraBodyMuted
                         )
                     }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Line Chart Canvas
-                    WeightLineChart(
-                        yAxisLabels = data?.yAxisLabels ?: listOf("65", "63", "61", "59"),
-                        xAxisLabels = data?.xAxisLabels ?: listOf("W16", "W18", "W20", "W22", "W24"),
-                        pointsNormalized = data?.chartPointsNormalized ?: listOf(
-                            0.0f to 0.88f,
-                            0.25f to 0.72f,
-                            0.50f to 0.48f,
-                            0.75f to 0.30f,
-                            1.00f to 0.12f
-                        ),
-                        lineColor = MomoraPurplePrimary,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(150.dp)
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Text(
-                        text = "Individual weight needs vary. Review your trend with your maternity team.",
-                        fontSize = 11.sp,
-                        lineHeight = 15.sp,
-                        color = MomoraBodyMuted
-                    )
                 }
-            }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Time Range Switcher Tabs (4 weeks vs Pregnancy)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color(0xFFF4ECF8))
+                        .padding(4.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        val tabs = if (data?.timeRangeTabs.isNullOrEmpty()) listOf("4 weeks", "Pregnancy") else data.timeRangeTabs
+                        tabs.forEachIndexed { index, label ->
+                            val isSelected = uiState.selectedTimeRangeIndex == index
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(38.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(if (isSelected) Color.White else Color.Transparent)
+                                    .clickable { onTimeRangeSelected(index) },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = label,
+                                    fontSize = 13.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (isSelected) MomoraPurpleDark else MomoraBodyMuted
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Interactive Weight Line Chart Card
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                        .padding(16.dp)
+                ) {
+                    Column {
+                        // Header dot + label
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(MomoraPurplePrimary)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Weight - kg",
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MomoraBodyMuted
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Line Chart Canvas
+                        val points = data?.chartPointsNormalized.toPairList()
+
+                        if (points.isEmpty()) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(150.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "No weight readings recorded yet",
+                                    fontSize = 13.sp,
+                                    color = MomoraBodyMuted
+                                )
+                            }
+                        } else {
+                            WeightLineChart(
+                                yAxisLabels = if (data?.yAxisLabels.isNullOrEmpty()) listOf("65", "63", "61", "59") else data.yAxisLabels,
+                                xAxisLabels = data?.xAxisLabels ?: emptyList(),
+                                pointsNormalized = points,
+                                lineColor = MomoraPurplePrimary,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(150.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Text(
+                            text = "Individual weight needs vary. Review your trend with your maternity team.",
+                            fontSize = 11.sp,
+                            lineHeight = 15.sp,
+                            color = MomoraBodyMuted
+                        )
+                    }
+                }
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -362,6 +424,7 @@ fun WeightTrackerScreenContent(
             )
 
             Spacer(modifier = Modifier.height(16.dp))
+            }
         }
 
         // 3. Bottom Dashboard Navigation Bar

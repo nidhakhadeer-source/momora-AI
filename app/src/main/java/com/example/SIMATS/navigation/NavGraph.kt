@@ -35,6 +35,7 @@ import com.example.SIMATS.ui.duedate.DueDateViewModel
 import com.example.SIMATS.ui.healthreport.HealthReportScreen
 import com.example.SIMATS.ui.healthreport.HealthReportViewModel
 import com.example.SIMATS.ui.home.HomeScreen
+import com.example.SIMATS.ui.home.HomeUiEvent
 import com.example.SIMATS.ui.home.HomeViewModel
 import com.example.SIMATS.ui.login.LoginScreen
 import com.example.SIMATS.ui.login.LoginViewModel
@@ -169,6 +170,9 @@ fun AppNavHost() {
         }
         Screen.Home -> {
             val homeViewModel: HomeViewModel = viewModel()
+            LaunchedEffect(Unit) {
+                homeViewModel.onEvent(HomeUiEvent.OnRetryClicked)
+            }
             HomeScreen(
                 viewModel = homeViewModel,
                 onPregnancyDetailsClick = { currentScreen = Screen.DueDate },
@@ -249,6 +253,9 @@ fun AppNavHost() {
         }
         Screen.WeightTracker -> {
             val weightViewModel: WeightTrackerViewModel = viewModel()
+            LaunchedEffect(Unit) {
+                weightViewModel.loadWeightData()
+            }
             WeightTrackerScreen(
                 viewModel = weightViewModel,
                 onNavigateBack = {
@@ -267,6 +274,9 @@ fun AppNavHost() {
         }
         Screen.BloodPressure -> {
             val bpViewModel: BloodPressureViewModel = viewModel()
+            LaunchedEffect(Unit) {
+                bpViewModel.loadData()
+            }
             BloodPressureScreen(
                 viewModel = bpViewModel,
                 onNavigateBack = {

@@ -9,6 +9,7 @@ data class WeightTrackerUiState(
     val inputDate: String = "27 Oct 2026",
     val selectedNavIndex: Int = 1,
     val isLoading: Boolean = false,
+    val isSaving: Boolean = false,
     val isSavedSuccess: Boolean = false,
     val errorMessage: String? = null
 )

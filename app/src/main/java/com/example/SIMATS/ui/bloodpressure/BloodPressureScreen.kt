@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -45,6 +46,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.SIMATS.data.model.BloodPressureData
+import com.example.SIMATS.data.model.ChartPoint
+import com.example.SIMATS.data.model.toPairList
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraMintBadgeBg
 import com.example.SIMATS.ui.theme.MomoraMintBadgeText
@@ -68,6 +71,7 @@ fun BloodPressureScreen(
         onSystolicInputChanged = { sys -> viewModel.onEvent(BloodPressureUiEvent.OnSystolicInputChanged(sys)) },
         onDiastolicInputChanged = { dia -> viewModel.onEvent(BloodPressureUiEvent.OnDiastolicInputChanged(dia)) },
         onSaveReadingClick = { viewModel.onEvent(BloodPressureUiEvent.OnSaveReadingClicked) },
+        onRetryClick = { viewModel.onEvent(BloodPressureUiEvent.OnRetryClicked) },
         onBackClick = {
             viewModel.onEvent(BloodPressureUiEvent.OnBackClicked)
             onNavigateBack()
@@ -90,22 +94,23 @@ fun BloodPressureScreenContent(
             yAxisLabels = listOf("120", "100", "80", "60"),
             xAxisLabels = listOf("21 Oct", "23 Oct", "25 Oct", "27 Oct"),
             systolicPointsNormalized = listOf(
-                0.00f to 0.28f,
-                0.33f to 0.35f,
-                0.66f to 0.25f,
-                1.00f to 0.28f
+                ChartPoint(0.00f, 0.28f),
+                ChartPoint(0.33f, 0.35f),
+                ChartPoint(0.66f, 0.25f),
+                ChartPoint(1.00f, 0.28f)
             ),
             diastolicPointsNormalized = listOf(
-                0.00f to 0.78f,
-                0.33f to 0.82f,
-                0.66f to 0.75f,
-                1.00f to 0.78f
+                ChartPoint(0.00f, 0.78f),
+                ChartPoint(0.33f, 0.82f),
+                ChartPoint(0.66f, 0.75f),
+                ChartPoint(1.00f, 0.78f)
             )
         )
     ),
     onSystolicInputChanged: (String) -> Unit = {},
     onDiastolicInputChanged: (String) -> Unit = {},
     onSaveReadingClick: () -> Unit = {},
+    onRetryClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
@@ -182,6 +187,52 @@ fun BloodPressureScreenContent(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            if (uiState.isLoading && data == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 48.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MomoraPurplePrimary)
+                }
+            } else if (uiState.errorMessage != null && data == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFF2DEDE), RoundedCornerShape(16.dp))
+                        .padding(20.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = uiState.errorMessage ?: "Failed to load blood pressure data",
+                            fontSize = 14.sp,
+                            color = Color(0xFFA94442),
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(MomoraPurplePrimary)
+                                .clickable { onRetryClick() }
+                                .padding(horizontal = 20.dp, vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Retry",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+            } else {
+
             // Current Reading Banner Card
             Box(
                 modifier = Modifier
@@ -191,8 +242,9 @@ fun BloodPressureScreenContent(
                     .padding(16.dp)
             ) {
                 Column {
+                    val hasReading = !data?.currentReadingText.isNullOrBlank()
                     Text(
-                        text = data?.currentReadingText ?: "112 / 72 mmHg",
+                        text = if (hasReading) data!!.currentReadingText!! else "No reading",
                         fontSize = 26.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF1E2C28)
@@ -201,7 +253,7 @@ fun BloodPressureScreenContent(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = data?.timestampText ?: "27 Oct 2026 · 08:15 · Pulse 78 bpm",
+                        text = if (!data?.timestampText.isNullOrBlank()) data!!.timestampText!! else "No readings recorded yet",
                         fontSize = 12.sp,
                         color = Color(0xFF43524E)
                     )
@@ -242,7 +294,7 @@ fun BloodPressureScreenContent(
                                         .size(7.dp)
                                         .clip(CircleShape)
                                         .background(MomoraPurplePrimary)
-                                )
+                                    )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = "Systolic - mmHg",
@@ -271,27 +323,35 @@ fun BloodPressureScreenContent(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     // Dual Line Chart
-                    DualLineChart(
-                        yAxisLabels = data?.yAxisLabels ?: listOf("120", "100", "80", "60"),
-                        xAxisLabels = data?.xAxisLabels ?: listOf("21 Oct", "23 Oct", "25 Oct", "27 Oct"),
-                        systolicPoints = data?.systolicPointsNormalized ?: listOf(
-                            0.00f to 0.28f,
-                            0.33f to 0.35f,
-                            0.66f to 0.25f,
-                            1.00f to 0.28f
-                        ),
-                        diastolicPoints = data?.diastolicPointsNormalized ?: listOf(
-                            0.00f to 0.78f,
-                            0.33f to 0.82f,
-                            0.66f to 0.75f,
-                            1.00f to 0.78f
-                        ),
-                        systolicColor = MomoraPurplePrimary,
-                        diastolicColor = MomoraMintBadgeText,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(140.dp)
-                    )
+                    val systolicPoints = data?.systolicPointsNormalized.toPairList()
+                    val diastolicPoints = data?.diastolicPointsNormalized.toPairList()
+
+                    if (systolicPoints.isEmpty() && diastolicPoints.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(140.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "No readings recorded yet",
+                                fontSize = 13.sp,
+                                color = MomoraBodyMuted
+                            )
+                        }
+                    } else {
+                        DualLineChart(
+                            yAxisLabels = if (data?.yAxisLabels.isNullOrEmpty()) listOf("120", "100", "80", "60") else data.yAxisLabels,
+                            xAxisLabels = data?.xAxisLabels ?: emptyList(),
+                            systolicPoints = systolicPoints,
+                            diastolicPoints = diastolicPoints,
+                            systolicColor = MomoraPurplePrimary,
+                            diastolicColor = MomoraMintBadgeText,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(140.dp)
+                        )
+                    }
                 }
             }
 
@@ -385,6 +445,7 @@ fun BloodPressureScreenContent(
             }
 
             Spacer(modifier = Modifier.height(16.dp))
+            }
         }
 
         // 3. Bottom Navigation Bar

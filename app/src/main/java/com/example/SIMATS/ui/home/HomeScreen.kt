@@ -452,8 +452,12 @@ fun HomeScreenContent(
                             color = MomoraPurplePrimary
                         )
                         Spacer(modifier = Modifier.height(4.dp))
+                        val rawWeight = data?.weightValue
+                        val weightDisplay = if (!rawWeight.isNullOrBlank()) {
+                            if (rawWeight.contains("kg", ignoreCase = true)) rawWeight else "$rawWeight kg"
+                        } else "64.2 kg"
                         Text(
-                            text = data?.weightValue ?: "64.2",
+                            text = weightDisplay,
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
                             color = MomoraPurpleDark

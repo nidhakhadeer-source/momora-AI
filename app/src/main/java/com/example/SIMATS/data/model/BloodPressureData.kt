@@ -1,10 +1,10 @@
 package com.example.SIMATS.data.model
 
 data class BloodPressureData(
-    val currentReadingText: String,
-    val timestampText: String,
-    val yAxisLabels: List<String>,
-    val xAxisLabels: List<String>,
-    val systolicPointsNormalized: List<Pair<Float, Float>>,
-    val diastolicPointsNormalized: List<Pair<Float, Float>>
+    val currentReadingText: String? = null,
+    val timestampText: String? = null,
+    val yAxisLabels: List<String> = emptyList(),
+    val xAxisLabels: List<String> = emptyList(),
+    val systolicPointsNormalized: List<ChartPoint> = emptyList(),
+    val diastolicPointsNormalized: List<ChartPoint> = emptyList()
 )

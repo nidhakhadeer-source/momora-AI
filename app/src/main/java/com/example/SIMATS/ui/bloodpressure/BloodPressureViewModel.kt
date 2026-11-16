@@ -3,7 +3,6 @@ package com.example.SIMATS.ui.bloodpressure
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.SIMATS.data.model.BloodPressureData
 import com.example.SIMATS.data.repository.BloodPressureRepository
 import com.example.SIMATS.data.repository.BloodPressureRepositoryImpl
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,34 +35,53 @@ class BloodPressureViewModel(
             BloodPressureUiEvent.OnSaveReadingClicked -> {
                 saveReading()
             }
+            BloodPressureUiEvent.OnRetryClicked -> {
+                loadData()
+            }
             BloodPressureUiEvent.OnBackClicked -> {}
             BloodPressureUiEvent.OnNotificationClicked -> {}
         }
     }
 
-    private fun loadData() {
+    fun loadData() {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getBloodPressureData().collect { bpData ->
-                _uiState.value = _uiState.value.copy(data = bpData)
+            repository.getBloodPressureData().collect { result ->
+                result.fold(
+                    onSuccess = { bpData ->
+                        _uiState.value = _uiState.value.copy(
+                            data = bpData,
+                            isLoading = false,
+                            errorMessage = null
+                        )
+                    },
+                    onFailure = { err ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = err.message ?: "Failed to load blood pressure data"
+                        )
+                    }
+                )
             }
         }
     }
 
     private fun saveReading() {
-        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+        _uiState.value = _uiState.value.copy(isSaving = true, errorMessage = null)
         viewModelScope.launch {
             repository.saveBloodPressureReading(_uiState.value.systolicInput, _uiState.value.diastolicInput)
                 .collect { result ->
                     result.onSuccess {
                         _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            isSavedSuccess = true,
-                            data = _uiState.value.data?.copy(
-                                currentReadingText = "${_uiState.value.systolicInput} / ${_uiState.value.diastolicInput} mmHg"
-                            )
+                            isSaving = false,
+                            isSavedSuccess = true
                         )
+                        loadData()
                     }.onFailure { err ->
-                        _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = err.message)
+                        _uiState.value = _uiState.value.copy(
+                            isSaving = false,
+                            errorMessage = err.message ?: "Failed to save blood pressure reading"
+                        )
                     }
                 }
         }

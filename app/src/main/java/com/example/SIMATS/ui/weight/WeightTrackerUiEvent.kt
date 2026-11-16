@@ -6,6 +6,7 @@ sealed interface WeightTrackerUiEvent {
     data class OnDateInputChanged(val date: String) : WeightTrackerUiEvent
     data class OnNavTabSelected(val index: Int) : WeightTrackerUiEvent
     data object OnSaveReadingClicked : WeightTrackerUiEvent
+    data object OnRetryClicked : WeightTrackerUiEvent
     data object OnBackClicked : WeightTrackerUiEvent
     data object OnNotificationClicked : WeightTrackerUiEvent
 }

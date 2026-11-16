@@ -3,7 +3,6 @@ package com.example.SIMATS.ui.weight
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.SIMATS.data.model.WeightTrackerData
 import com.example.SIMATS.data.repository.WeightRepository
 import com.example.SIMATS.data.repository.WeightRepositoryImpl
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,34 +38,53 @@ class WeightTrackerViewModel(
             WeightTrackerUiEvent.OnSaveReadingClicked -> {
                 saveReading()
             }
+            WeightTrackerUiEvent.OnRetryClicked -> {
+                loadWeightData()
+            }
             WeightTrackerUiEvent.OnBackClicked -> {}
             WeightTrackerUiEvent.OnNotificationClicked -> {}
         }
     }
 
-    private fun loadWeightData() {
+    fun loadWeightData() {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getWeightTrackerData().collect { trackerData ->
-                _uiState.value = _uiState.value.copy(data = trackerData)
+            repository.getWeightTrackerData().collect { result ->
+                result.fold(
+                    onSuccess = { trackerData ->
+                        _uiState.value = _uiState.value.copy(
+                            data = trackerData,
+                            isLoading = false,
+                            errorMessage = null
+                        )
+                    },
+                    onFailure = { err ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = err.message ?: "Failed to load weight data"
+                        )
+                    }
+                )
             }
         }
     }
 
     private fun saveReading() {
-        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+        _uiState.value = _uiState.value.copy(isSaving = true, errorMessage = null)
         viewModelScope.launch {
             repository.saveWeightReading(_uiState.value.inputWeight, _uiState.value.inputDate)
                 .collect { result ->
                     result.onSuccess {
                         _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            isSavedSuccess = true,
-                            data = _uiState.value.data?.copy(
-                                currentWeightKg = _uiState.value.inputWeight
-                            )
+                            isSaving = false,
+                            isSavedSuccess = true
                         )
+                        loadWeightData()
                     }.onFailure { err ->
-                        _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = err.message)
+                        _uiState.value = _uiState.value.copy(
+                            isSaving = false,
+                            errorMessage = err.message ?: "Failed to save weight reading"
+                        )
                     }
                 }
         }

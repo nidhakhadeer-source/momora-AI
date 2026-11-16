@@ -8,6 +8,7 @@ data class BloodPressureUiState(
     val diastolicInput: String = "72",
     val selectedNavIndex: Int = 1,
     val isLoading: Boolean = false,
+    val isSaving: Boolean = false,
     val isSavedSuccess: Boolean = false,
     val errorMessage: String? = null
 )

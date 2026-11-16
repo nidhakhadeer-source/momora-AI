@@ -5,44 +5,32 @@ import com.example.SIMATS.data.model.BloodPressureData
 import com.example.SIMATS.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import retrofit2.HttpException
 
 interface BloodPressureRepository {
-    fun getBloodPressureData(): Flow<BloodPressureData>
+    fun getBloodPressureData(): Flow<Result<BloodPressureData>>
     fun saveBloodPressureReading(systolic: String, diastolic: String): Flow<Result<Boolean>>
 }
 
 class BloodPressureRepositoryImpl : BloodPressureRepository {
     private val apiService = RetrofitClient.apiService
 
-    override fun getBloodPressureData(): Flow<BloodPressureData> = flow {
+    override fun getBloodPressureData(): Flow<Result<BloodPressureData>> = flow {
         try {
             val response = apiService.getBloodPressureData(SessionManager.getUserId())
             if (response.success && response.data != null) {
-                emit(response.data)
-                return@flow
+                emit(Result.success(response.data))
+            } else {
+                emit(Result.failure(Exception(response.message ?: "Failed to load blood pressure data")))
             }
-        } catch (_: Exception) {}
-
-        emit(
-            BloodPressureData(
-                currentReadingText = "112 / 72 mmHg",
-                timestampText = "29 Oct 2026 · 08:15 · Pulse 78 bpm",
-                yAxisLabels = listOf("120", "100", "80", "60"),
-                xAxisLabels = listOf("21 Oct", "23 Oct", "25 Oct", "27 Oct"),
-                systolicPointsNormalized = listOf(
-                    0.00f to 0.28f,
-                    0.33f to 0.35f,
-                    0.66f to 0.25f,
-                    1.00f to 0.28f
-                ),
-                diastolicPointsNormalized = listOf(
-                    0.00f to 0.78f,
-                    0.33f to 0.82f,
-                    0.66f to 0.75f,
-                    1.00f to 0.78f
-                )
-            )
-        )
+        } catch (e: Exception) {
+            if (e is HttpException && e.code() == 401) {
+                SessionManager.notifySessionExpired()
+                emit(Result.failure(Exception("Session expired. Please log in again.")))
+            } else {
+                emit(Result.failure(Exception(e.localizedMessage ?: "Network connection error")))
+            }
+        }
     }
 
     override fun saveBloodPressureReading(systolic: String, diastolic: String): Flow<Result<Boolean>> = flow {
@@ -54,7 +42,12 @@ class BloodPressureRepositoryImpl : BloodPressureRepository {
                 emit(Result.failure(Exception(response.message ?: "Failed to log blood pressure")))
             }
         } catch (e: Exception) {
-            emit(Result.failure(Exception(e.localizedMessage ?: "Network error while logging blood pressure")))
+            if (e is HttpException && e.code() == 401) {
+                SessionManager.notifySessionExpired()
+                emit(Result.failure(Exception("Session expired. Please log in again.")))
+            } else {
+                emit(Result.failure(Exception(e.localizedMessage ?: "Network error while logging blood pressure")))
+            }
         }
     }
 }
