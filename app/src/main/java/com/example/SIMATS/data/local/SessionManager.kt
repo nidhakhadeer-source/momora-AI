@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 object SessionManager {
     private const val PREF_NAME = "momora_session_pref"
@@ -145,10 +146,14 @@ object SessionManager {
         if (expiresAtStr.isNullOrEmpty()) {
             return false
         }
+        val cleanStr = expiresAtStr.replace("T", " ").substringBefore(".")
         return try {
-            val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
-            val expiryDate = sdf.parse(expiresAtStr)
-            expiryDate != null && expiryDate.before(Date())
+            val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).apply {
+                timeZone = TimeZone.getDefault()
+            }
+            val expiryDate = sdf.parse(cleanStr)
+            val now = Date()
+            expiryDate != null && expiryDate.before(now)
         } catch (_: Exception) {
             false
         }

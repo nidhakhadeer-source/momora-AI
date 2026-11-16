@@ -23,6 +23,9 @@ class SplashViewModel(
 
     fun onEvent(event: SplashUiEvent) {
         when (event) {
+            SplashUiEvent.OnCheckAuthState -> {
+                loadSplashData()
+            }
             SplashUiEvent.OnFavoriteClicked -> {
                 // Handle favorite action
             }
@@ -36,6 +39,7 @@ class SplashViewModel(
     }
 
     private fun loadSplashData() {
+        _uiState.value = SplashUiState.Loading
         viewModelScope.launch {
             repository.checkAuthState().collect { authState ->
                 _uiState.value = SplashUiState.Success(authState)

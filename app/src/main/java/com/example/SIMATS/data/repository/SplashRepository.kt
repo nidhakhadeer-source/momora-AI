@@ -12,9 +12,11 @@ interface SplashRepository {
 
 class SplashRepositoryImpl : SplashRepository {
     override fun checkAuthState(): Flow<UserAuthState> = flow {
-        delay(1200)
-        if (SessionManager.isLoggedIn()) {
-            emit(UserAuthState.Authenticated(SessionManager.getUserRole()))
+        delay(800)
+        val loggedIn = SessionManager.isLoggedIn()
+        val role = SessionManager.getUserRole()
+        if (loggedIn) {
+            emit(UserAuthState.Authenticated(role))
         } else {
             emit(UserAuthState.Unauthenticated)
         }
