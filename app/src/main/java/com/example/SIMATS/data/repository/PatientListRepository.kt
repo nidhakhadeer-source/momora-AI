@@ -7,18 +7,38 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException
 
+data class PaginatedPatients(
+    val patients: List<AssignedPatientItem>,
+    val page: Int,
+    val limit: Int,
+    val total: Int,
+    val totalPages: Int
+)
+
 interface PatientListRepository {
-    fun getAssignedPatients(): Flow<Result<List<AssignedPatientItem>>>
+    fun getAssignedPatients(page: Int = 1, limit: Int = 10): Flow<Result<PaginatedPatients>>
 }
 
 class PatientListRepositoryImpl : PatientListRepository {
     private val apiService = RetrofitClient.apiService
 
-    override fun getAssignedPatients(): Flow<Result<List<AssignedPatientItem>>> = flow {
+    override fun getAssignedPatients(page: Int, limit: Int): Flow<Result<PaginatedPatients>> = flow {
         try {
-            val response = apiService.getAssignedPatients(SessionManager.getUserId())
+            val response = apiService.getAssignedPatients(
+                page = page,
+                limit = limit,
+                userId = SessionManager.getUserId()
+            )
             if (response.success && response.data != null) {
-                emit(Result.success(response.data))
+                emit(Result.success(
+                    PaginatedPatients(
+                        patients = response.data,
+                        page = response.page ?: page,
+                        limit = response.limit ?: limit,
+                        total = response.total ?: response.data.size,
+                        totalPages = response.totalPages ?: 1
+                    )
+                ))
             } else {
                 emit(Result.failure(Exception(response.message ?: "Failed to load assigned patients")))
             }

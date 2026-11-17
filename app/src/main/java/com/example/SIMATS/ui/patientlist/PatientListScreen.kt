@@ -60,7 +60,8 @@ fun PatientListScreen(
     viewModel: PatientListViewModel,
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit = {},
-    onPatientClick: (String) -> Unit = {},
+    onPatientClick: (String, String) -> Unit = { _, _ -> },
+    onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -70,9 +71,9 @@ fun PatientListScreen(
         uiState = uiState,
         onSearchQueryChanged = { q -> viewModel.onEvent(PatientListUiEvent.OnSearchQueryChanged(q)) },
         onFilterTabSelected = { index -> viewModel.onEvent(PatientListUiEvent.OnFilterTabSelected(index)) },
-        onPatientClick = { id ->
-            viewModel.onEvent(PatientListUiEvent.OnPatientClicked(id))
-            onPatientClick(id)
+        onPatientClick = { id, name ->
+            viewModel.onEvent(PatientListUiEvent.OnPatientClicked(id, name))
+            onPatientClick(id, name)
         },
         onPreviousPageClick = { viewModel.onEvent(PatientListUiEvent.OnPreviousPageClicked) },
         onNextPageClick = { viewModel.onEvent(PatientListUiEvent.OnNextPageClicked) },
@@ -81,7 +82,10 @@ fun PatientListScreen(
             viewModel.onEvent(PatientListUiEvent.OnBackClicked)
             onNavigateBack()
         },
-        onNotificationClick = { viewModel.onEvent(PatientListUiEvent.OnNotificationClicked) },
+        onNotificationClick = {
+            viewModel.onEvent(PatientListUiEvent.OnNotificationClicked)
+            onNotificationClick()
+        },
         onNavTabSelected = { index ->
             viewModel.onEvent(PatientListUiEvent.OnNavTabSelected(index))
             onNavTabSelected(index)
@@ -139,7 +143,7 @@ fun PatientListScreenContent(
     ),
     onSearchQueryChanged: (String) -> Unit = {},
     onFilterTabSelected: (Int) -> Unit = {},
-    onPatientClick: (String) -> Unit = {},
+    onPatientClick: (String, String) -> Unit = { _, _ -> },
     onPreviousPageClick: () -> Unit = {},
     onNextPageClick: () -> Unit = {},
     onRetryClick: () -> Unit = {},
@@ -393,7 +397,7 @@ fun PatientListScreenContent(
                     filteredList.forEach { patient ->
                         PatientCardItem(
                             item = patient,
-                            onClick = { onPatientClick(patient.id) }
+                            onClick = { onPatientClick(patient.id, patient.name) }
                         )
                     }
                 }
@@ -407,11 +411,16 @@ fun PatientListScreenContent(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val startIdx = if (uiState.totalCount > 0) ((uiState.currentPage - 1) * uiState.limit) + 1 else 0
+                val endIdx = kotlin.math.min(uiState.currentPage * uiState.limit, uiState.totalCount)
                 Text(
-                    text = "Showing 1-5 of ${uiState.totalCount}",
+                    text = if (uiState.totalCount > 0) "Showing $startIdx-$endIdx of ${uiState.totalCount} · Page ${uiState.currentPage} of ${uiState.totalPages}" else "No patients",
                     fontSize = 11.5.sp,
                     color = MomoraBodyMuted
                 )
+
+                val canGoPrev = uiState.currentPage > 1
+                val canGoNext = uiState.currentPage < uiState.totalPages
 
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -421,15 +430,21 @@ fun PatientListScreenContent(
                         text = "Previous",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MomoraPurplePrimary,
-                        modifier = Modifier.clickable { onPreviousPageClick() }
+                        color = if (canGoPrev) MomoraPurplePrimary else Color(0xFFC4B8CA),
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .clickable(enabled = canGoPrev) { onPreviousPageClick() }
+                            .padding(horizontal = 4.dp, vertical = 2.dp)
                     )
                     Text(
                         text = "Next ➔",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MomoraPurplePrimary,
-                        modifier = Modifier.clickable { onNextPageClick() }
+                        color = if (canGoNext) MomoraPurplePrimary else Color(0xFFC4B8CA),
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .clickable(enabled = canGoNext) { onNextPageClick() }
+                            .padding(horizontal = 4.dp, vertical = 2.dp)
                     )
                 }
             }

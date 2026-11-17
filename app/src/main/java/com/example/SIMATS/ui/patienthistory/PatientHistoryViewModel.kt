@@ -13,10 +13,13 @@ import kotlinx.coroutines.launch
 
 class PatientHistoryViewModel(
     private val repository: PatientHistoryRepository = PatientHistoryRepositoryImpl(),
-    patientId: String? = SelectedPatientHolder.selectedPatientId
+    patientId: String? = SelectedPatientHolder.selectedPatientId,
+    patientName: String? = SelectedPatientHolder.selectedPatientName
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(PatientHistoryUiState())
+    private val _uiState = MutableStateFlow(
+        PatientHistoryUiState(patientName = patientName ?: SelectedPatientHolder.selectedPatientName)
+    )
     val uiState: StateFlow<PatientHistoryUiState> = _uiState.asStateFlow()
 
     private var currentPatientId: String? = patientId ?: SelectedPatientHolder.selectedPatientId
@@ -38,11 +41,24 @@ class PatientHistoryViewModel(
             is PatientHistoryUiEvent.OnTabSelected -> {
                 _uiState.value = _uiState.value.copy(selectedTab = event.index)
             }
-            is PatientHistoryUiEvent.OnMedicationClicked -> {}
+            is PatientHistoryUiEvent.OnMedicationClicked -> {
+                _uiState.value = _uiState.value.copy(
+                    selectedMedication = event.medication,
+                    isMedicationSheetOpen = true
+                )
+            }
+            PatientHistoryUiEvent.OnDismissMedicationSheet -> {
+                _uiState.value = _uiState.value.copy(
+                    isMedicationSheetOpen = false,
+                    selectedMedication = null
+                )
+            }
             is PatientHistoryUiEvent.OnNavTabSelected -> {
                 _uiState.value = _uiState.value.copy(selectedNavIndex = event.index)
             }
-            PatientHistoryUiEvent.OnViewAllReportsClicked -> {}
+            PatientHistoryUiEvent.OnViewAllReportsClicked -> {
+                _uiState.value = _uiState.value.copy(selectedTab = 1)
+            }
             PatientHistoryUiEvent.OnOpenHealthMonitoringClicked -> {}
             PatientHistoryUiEvent.OnRetryClicked -> {
                 val id = currentPatientId ?: SelectedPatientHolder.selectedPatientId
@@ -61,10 +77,15 @@ class PatientHistoryViewModel(
         }
     }
 
-    fun setPatientId(id: String) {
+    fun setPatientId(id: String, name: String? = null) {
+        val resolvedName = name ?: SelectedPatientHolder.selectedPatientName
         if (id.isNotBlank() && (id != currentPatientId || _uiState.value.historyData == null)) {
             currentPatientId = id
             SelectedPatientHolder.selectedPatientId = id
+            if (!resolvedName.isNullOrBlank()) {
+                SelectedPatientHolder.selectedPatientName = resolvedName
+            }
+            _uiState.value = _uiState.value.copy(patientName = resolvedName ?: _uiState.value.patientName)
             loadHistory(id)
         }
     }
@@ -75,8 +96,13 @@ class PatientHistoryViewModel(
             repository.getPatientHistory(id).collect { result ->
                 result.fold(
                     onSuccess = { data ->
+                        if (data.patientName.isNotBlank()) {
+                            SelectedPatientHolder.selectedPatientName = data.patientName
+                        }
                         _uiState.value = _uiState.value.copy(
                             historyData = data,
+                            patientName = data.patientName.ifBlank { _uiState.value.patientName },
+                            reportsCount = data.reports.size,
                             isLoading = false,
                             errorMessage = null
                         )

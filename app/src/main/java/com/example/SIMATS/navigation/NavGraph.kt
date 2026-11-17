@@ -26,6 +26,9 @@ import com.example.SIMATS.ui.calendar.AppointmentsCalendarScreen
 import com.example.SIMATS.ui.calendar.AppointmentsCalendarViewModel
 import com.example.SIMATS.ui.doctoradvice.DoctorAdviceScreen
 import com.example.SIMATS.ui.doctoradvice.DoctorAdviceViewModel
+import com.example.SIMATS.ui.doctoravailability.DoctorAvailabilityScreen
+import com.example.SIMATS.ui.doctoravailability.DoctorAvailabilityViewModel
+import com.example.SIMATS.ui.doctornotifications.DoctorNotificationsScreen
 import com.example.SIMATS.ui.doctorschedule.DoctorScheduleScreen
 import com.example.SIMATS.ui.doctorprofile.DoctorProfileScreen
 import com.example.SIMATS.ui.doctorprofile.DoctorProfileViewModel
@@ -73,20 +76,103 @@ import com.example.SIMATS.ui.symptom.SymptomLoggerViewModel
 import com.example.SIMATS.ui.weight.WeightTrackerScreen
 import com.example.SIMATS.ui.weight.WeightTrackerViewModel
 
+private val PatientScreens: Set<Screen> = setOf(
+    Screen.Home,
+    Screen.Profile,
+    Screen.DueDate,
+    Screen.HealthReport,
+    Screen.WeightTracker,
+    Screen.BloodPressure,
+    Screen.BabyDevelopment,
+    Screen.AiChat,
+    Screen.Symptom,
+    Screen.Nutrition,
+    Screen.Medication,
+    Screen.AppointmentsCalendar,
+    Screen.MedicalReports,
+    Screen.Notifications
+)
+
+private val DoctorScreens: Set<Screen> = setOf(
+    Screen.DoctorDashboard,
+    Screen.AssignedPatients,
+    Screen.PatientHistory,
+    Screen.PatientHealthMonitoring,
+    Screen.DoctorAdvice,
+    Screen.DoctorSchedule,
+    Screen.DoctorAvailability,
+    Screen.DoctorProfile,
+    Screen.DoctorNotifications
+)
+
+private val AdminScreens: Set<Screen> = setOf(
+    Screen.AdminDashboard,
+    Screen.AddDoctor,
+    Screen.ManageDoctors,
+    Screen.ManagePatients,
+    Screen.AdminSettings
+)
+
+/**
+ * Route guard:
+ * If user role is DOCTOR, never route to patient screens;
+ * if user role is PATIENT, never route to doctor screens.
+ */
+private fun sanitizeScreenForRole(target: Screen): Screen {
+    if (!SessionManager.isLoggedIn()) {
+        return target
+    }
+    return when (SessionManager.getUserRole()) {
+        UserRole.DOCTOR -> {
+            when {
+                target == Screen.Notifications -> Screen.DoctorNotifications
+                target in PatientScreens -> Screen.DoctorDashboard
+                target in AdminScreens -> Screen.DoctorDashboard
+                else -> target
+            }
+        }
+        UserRole.PATIENT -> {
+            when {
+                target in DoctorScreens -> Screen.Home
+                target in AdminScreens -> Screen.Home
+                else -> target
+            }
+        }
+        UserRole.ADMIN -> {
+            when {
+                target in PatientScreens -> Screen.AdminDashboard
+                target in DoctorScreens -> Screen.AdminDashboard
+                else -> target
+            }
+        }
+    }
+}
+
 @Composable
 fun AppNavHost() {
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Splash) }
     var selectedPatientId by remember { mutableStateOf<String?>(SelectedPatientHolder.selectedPatientId) }
+    var selectedPatientName by remember { mutableStateOf<String?>(SelectedPatientHolder.selectedPatientName) }
 
     LaunchedEffect(Unit) {
         SessionManager.sessionExpiredEvent.collect {
             SelectedPatientHolder.clear()
             selectedPatientId = null
+            selectedPatientName = null
             currentScreen = Screen.Login
         }
     }
 
-    when (currentScreen) {
+    LaunchedEffect(currentScreen) {
+        val safe = sanitizeScreenForRole(currentScreen)
+        if (safe != currentScreen) {
+            currentScreen = safe
+        }
+    }
+
+    val activeScreen = sanitizeScreenForRole(currentScreen)
+
+    when (activeScreen) {
         Screen.NavMenu -> {
             ScreenMenuScreen(
                 onNavigateToScreen = { screen ->
@@ -437,6 +523,23 @@ fun AppNavHost() {
                 }
             )
         }
+        Screen.DoctorNotifications -> {
+            val notificationsViewModel: NotificationsViewModel = viewModel()
+            DoctorNotificationsScreen(
+                viewModel = notificationsViewModel,
+                onNavigateBack = {
+                    currentScreen = Screen.DoctorDashboard
+                },
+                onNavTabSelected = { index ->
+                    when (index) {
+                        0 -> currentScreen = Screen.DoctorDashboard
+                        1 -> currentScreen = Screen.AssignedPatients
+                        2 -> currentScreen = Screen.DoctorSchedule
+                        3 -> currentScreen = Screen.DoctorAdvice
+                    }
+                }
+            )
+        }
         Screen.DoctorDashboard -> {
             val doctorViewModel: MainViewModel = viewModel()
             MainScreen(
@@ -444,6 +547,7 @@ fun AppNavHost() {
                 onLogoutSuccess = {
                     SelectedPatientHolder.clear()
                     selectedPatientId = null
+                    selectedPatientName = null
                     currentScreen = Screen.Login
                 },
                 onProfileClick = {
@@ -458,9 +562,14 @@ fun AppNavHost() {
                 onNextAppointmentClick = {
                     currentScreen = Screen.DoctorSchedule
                 },
-                onReviewPatientClick = { patientId ->
+                onNotificationClick = {
+                    currentScreen = Screen.DoctorNotifications
+                },
+                onReviewPatientClick = { patientId, patientName ->
                     selectedPatientId = patientId
+                    selectedPatientName = patientName
                     SelectedPatientHolder.selectedPatientId = patientId
+                    SelectedPatientHolder.selectedPatientName = patientName
                     currentScreen = Screen.PatientHistory
                 },
                 onNavTabSelected = { index ->
@@ -480,10 +589,15 @@ fun AppNavHost() {
                 onNavigateBack = {
                     currentScreen = Screen.DoctorDashboard
                 },
-                onPatientClick = { patientId ->
+                onPatientClick = { patientId, patientName ->
                     selectedPatientId = patientId
+                    selectedPatientName = patientName
                     SelectedPatientHolder.selectedPatientId = patientId
+                    SelectedPatientHolder.selectedPatientName = patientName
                     currentScreen = Screen.PatientHistory
+                },
+                onNotificationClick = {
+                    currentScreen = Screen.DoctorNotifications
                 },
                 onNavTabSelected = { index ->
                     when (index) {
@@ -497,12 +611,13 @@ fun AppNavHost() {
         }
         Screen.PatientHistory -> {
             val activePatientId = selectedPatientId ?: SelectedPatientHolder.selectedPatientId
+            val activePatientName = selectedPatientName ?: SelectedPatientHolder.selectedPatientName
             val patientHistoryViewModel: PatientHistoryViewModel = viewModel(
                 key = "patient_history_${activePatientId ?: "none"}"
             )
-            LaunchedEffect(activePatientId) {
+            LaunchedEffect(activePatientId, activePatientName) {
                 if (!activePatientId.isNullOrBlank()) {
-                    patientHistoryViewModel.setPatientId(activePatientId)
+                    patientHistoryViewModel.setPatientId(activePatientId, activePatientName)
                 }
             }
             PatientHistoryScreen(
@@ -512,6 +627,9 @@ fun AppNavHost() {
                 },
                 onOpenHealthMonitoringClick = {
                     currentScreen = Screen.PatientHealthMonitoring
+                },
+                onNotificationClick = {
+                    currentScreen = Screen.DoctorNotifications
                 },
                 onNavTabSelected = { index ->
                     when (index) {
@@ -525,12 +643,13 @@ fun AppNavHost() {
         }
         Screen.PatientHealthMonitoring -> {
             val activePatientId = selectedPatientId ?: SelectedPatientHolder.selectedPatientId
+            val activePatientName = selectedPatientName ?: SelectedPatientHolder.selectedPatientName
             val healthMonitoringViewModel: PatientHealthMonitoringViewModel = viewModel(
                 key = "health_monitoring_${activePatientId ?: "none"}"
             )
-            LaunchedEffect(activePatientId) {
+            LaunchedEffect(activePatientId, activePatientName) {
                 if (!activePatientId.isNullOrBlank()) {
-                    healthMonitoringViewModel.setPatientId(activePatientId)
+                    healthMonitoringViewModel.setPatientId(activePatientId, activePatientName)
                 }
             }
             PatientHealthMonitoringScreen(
@@ -540,6 +659,9 @@ fun AppNavHost() {
                 },
                 onWriteAdviceClick = {
                     currentScreen = Screen.DoctorAdvice
+                },
+                onNotificationClick = {
+                    currentScreen = Screen.DoctorNotifications
                 },
                 onNavTabSelected = { index ->
                     when (index) {
@@ -553,18 +675,22 @@ fun AppNavHost() {
         }
         Screen.DoctorAdvice -> {
             val activePatientId = selectedPatientId ?: SelectedPatientHolder.selectedPatientId
+            val activePatientName = selectedPatientName ?: SelectedPatientHolder.selectedPatientName
             val adviceViewModel: DoctorAdviceViewModel = viewModel(
                 key = "doctor_advice_${activePatientId ?: "none"}"
             )
-            LaunchedEffect(activePatientId) {
+            LaunchedEffect(activePatientId, activePatientName) {
                 if (!activePatientId.isNullOrBlank()) {
-                    adviceViewModel.setPatientId(activePatientId)
+                    adviceViewModel.setPatientId(activePatientId, activePatientName)
                 }
             }
             DoctorAdviceScreen(
                 viewModel = adviceViewModel,
                 onNavigateBack = {
                     currentScreen = Screen.DoctorDashboard
+                },
+                onNotificationClick = {
+                    currentScreen = Screen.DoctorNotifications
                 },
                 onNavTabSelected = { index ->
                     when (index) {
@@ -586,6 +712,19 @@ fun AppNavHost() {
                 onViewRecordClick = {
                     currentScreen = Screen.PatientHistory
                 },
+                onPatientClick = { patientId, patientName ->
+                    selectedPatientId = patientId
+                    selectedPatientName = patientName
+                    SelectedPatientHolder.selectedPatientId = patientId
+                    SelectedPatientHolder.selectedPatientName = patientName
+                    currentScreen = Screen.PatientHistory
+                },
+                onManageAvailabilityClick = {
+                    currentScreen = Screen.DoctorAvailability
+                },
+                onNotificationClick = {
+                    currentScreen = Screen.DoctorNotifications
+                },
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.DoctorDashboard
@@ -593,6 +732,18 @@ fun AppNavHost() {
                         2 -> currentScreen = Screen.DoctorSchedule
                         3 -> currentScreen = Screen.DoctorAdvice
                     }
+                }
+            )
+        }
+        Screen.DoctorAvailability -> {
+            val doctorAvailabilityViewModel: DoctorAvailabilityViewModel = viewModel()
+            DoctorAvailabilityScreen(
+                viewModel = doctorAvailabilityViewModel,
+                onNavigateBack = {
+                    currentScreen = Screen.DoctorSchedule
+                },
+                onNotificationClick = {
+                    currentScreen = Screen.DoctorNotifications
                 }
             )
         }

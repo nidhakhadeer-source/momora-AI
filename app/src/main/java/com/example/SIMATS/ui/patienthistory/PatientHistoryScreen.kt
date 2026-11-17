@@ -22,6 +22,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -42,6 +44,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.SIMATS.data.model.PatientMedicalHistoryData
 import com.example.SIMATS.data.model.PatientMedicationItem
+import com.example.SIMATS.data.model.PatientReportItem
+import com.example.SIMATS.data.model.PatientVisitItem
+import com.example.SIMATS.navigation.SelectedPatientHolder
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraMintBadgeBg
 import com.example.SIMATS.ui.theme.MomoraMintBadgeText
@@ -56,6 +61,7 @@ fun PatientHistoryScreen(
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit = {},
     onOpenHealthMonitoringClick: () -> Unit = {},
+    onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -64,7 +70,8 @@ fun PatientHistoryScreen(
         modifier = modifier,
         uiState = uiState,
         onTabSelected = { index -> viewModel.onEvent(PatientHistoryUiEvent.OnTabSelected(index)) },
-        onMedicationClick = { id -> viewModel.onEvent(PatientHistoryUiEvent.OnMedicationClicked(id)) },
+        onMedicationClick = { medication -> viewModel.onEvent(PatientHistoryUiEvent.OnMedicationClicked(medication)) },
+        onDismissMedicationSheet = { viewModel.onEvent(PatientHistoryUiEvent.OnDismissMedicationSheet) },
         onViewAllReportsClick = { viewModel.onEvent(PatientHistoryUiEvent.OnViewAllReportsClicked) },
         onOpenHealthMonitoringClick = {
             viewModel.onEvent(PatientHistoryUiEvent.OnOpenHealthMonitoringClicked)
@@ -75,7 +82,10 @@ fun PatientHistoryScreen(
             viewModel.onEvent(PatientHistoryUiEvent.OnBackClicked)
             onNavigateBack()
         },
-        onNotificationClick = { viewModel.onEvent(PatientHistoryUiEvent.OnNotificationClicked) },
+        onNotificationClick = {
+            viewModel.onEvent(PatientHistoryUiEvent.OnNotificationClicked)
+            onNotificationClick()
+        },
         onNavTabSelected = { index ->
             viewModel.onEvent(PatientHistoryUiEvent.OnNavTabSelected(index))
             onNavTabSelected(index)
@@ -114,7 +124,8 @@ fun PatientHistoryScreenContent(
         )
     ),
     onTabSelected: (Int) -> Unit = {},
-    onMedicationClick: (String) -> Unit = {},
+    onMedicationClick: (PatientMedicationItem) -> Unit = {},
+    onDismissMedicationSheet: () -> Unit = {},
     onViewAllReportsClick: () -> Unit = {},
     onOpenHealthMonitoringClick: () -> Unit = {},
     onRetryClick: () -> Unit = {},
@@ -124,6 +135,22 @@ fun PatientHistoryScreenContent(
 ) {
     val scrollState = rememberScrollState()
     val data = uiState.historyData
+    val resolvedPatientName = data?.patientName?.takeIf { it.isNotBlank() }
+        ?: uiState.patientName?.takeIf { it.isNotBlank() }
+        ?: SelectedPatientHolder.selectedPatientName?.takeIf { it.isNotBlank() }
+        ?: "Patient"
+
+    val resolvedInitials = data?.patientInitials?.takeIf { it.isNotBlank() }
+        ?: run {
+            val words = resolvedPatientName.trim().split("\\s+".toRegex()).filter { it.isNotBlank() }
+            if (words.size >= 2) {
+                "${words[0].first().uppercaseChar()}${words[1].first().uppercaseChar()}"
+            } else if (resolvedPatientName.isNotEmpty()) {
+                resolvedPatientName.take(2).uppercase()
+            } else {
+                "PT"
+            }
+        }
 
     Column(
         modifier = modifier
@@ -264,7 +291,7 @@ fun PatientHistoryScreenContent(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = data?.patientInitials ?: "MP",
+                                text = resolvedInitials,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MomoraPurplePrimary
@@ -275,7 +302,7 @@ fun PatientHistoryScreenContent(
 
                         Column {
                             Text(
-                                text = data?.patientName ?: "Maya Patel",
+                                text = resolvedPatientName,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MomoraPurpleDark
@@ -337,209 +364,471 @@ fun PatientHistoryScreenContent(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Clinical Background Card
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.White)
-                    .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
-                    .padding(14.dp)
-            ) {
-                Column {
+            when (uiState.selectedTab) {
+                0 -> {
+                    // Summary Tab
+                    // Clinical Background Card
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color.White)
+                            .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                            .padding(14.dp)
+                    ) {
+                        Column {
+                            Text(
+                                text = "Clinical background",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MomoraPurpleDark
+                            )
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            Text(
+                                text = data?.clinicalBackgroundText ?: "No clinical background notes recorded.",
+                                fontSize = 11.5.sp,
+                                lineHeight = 16.sp,
+                                color = Color(0xFF4A3F50)
+                            )
+
+                            if (!data?.patientConfirmedDateText.isNullOrBlank()) {
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = data.patientConfirmedDateText,
+                                    fontSize = 11.sp,
+                                    color = MomoraBodyMuted
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    // "Current medication" Section
                     Text(
-                        text = "Clinical background",
-                        fontSize = 14.sp,
+                        text = "Current medication",
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = MomoraPurpleDark
                     )
 
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                    Text(
-                        text = data?.clinicalBackgroundText ?: "Age 29 · O positive · First pregnancy (G1 P0). No known drug allergies or chronic conditions reported.",
-                        fontSize = 11.5.sp,
-                        lineHeight = 16.sp,
-                        color = Color(0xFF4A3F50)
-                    )
+                    // Medications Card List
+                    if (data?.medications.isNullOrEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color.White)
+                                .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                                .padding(18.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "No medications recorded",
+                                    fontSize = 13.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MomoraPurpleDark
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Prescribed medications and vitamins will appear here.",
+                                    fontSize = 11.5.sp,
+                                    color = MomoraBodyMuted
+                                )
+                            }
+                        }
+                    } else {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color.White)
+                                .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                                .padding(horizontal = 14.dp, vertical = 6.dp)
+                        ) {
+                            data?.medications?.forEachIndexed { index, item ->
+                                MedicationRow(
+                                    item = item,
+                                    onClick = { onMedicationClick(item) }
+                                )
+                                if (index < (data.medications.size - 1)) {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                }
+                            }
+                        }
+                    }
 
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(18.dp))
 
-                    Text(
-                        text = data?.patientConfirmedDateText ?: "Patient confirmed · 05 Oct 2026",
-                        fontSize = 11.sp,
-                        color = MomoraBodyMuted
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            // "Current medication" Section
-            Text(
-                text = "Current medication",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                color = MomoraPurpleDark
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Medications Card List
-            if (data?.medications.isNullOrEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color.White)
-                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
-                        .padding(18.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    // "Recent care record" Section
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            text = "No medications recorded",
-                            fontSize = 13.5.sp,
+                            text = "Recent care record",
+                            fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = MomoraPurpleDark
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
+
                         Text(
-                            text = "Prescribed medications and vitamins will appear here.",
-                            fontSize = 11.5.sp,
-                            color = MomoraBodyMuted
+                            text = "View all ${uiState.reportsCount}",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MomoraPurplePrimary,
+                            modifier = Modifier.clickable { onViewAllReportsClick() }
                         )
                     }
-                }
-            } else {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color.White)
-                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
-                        .padding(horizontal = 14.dp, vertical = 6.dp)
-                ) {
-                    data?.medications?.forEachIndexed { index, item ->
-                        MedicationRow(
-                            item = item,
-                            onClick = { onMedicationClick(item.id) }
-                        )
-                        if (index < (data.medications.size - 1)) {
-                            Spacer(modifier = Modifier.height(4.dp))
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Recent Care Record Card
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color.White)
+                            .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                            .clickable { onViewAllReportsClick() }
+                            .padding(14.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFFEDE4F0)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    DocumentIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp))
+                                }
+
+                                Spacer(modifier = Modifier.width(12.dp))
+
+                                Column {
+                                    Text(
+                                        text = data?.recentCareRecordTitle ?: "Complete blood count",
+                                        fontSize = 13.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MomoraPurpleDark
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = data?.recentCareRecordDetails ?: "Reports and clinical notes",
+                                        fontSize = 11.5.sp,
+                                        color = MomoraBodyMuted
+                                    )
+                                }
+                            }
+
+                            Text(
+                                text = "›",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFF8C7F92)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    // Open health monitoring Button
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .clip(RoundedCornerShape(50))
+                            .background(MomoraPurplePrimary)
+                            .clickable { onOpenHealthMonitoringClick() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Open health monitoring",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "⚡",
+                                fontSize = 16.sp
+                            )
                         }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(18.dp))
+                1 -> {
+                    // Reports Tab
+                    Text(
+                        text = "Medical reports (${data?.reports?.size ?: 0})",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurpleDark
+                    )
 
-            // "Recent care record" Section
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Recent care record",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MomoraPurpleDark
-                )
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                Text(
-                    text = "View all 3",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MomoraPurplePrimary,
-                    modifier = Modifier.clickable { onViewAllReportsClick() }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Recent Care Record Card
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.White)
-                    .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
-                    .clickable { onViewAllReportsClick() }
-                    .padding(14.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.weight(1f)
-                    ) {
+                    if (data?.reports.isNullOrEmpty()) {
                         Box(
                             modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(Color(0xFFEDE4F0)),
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color.White)
+                                .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                                .padding(28.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            DocumentIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp))
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(44.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFFF4ECF8)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    DocumentIcon(color = MomoraPurplePrimary, modifier = Modifier.size(20.dp))
+                                }
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text(
+                                    text = "No medical reports available",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MomoraPurpleDark
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Uploaded lab results, ultrasounds and scans for this patient will appear here.",
+                                    fontSize = 12.sp,
+                                    textAlign = TextAlign.Center,
+                                    color = MomoraBodyMuted
+                                )
+                            }
                         }
+                    } else {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            data?.reports?.forEach { report ->
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .background(Color.White)
+                                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                                        .padding(14.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(36.dp)
+                                                    .clip(CircleShape)
+                                                    .background(Color(0xFFEDE4F0)),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                DocumentIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp))
+                                            }
 
-                        Spacer(modifier = Modifier.width(12.dp))
+                                            Spacer(modifier = Modifier.width(12.dp))
 
-                        Column {
-                            Text(
-                                text = data?.recentCareRecordTitle ?: "Complete blood count",
-                                fontSize = 13.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MomoraPurpleDark
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = data?.recentCareRecordDetails ?: "28 Oct 2026 · Reviewed 27 Oct 2026",
-                                fontSize = 11.5.sp,
-                                color = MomoraBodyMuted
-                            )
+                                            Column {
+                                                Text(
+                                                    text = report.title,
+                                                    fontSize = 13.5.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MomoraPurpleDark
+                                                )
+                                                Spacer(modifier = Modifier.height(2.dp))
+                                                Text(
+                                                    text = "${report.category ?: "Medical report"} · ${report.reportDate ?: "Recent"}",
+                                                    fontSize = 11.5.sp,
+                                                    color = MomoraBodyMuted
+                                                )
+                                            }
+                                        }
+
+                                        if (!report.size.isNullOrBlank()) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(6.dp))
+                                                    .background(Color(0xFFF4ECF8))
+                                                    .padding(horizontal = 8.dp, vertical = 3.dp)
+                                            ) {
+                                                Text(
+                                                    text = report.size,
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Medium,
+                                                    color = MomoraPurplePrimary
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
-
-                    Text(
-                        text = "›",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF8C7F92)
-                    )
                 }
-            }
 
-            Spacer(modifier = Modifier.height(18.dp))
-
-            // Open health monitoring Button
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(MomoraPurplePrimary)
-                    .clickable { onOpenHealthMonitoringClick() },
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                2 -> {
+                    // Visits Tab
                     Text(
-                        text = "Open health monitoring",
-                        fontSize = 16.sp,
+                        text = "Clinical visits (${data?.visits?.size ?: 0})",
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = MomoraPurpleDark
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "⚡",
-                        fontSize = 16.sp
-                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    if (data?.visits.isNullOrEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color.White)
+                                .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                                .padding(28.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(44.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFFF4ECF8)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CalendarNavIcon(color = MomoraPurplePrimary, modifier = Modifier.size(20.dp))
+                                }
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text(
+                                    text = "No visits recorded",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MomoraPurpleDark
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Appointments, routine prenatal checks and clinical consultations will appear here.",
+                                    fontSize = 12.sp,
+                                    textAlign = TextAlign.Center,
+                                    color = MomoraBodyMuted
+                                )
+                            }
+                        }
+                    } else {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            data?.visits?.forEach { visit ->
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .background(Color.White)
+                                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                                        .padding(14.dp)
+                                ) {
+                                    Column {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                modifier = Modifier.weight(1f)
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(36.dp)
+                                                        .clip(CircleShape)
+                                                        .background(Color(0xFFEDE4F0)),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    CalendarNavIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp))
+                                                }
+
+                                                Spacer(modifier = Modifier.width(12.dp))
+
+                                                Column {
+                                                    val dateTimeStr = buildString {
+                                                        append(visit.date ?: "Date TBD")
+                                                        if (!visit.time.isNullOrBlank()) {
+                                                            append(" · ")
+                                                            append(visit.time)
+                                                        }
+                                                    }
+                                                    Text(
+                                                        text = dateTimeStr,
+                                                        fontSize = 13.5.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = MomoraPurpleDark
+                                                    )
+                                                }
+                                            }
+
+                                            val status = visit.status ?: "Scheduled"
+                                            val isDone = status.lowercase() in listOf("completed", "attended")
+                                            val statusBg = if (isDone) MomoraMintBadgeBg else Color(0xFFF4ECF8)
+                                            val statusColor = if (isDone) MomoraMintBadgeText else MomoraPurplePrimary
+
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(6.dp))
+                                                    .background(statusBg)
+                                                    .padding(horizontal = 8.dp, vertical = 3.dp)
+                                            ) {
+                                                Text(
+                                                    text = status.replaceFirstChar { it.uppercase() },
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = statusColor
+                                                )
+                                            }
+                                        }
+
+                                        if (!visit.notes.isNullOrBlank()) {
+                                            Spacer(modifier = Modifier.height(8.dp))
+                                            Text(
+                                                text = visit.notes,
+                                                fontSize = 11.5.sp,
+                                                lineHeight = 15.sp,
+                                                color = Color(0xFF4A3F50)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
             }
@@ -552,6 +841,155 @@ fun PatientHistoryScreenContent(
             selectedIndex = uiState.selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
+    }
+
+    if (uiState.isMedicationSheetOpen && uiState.selectedMedication != null) {
+        MedicationDetailsBottomSheet(
+            medication = uiState.selectedMedication,
+            onDismiss = onDismissMedicationSheet
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MedicationDetailsBottomSheet(
+    medication: PatientMedicationItem,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Medication details",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MomoraPurpleDark
+                )
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFF4ECF8))
+                        .clickable { onDismiss() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "✕",
+                        fontSize = 14.sp,
+                        color = MomoraPurpleDark
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color(0xFFFBF8FC))
+                    .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                    .padding(16.dp)
+            ) {
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = medication.name,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurpleText,
+                            modifier = Modifier.weight(1f)
+                        )
+                        val bg = if (medication.isTakenToday) MomoraMintBadgeBg else Color(0xFFF0EBF4)
+                        val textColor = if (medication.isTakenToday) MomoraMintBadgeText else MomoraPurplePrimary
+                        val statusText = if (medication.isTakenToday) "Taken today ✓" else "Pending"
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(bg)
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = statusText,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = textColor
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = "Dosage & schedule",
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MomoraBodyMuted
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = medication.dosageDetails,
+                        fontSize = 13.5.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MomoraPurpleDark
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text(
+                        text = "Clinical instructions",
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MomoraBodyMuted
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Take daily as prescribed with meals. Patient should report any nausea or skipped doses during prenatal consultations.",
+                        fontSize = 12.sp,
+                        lineHeight = 16.sp,
+                        color = Color(0xFF4A3F50)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(MomoraPurplePrimary)
+                    .clickable { onDismiss() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Close",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
     }
 }
 

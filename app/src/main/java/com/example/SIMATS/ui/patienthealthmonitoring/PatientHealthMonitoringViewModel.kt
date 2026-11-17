@@ -13,10 +13,13 @@ import kotlinx.coroutines.launch
 
 class PatientHealthMonitoringViewModel(
     private val repository: PatientHealthMonitoringRepository = PatientHealthMonitoringRepositoryImpl(),
-    patientId: String? = SelectedPatientHolder.selectedPatientId
+    patientId: String? = SelectedPatientHolder.selectedPatientId,
+    patientName: String? = SelectedPatientHolder.selectedPatientName
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(PatientHealthMonitoringUiState())
+    private val _uiState = MutableStateFlow(
+        PatientHealthMonitoringUiState(patientName = patientName ?: SelectedPatientHolder.selectedPatientName)
+    )
     val uiState: StateFlow<PatientHealthMonitoringUiState> = _uiState.asStateFlow()
 
     private var currentPatientId: String? = patientId ?: SelectedPatientHolder.selectedPatientId
@@ -24,7 +27,7 @@ class PatientHealthMonitoringViewModel(
     init {
         val id = currentPatientId
         if (!id.isNullOrBlank()) {
-            loadMonitoring(id)
+            loadMonitoring(id, _uiState.value.selectedDays)
         } else {
             _uiState.value = _uiState.value.copy(
                 isLoading = false,
@@ -38,12 +41,28 @@ class PatientHealthMonitoringViewModel(
             is PatientHealthMonitoringUiEvent.OnNavTabSelected -> {
                 _uiState.value = _uiState.value.copy(selectedNavIndex = event.index)
             }
+            is PatientHealthMonitoringUiEvent.OnDaysSelected -> {
+                _uiState.value = _uiState.value.copy(selectedDays = event.days)
+                val id = currentPatientId ?: SelectedPatientHolder.selectedPatientId
+                if (!id.isNullOrBlank()) {
+                    loadMonitoring(id, event.days)
+                }
+            }
+            PatientHealthMonitoringUiEvent.OnBpCardClicked -> {
+                _uiState.value = _uiState.value.copy(isBpSheetOpen = true, isWeightSheetOpen = false)
+            }
+            PatientHealthMonitoringUiEvent.OnWeightCardClicked -> {
+                _uiState.value = _uiState.value.copy(isWeightSheetOpen = true, isBpSheetOpen = false)
+            }
+            PatientHealthMonitoringUiEvent.OnDismissSheet -> {
+                _uiState.value = _uiState.value.copy(isBpSheetOpen = false, isWeightSheetOpen = false)
+            }
             PatientHealthMonitoringUiEvent.OnWriteAdviceClicked -> {}
             PatientHealthMonitoringUiEvent.OnRetryClicked -> {
                 val id = currentPatientId ?: SelectedPatientHolder.selectedPatientId
                 if (!id.isNullOrBlank()) {
                     currentPatientId = id
-                    loadMonitoring(id)
+                    loadMonitoring(id, _uiState.value.selectedDays)
                 } else {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
@@ -56,22 +75,32 @@ class PatientHealthMonitoringViewModel(
         }
     }
 
-    fun setPatientId(id: String) {
+    fun setPatientId(id: String, name: String? = null) {
+        val resolvedName = name ?: SelectedPatientHolder.selectedPatientName
         if (id.isNotBlank() && (id != currentPatientId || _uiState.value.monitoringData == null)) {
             currentPatientId = id
             SelectedPatientHolder.selectedPatientId = id
-            loadMonitoring(id)
+            if (!resolvedName.isNullOrBlank()) {
+                SelectedPatientHolder.selectedPatientName = resolvedName
+            }
+            _uiState.value = _uiState.value.copy(patientName = resolvedName ?: _uiState.value.patientName)
+            loadMonitoring(id, _uiState.value.selectedDays)
         }
     }
 
-    private fun loadMonitoring(id: String) {
+    private fun loadMonitoring(id: String, days: Int = _uiState.value.selectedDays) {
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getPatientHealthMonitoring(id).collect { result ->
+            repository.getPatientHealthMonitoring(id, days).collect { result ->
                 result.fold(
                     onSuccess = { data ->
+                        if (data.patientName.isNotBlank()) {
+                            SelectedPatientHolder.selectedPatientName = data.patientName
+                        }
                         _uiState.value = _uiState.value.copy(
                             monitoringData = data,
+                            patientName = data.patientName.ifBlank { _uiState.value.patientName },
+                            selectedDays = days,
                             isLoading = false,
                             errorMessage = null
                         )

@@ -30,6 +30,9 @@ class MainViewModel(
             }
             is MainUiEvent.OnReviewPatientClicked -> {
                 SelectedPatientHolder.selectedPatientId = event.patientId
+                if (!event.patientName.isNullOrBlank()) {
+                    SelectedPatientHolder.selectedPatientName = event.patientName
+                }
             }
             MainUiEvent.OnViewAssignedPatientsClicked -> {}
             MainUiEvent.OnScheduleClicked -> {}

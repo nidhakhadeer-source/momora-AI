@@ -19,7 +19,7 @@ class PatientListViewModel(
     val uiState: StateFlow<PatientListUiState> = _uiState.asStateFlow()
 
     init {
-        loadPatients()
+        loadPatients(1)
     }
 
     fun onEvent(event: PatientListUiEvent) {
@@ -32,30 +32,43 @@ class PatientListViewModel(
             }
             is PatientListUiEvent.OnPatientClicked -> {
                 SelectedPatientHolder.selectedPatientId = event.patientId
+                if (!event.patientName.isNullOrBlank()) {
+                    SelectedPatientHolder.selectedPatientName = event.patientName
+                }
             }
             is PatientListUiEvent.OnNavTabSelected -> {
                 _uiState.value = _uiState.value.copy(selectedNavIndex = event.index)
             }
-            PatientListUiEvent.OnPreviousPageClicked -> {}
-            PatientListUiEvent.OnNextPageClicked -> {}
+            PatientListUiEvent.OnPreviousPageClicked -> {
+                if (_uiState.value.currentPage > 1) {
+                    loadPatients(_uiState.value.currentPage - 1)
+                }
+            }
+            PatientListUiEvent.OnNextPageClicked -> {
+                if (_uiState.value.currentPage < _uiState.value.totalPages) {
+                    loadPatients(_uiState.value.currentPage + 1)
+                }
+            }
             PatientListUiEvent.OnRetryClicked -> {
-                loadPatients()
+                loadPatients(_uiState.value.currentPage)
             }
             PatientListUiEvent.OnBackClicked -> {}
             PatientListUiEvent.OnNotificationClicked -> {}
         }
     }
 
-    private fun loadPatients() {
+    fun loadPatients(page: Int = _uiState.value.currentPage) {
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getAssignedPatients().collect { result ->
+            repository.getAssignedPatients(page = page, limit = _uiState.value.limit).collect { result ->
                 result.fold(
-                    onSuccess = { list ->
-                        val toReview = list.count { it.needsReview }
+                    onSuccess = { paginated ->
+                        val toReview = paginated.patients.count { it.needsReview }
                         _uiState.value = _uiState.value.copy(
-                            patients = list,
-                            totalCount = list.size,
+                            patients = paginated.patients,
+                            currentPage = paginated.page,
+                            totalPages = paginated.totalPages,
+                            totalCount = paginated.total,
                             reviewCount = toReview,
                             isLoading = false,
                             errorMessage = null

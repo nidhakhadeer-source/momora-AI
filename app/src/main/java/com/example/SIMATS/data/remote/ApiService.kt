@@ -1,4 +1,4 @@
-﻿package com.example.SIMATS.data.remote
+package com.example.SIMATS.data.remote
 
 import com.example.SIMATS.data.model.AddDoctorData
 import com.example.SIMATS.data.model.AdminDashboardData
@@ -10,9 +10,11 @@ import com.example.SIMATS.data.model.BloodPressureData
 import com.example.SIMATS.data.model.ChatMessage
 import com.example.SIMATS.data.model.DoctorAccountItem
 import com.example.SIMATS.data.model.DoctorAdviceData
+import com.example.SIMATS.data.model.DoctorAvailabilityResponseData
 import com.example.SIMATS.data.model.DoctorDashboardData
 import com.example.SIMATS.data.model.DoctorProfileData
 import com.example.SIMATS.data.model.DoctorScheduleData
+import com.example.SIMATS.data.model.SaveAvailabilityRequest
 import com.example.SIMATS.data.model.HealthMonitoringData
 import com.example.SIMATS.data.model.MedicalReportItem
 import com.example.SIMATS.data.model.MedicationReminderData
@@ -28,6 +30,7 @@ import com.example.SIMATS.data.model.SymptomEntryData
 import com.example.SIMATS.data.model.WeightTrackerData
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import retrofit2.http.Body
 import retrofit2.http.Field
 import retrofit2.http.FieldMap
 import retrofit2.http.FormUrlEncoded
@@ -244,6 +247,8 @@ interface ApiService {
 
     @GET("doctor/patients.php")
     suspend fun getAssignedPatients(
+        @Query("page") page: Int? = 1,
+        @Query("limit") limit: Int? = 10,
         @Query("user_id") userId: Int? = null
     ): DataResponse<List<AssignedPatientItem>>
 
@@ -254,7 +259,8 @@ interface ApiService {
 
     @GET("doctor/patient_monitoring.php")
     suspend fun getPatientHealthMonitoring(
-        @Query("patientId") patientId: String
+        @Query("patientId") patientId: String,
+        @Query("days") days: Int? = 7
     ): DataResponse<PatientHealthMonitoringData>
 
     @GET("doctor/advice.php")
@@ -270,8 +276,25 @@ interface ApiService {
 
     @GET("doctor/schedule.php")
     suspend fun getDoctorSchedule(
+        @Query("date") date: String? = null,
         @Query("user_id") userId: Int? = null
     ): DataResponse<DoctorScheduleData>
+
+    @FormUrlEncoded
+    @POST("doctor/appointment_reschedule.php")
+    suspend fun rescheduleAppointment(
+        @Field("appointmentId") appointmentId: Int,
+        @Field("newDate") newDate: String,
+        @Field("newTime") newTime: String
+    ): BaseResponse
+
+    @GET("doctor/availability.php")
+    suspend fun getDoctorAvailability(): DataResponse<DoctorAvailabilityResponseData>
+
+    @POST("doctor/availability.php")
+    suspend fun saveDoctorAvailability(
+        @Body request: SaveAvailabilityRequest
+    ): BaseResponse
 
     @GET("doctor/profile_fetch.php")
     suspend fun getDoctorProfile(

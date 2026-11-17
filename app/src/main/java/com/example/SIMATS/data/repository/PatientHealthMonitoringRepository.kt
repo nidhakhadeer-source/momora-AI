@@ -8,15 +8,15 @@ import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException
 
 interface PatientHealthMonitoringRepository {
-    fun getPatientHealthMonitoring(patientId: String): Flow<Result<PatientHealthMonitoringData>>
+    fun getPatientHealthMonitoring(patientId: String, days: Int = 7): Flow<Result<PatientHealthMonitoringData>>
 }
 
 class PatientHealthMonitoringRepositoryImpl : PatientHealthMonitoringRepository {
     private val apiService = RetrofitClient.apiService
 
-    override fun getPatientHealthMonitoring(patientId: String): Flow<Result<PatientHealthMonitoringData>> = flow {
+    override fun getPatientHealthMonitoring(patientId: String, days: Int): Flow<Result<PatientHealthMonitoringData>> = flow {
         try {
-            val response = apiService.getPatientHealthMonitoring(patientId)
+            val response = apiService.getPatientHealthMonitoring(patientId, days)
             if (response.success && response.data != null) {
                 emit(Result.success(response.data))
             } else {

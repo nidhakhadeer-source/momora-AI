@@ -82,7 +82,8 @@ fun ScreenMenuScreen(
         MenuItemData("22", "Patient Medical History", "Clinical background & recent records", Screen.PatientHistory),
         MenuItemData("23", "Patient Health Monitoring", "Home vitals trends & 7-day BP graph", Screen.PatientHealthMonitoring),
         MenuItemData("24", "Doctor Advice & Consultation", "Write and send secure advice", Screen.DoctorAdvice),
-        MenuItemData("25", "Doctor Appointment Book", "Daily schedule & clinic availability", Screen.DoctorSchedule)
+        MenuItemData("25", "Doctor Appointment Book", "Daily schedule & clinic availability", Screen.DoctorSchedule),
+        MenuItemData("25b", "Doctor Notifications", "Clinic alerts & patient updates", Screen.DoctorNotifications)
     )
 
     val adminScreens = listOf(

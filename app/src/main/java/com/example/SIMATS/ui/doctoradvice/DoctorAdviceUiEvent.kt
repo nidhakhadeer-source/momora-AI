@@ -5,6 +5,8 @@ sealed interface DoctorAdviceUiEvent {
     data class OnAdviceTextChanged(val text: String) : DoctorAdviceUiEvent
     data class OnSaveCopyToggled(val isChecked: Boolean) : DoctorAdviceUiEvent
     data class OnNavTabSelected(val index: Int) : DoctorAdviceUiEvent
+    data object OnQuoteCardClicked : DoctorAdviceUiEvent
+    data object OnDismissSymptomTimeline : DoctorAdviceUiEvent
     data object OnSendAdviceClicked : DoctorAdviceUiEvent
     data object OnRetryClicked : DoctorAdviceUiEvent
     data object OnBackClicked : DoctorAdviceUiEvent

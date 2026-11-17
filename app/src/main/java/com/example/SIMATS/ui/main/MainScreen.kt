@@ -45,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import com.example.SIMATS.data.model.DoctorDashboardData
 import com.example.SIMATS.data.model.DoctorNextAppointment
 import com.example.SIMATS.data.model.DoctorReviewItem
+import com.example.SIMATS.navigation.SelectedPatientHolder
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraFooterText
 import com.example.SIMATS.ui.theme.MomoraIconBtnBg
@@ -65,8 +66,9 @@ fun MainScreen(
     onViewAssignedPatientsClick: () -> Unit = {},
     onScheduleClick: () -> Unit = {},
     onNextAppointmentClick: () -> Unit = {},
-    onReviewPatientClick: (String) -> Unit = {},
+    onReviewPatientClick: (String, String) -> Unit = { _, _ -> },
     onProfileClick: () -> Unit = {},
+    onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -84,9 +86,9 @@ fun MainScreen(
             viewModel.onEvent(MainUiEvent.OnNavTabSelected(index))
             onNavTabSelected(index)
         },
-        onReviewPatientClick = { id ->
-            viewModel.onEvent(MainUiEvent.OnReviewPatientClicked(id))
-            onReviewPatientClick(id)
+        onReviewPatientClick = { id, name ->
+            viewModel.onEvent(MainUiEvent.OnReviewPatientClicked(id, name))
+            onReviewPatientClick(id, name)
         },
         onViewAssignedPatientsClick = {
             viewModel.onEvent(MainUiEvent.OnViewAssignedPatientsClicked)
@@ -103,7 +105,10 @@ fun MainScreen(
         onRetryClick = { viewModel.onEvent(MainUiEvent.OnRetryClicked) },
         onProfileClick = onProfileClick,
         onLogoutClick = { viewModel.onEvent(MainUiEvent.OnLogoutClicked) },
-        onNotificationClick = { viewModel.onEvent(MainUiEvent.OnNotificationClicked) }
+        onNotificationClick = {
+            viewModel.onEvent(MainUiEvent.OnNotificationClicked)
+            onNotificationClick()
+        }
     )
 }
 
@@ -144,7 +149,7 @@ fun MainScreenContent(
         )
     ),
     onNavTabSelected: (Int) -> Unit = {},
-    onReviewPatientClick: (String) -> Unit = {},
+    onReviewPatientClick: (String, String) -> Unit = { _, _ -> },
     onViewAssignedPatientsClick: () -> Unit = {},
     onScheduleClick: () -> Unit = {},
     onNextAppointmentClick: () -> Unit = {},
@@ -470,7 +475,7 @@ fun MainScreenContent(
                     data?.reviewItems?.forEachIndexed { index, item ->
                         DoctorReviewRow(
                             item = item,
-                            onClick = { onReviewPatientClick(item.id) }
+                            onClick = { onReviewPatientClick(item.id, item.patientName) }
                         )
                         if (index < (data.reviewItems.size - 1)) {
                             Spacer(modifier = Modifier.height(4.dp))
@@ -564,8 +569,9 @@ fun MainScreenContent(
 
             Spacer(modifier = Modifier.height(6.dp))
 
+            val patientForNote = SelectedPatientHolder.selectedPatientName?.takeIf { it.isNotBlank() } ?: "Patient"
             Text(
-                text = nextAppt?.futureNote ?: "Maya Patel's next visit · 29 Oct at 10:30",
+                text = nextAppt?.futureNote?.takeIf { it.isNotBlank() } ?: "$patientForNote's next visit · Scheduled",
                 fontSize = 11.5.sp,
                 color = MomoraBodyMuted
             )

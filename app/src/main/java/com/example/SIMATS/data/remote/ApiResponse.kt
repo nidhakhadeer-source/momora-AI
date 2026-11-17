@@ -8,6 +8,10 @@ data class BaseResponse(
 data class DataResponse<T>(
     val success: Boolean,
     val message: String? = null,
+    val page: Int? = null,
+    val limit: Int? = null,
+    val total: Int? = null,
+    val totalPages: Int? = null,
     val data: T
 )
 

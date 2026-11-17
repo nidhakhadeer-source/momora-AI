@@ -22,6 +22,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -41,6 +43,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.SIMATS.data.model.PatientHealthMonitoringData
+import com.example.SIMATS.navigation.SelectedPatientHolder
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraLavenderCircleBg
 import com.example.SIMATS.ui.theme.MomoraMintBadgeBg
@@ -56,6 +59,7 @@ fun PatientHealthMonitoringScreen(
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit = {},
     onWriteAdviceClick: () -> Unit = {},
+    onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -63,6 +67,10 @@ fun PatientHealthMonitoringScreen(
     PatientHealthMonitoringScreenContent(
         modifier = modifier,
         uiState = uiState,
+        onDaysSelected = { days -> viewModel.onEvent(PatientHealthMonitoringUiEvent.OnDaysSelected(days)) },
+        onBpCardClick = { viewModel.onEvent(PatientHealthMonitoringUiEvent.OnBpCardClicked) },
+        onWeightCardClick = { viewModel.onEvent(PatientHealthMonitoringUiEvent.OnWeightCardClicked) },
+        onDismissSheet = { viewModel.onEvent(PatientHealthMonitoringUiEvent.OnDismissSheet) },
         onWriteAdviceClick = {
             viewModel.onEvent(PatientHealthMonitoringUiEvent.OnWriteAdviceClicked)
             onWriteAdviceClick()
@@ -72,7 +80,10 @@ fun PatientHealthMonitoringScreen(
             viewModel.onEvent(PatientHealthMonitoringUiEvent.OnBackClicked)
             onNavigateBack()
         },
-        onNotificationClick = { viewModel.onEvent(PatientHealthMonitoringUiEvent.OnNotificationClicked) },
+        onNotificationClick = {
+            viewModel.onEvent(PatientHealthMonitoringUiEvent.OnNotificationClicked)
+            onNotificationClick()
+        },
         onNavTabSelected = { index ->
             viewModel.onEvent(PatientHealthMonitoringUiEvent.OnNavTabSelected(index))
             onNavTabSelected(index)
@@ -101,6 +112,10 @@ fun PatientHealthMonitoringScreenContent(
             additionalVitalsText = "Pulse 76 bpm · Temperature 36.7 °C. Latest symptom: mild heartburn after meals."
         )
     ),
+    onDaysSelected: (Int) -> Unit = {},
+    onBpCardClick: () -> Unit = {},
+    onWeightCardClick: () -> Unit = {},
+    onDismissSheet: () -> Unit = {},
     onWriteAdviceClick: () -> Unit = {},
     onRetryClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
@@ -109,6 +124,24 @@ fun PatientHealthMonitoringScreenContent(
 ) {
     val scrollState = rememberScrollState()
     val data = uiState.monitoringData
+    val resolvedPatientName = data?.patientName?.takeIf { it.isNotBlank() }
+        ?: uiState.patientName?.takeIf { it.isNotBlank() }
+        ?: SelectedPatientHolder.selectedPatientName?.takeIf { it.isNotBlank() }
+        ?: "Patient"
+
+    val patientFirstName = resolvedPatientName.trim().split("\\s+".toRegex()).firstOrNull()?.takeIf { it.isNotBlank() } ?: resolvedPatientName
+
+    val resolvedInitials = data?.patientInitials?.takeIf { it.isNotBlank() }
+        ?: run {
+            val words = resolvedPatientName.trim().split("\\s+".toRegex()).filter { it.isNotBlank() }
+            if (words.size >= 2) {
+                "${words[0].first().uppercaseChar()}${words[1].first().uppercaseChar()}"
+            } else if (resolvedPatientName.isNotEmpty()) {
+                resolvedPatientName.take(2).uppercase()
+            } else {
+                "PT"
+            }
+        }
 
     Column(
         modifier = modifier
@@ -249,7 +282,7 @@ fun PatientHealthMonitoringScreenContent(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = data?.patientInitials ?: "MP",
+                                text = resolvedInitials,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MomoraPurplePrimary
@@ -260,7 +293,7 @@ fun PatientHealthMonitoringScreenContent(
 
                         Column {
                             Text(
-                                text = data?.patientName ?: "Maya Patel",
+                                text = resolvedPatientName,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MomoraPurpleDark
@@ -290,62 +323,94 @@ fun PatientHealthMonitoringScreenContent(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Blood pressure Card
+                // Blood pressure Card (Tappable to show readings list)
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(16.dp))
                         .background(MomoraMintBadgeBg)
+                        .clickable { onBpCardClick() }
                         .padding(14.dp)
                 ) {
                     Column {
-                        Text(
-                            text = "Blood pressure",
-                            fontSize = 11.5.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MomoraMintBadgeText
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Blood pressure",
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MomoraMintBadgeText
+                            )
+                            Text(
+                                text = "›",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MomoraMintBadgeText
+                            )
+                        }
                         Spacer(modifier = Modifier.height(4.dp))
+                        val bpVal = if (data?.latestSystolic != null && data?.latestDiastolic != null) {
+                            "${data.latestSystolic}/${data.latestDiastolic}"
+                        } else {
+                            "—/—"
+                        }
                         Text(
-                            text = "${data?.latestSystolic ?: 112}/${data?.latestDiastolic ?: 72}",
+                            text = bpVal,
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
                             color = MomoraPurpleDark
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "mmHg · ${data?.bpReadingTime ?: "08:15"}",
+                            text = data?.bpReadingTime?.let { "mmHg · $it" } ?: "mmHg · Tap to view",
                             fontSize = 10.5.sp,
                             color = Color(0xFF43524E)
                         )
                     }
                 }
 
-                // Weight Card
+                // Weight Card (Tappable to show readings list)
                 Box(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(16.dp))
                         .background(MomoraLavenderCircleBg)
+                        .clickable { onWeightCardClick() }
                         .padding(14.dp)
                 ) {
                     Column {
-                        Text(
-                            text = "Weight",
-                            fontSize = 11.5.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MomoraPurplePrimary
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Weight",
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MomoraPurplePrimary
+                            )
+                            Text(
+                                text = "›",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MomoraPurplePrimary
+                            )
+                        }
                         Spacer(modifier = Modifier.height(4.dp))
+                        val wVal = data?.latestWeightKg?.let { "$it" } ?: "—"
                         Text(
-                            text = "${data?.latestWeightKg ?: 64.2}",
+                            text = wVal,
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
                             color = MomoraPurpleDark
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "kg · ${data?.weightReadingTime ?: "08:10"}",
+                            text = data?.weightReadingTime?.let { "kg · $it" } ?: "kg · Tap to view",
                             fontSize = 10.5.sp,
                             color = MomoraBodyMuted
                         )
@@ -355,7 +420,7 @@ fun PatientHealthMonitoringScreenContent(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Line Chart Card (Blood pressure · 7 days)
+            // Line Chart Card (Blood pressure with 7 / 14 / 30 day selector)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -365,12 +430,40 @@ fun PatientHealthMonitoringScreenContent(
                     .padding(14.dp)
             ) {
                 Column {
-                    Text(
-                        text = "Blood pressure · 7 days",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MomoraPurpleDark
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Blood pressure · ${uiState.selectedDays} days",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurpleDark
+                        )
+
+                        // 7 / 14 / 30 day selector chips
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            listOf(7, 14, 30).forEach { days ->
+                                val isSelected = uiState.selectedDays == days
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(if (isSelected) MomoraPurplePrimary else Color(0xFFF4ECF8))
+                                        .clickable { onDaysSelected(days) }
+                                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "${days}d",
+                                        fontSize = 11.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) Color.White else MomoraPurpleDark
+                                    )
+                                }
+                            }
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(6.dp))
 
@@ -411,26 +504,139 @@ fun PatientHealthMonitoringScreenContent(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Canvas Native Chart Drawing
-                    HealthMonitoringChart(
-                        systolicTrends = data?.systolicTrends ?: listOf(114f, 110f, 115f, 112f, 116f, 110f, 112f),
-                        diastolicTrends = data?.diastolicTrends ?: listOf(70f, 72f, 68f, 74f, 71f, 73f, 72f),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(130.dp)
-                    )
+                    // Safe Native Chart Drawing
+                    val sysTrends = data?.systolicTrends ?: emptyList()
+                    val diaTrends = data?.diastolicTrends ?: emptyList()
+
+                    if (sysTrends.isEmpty() || diaTrends.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(130.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "No readings logged in the last ${uiState.selectedDays} days",
+                                fontSize = 12.sp,
+                                color = MomoraBodyMuted
+                            )
+                        }
+                    } else {
+                        HealthMonitoringChart(
+                            systolicTrends = sysTrends,
+                            diastolicTrends = diaTrends,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(130.dp)
+                        )
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Vitals & Symptoms Summary Note
-            Text(
-                text = data?.additionalVitalsText ?: "Pulse 76 bpm · Temperature 36.7 °C. Latest symptom: mild heartburn after meals.",
-                fontSize = 11.5.sp,
-                lineHeight = 15.sp,
-                color = Color(0xFF4A3F50)
-            )
+            // Real Vitals & Symptoms Section
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color.White)
+                    .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                    .padding(14.dp)
+            ) {
+                Column {
+                    Text(
+                        text = "Vitals & symptoms",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurpleDark
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        // Pulse
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFFF9F5FB))
+                                .padding(10.dp)
+                        ) {
+                            Column {
+                                Text(text = "Pulse", fontSize = 11.sp, color = MomoraBodyMuted)
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = data?.pulse?.let { "$it bpm" } ?: "—",
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MomoraPurpleDark
+                                )
+                            }
+                        }
+
+                        // Temperature
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFFF9F5FB))
+                                .padding(10.dp)
+                        ) {
+                            Column {
+                                Text(text = "Temperature", fontSize = 11.sp, color = MomoraBodyMuted)
+                                Spacer(modifier = Modifier.height(2.dp))
+                                val tempStr = if (data?.temperature != null) {
+                                    "${data.temperature} ${data.temperatureUnit ?: "°C"}"
+                                } else {
+                                    "—"
+                                }
+                                Text(
+                                    text = tempStr,
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MomoraPurpleDark
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Latest Symptom
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFFF9F5FB))
+                            .padding(10.dp)
+                    ) {
+                        Column {
+                            Text(text = "Latest symptom", fontSize = 11.sp, color = MomoraBodyMuted)
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = data?.latestSymptom?.takeIf { it.isNotBlank() } ?: "No symptoms reported",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MomoraPurpleDark
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = data?.additionalVitalsText?.takeIf { it.isNotBlank() }
+                            ?: "Home vitals and symptoms recorded by patient.",
+                        fontSize = 11.5.sp,
+                        lineHeight = 15.sp,
+                        color = Color(0xFF4A3F50)
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(14.dp))
 
@@ -486,7 +692,7 @@ fun PatientHealthMonitoringScreenContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Write advice for Maya",
+                        text = "Write advice for $patientFirstName",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -509,6 +715,21 @@ fun PatientHealthMonitoringScreenContent(
             onTabSelected = onNavTabSelected
         )
     }
+
+    if (uiState.isBpSheetOpen) {
+        BpReadingsBottomSheet(
+            data = data,
+            selectedDays = uiState.selectedDays,
+            onClose = onDismissSheet
+        )
+    }
+
+    if (uiState.isWeightSheetOpen) {
+        WeightReadingsBottomSheet(
+            data = data,
+            onClose = onDismissSheet
+        )
+    }
 }
 
 /**
@@ -526,12 +747,13 @@ private fun HealthMonitoringChart(
         val gridColor = Color(0xFFEFE8F4)
         val strokeWidth = 2.dp.toPx()
 
-        val yMin = 60f
-        val yMax = 120f
+        val allValues = systolicTrends + diastolicTrends
+        val yMin = ((allValues.minOrNull() ?: 60f) - 10f).coerceAtMost(60f)
+        val yMax = ((allValues.maxOrNull() ?: 120f) + 10f).coerceAtLeast(130f)
 
         // Y-axis grid lines
         val ySteps = listOf(120, 100, 80, 60)
-        ySteps.forEachIndexed { i, valStep ->
+        ySteps.forEachIndexed { i, _ ->
             val yPos = (h / (ySteps.size - 1)) * i
             drawLine(
                 color = gridColor,
@@ -541,35 +763,414 @@ private fun HealthMonitoringChart(
             )
         }
 
-        val stepX = w / (systolicTrends.size - 1)
+        val count = systolicTrends.size
+        if (count == 1) {
+            val normYSys = ((systolicTrends[0] - yMin) / (yMax - yMin)).coerceIn(0f, 1f)
+            val ySys = h - (normYSys * h)
+            drawCircle(color = Color(0xFF6E4F76), radius = 5.dp.toPx(), center = Offset(w / 2f, ySys))
 
-        // Draw Systolic Line (Purple)
-        val sysPath = Path()
-        systolicTrends.forEachIndexed { index, sysVal ->
-            val x = index * stepX
-            val normY = (sysVal - yMin) / (yMax - yMin)
-            val y = h - (normY * h)
-            if (index == 0) sysPath.moveTo(x, y) else sysPath.lineTo(x, y)
-        }
-        drawPath(
-            path = sysPath,
-            color = Color(0xFF6E4F76),
-            style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round)
-        )
+            if (diastolicTrends.isNotEmpty()) {
+                val normYDia = ((diastolicTrends[0] - yMin) / (yMax - yMin)).coerceIn(0f, 1f)
+                val yDia = h - (normYDia * h)
+                drawCircle(color = Color(0xFF3D7B59), radius = 5.dp.toPx(), center = Offset(w / 2f, yDia))
+            }
+        } else if (count > 1) {
+            val stepX = w / (count - 1)
 
-        // Draw Diastolic Line (Mint Green)
-        val diaPath = Path()
-        diastolicTrends.forEachIndexed { index, diaVal ->
-            val x = index * stepX
-            val normY = (diaVal - yMin) / (yMax - yMin)
-            val y = h - (normY * h)
-            if (index == 0) diaPath.moveTo(x, y) else diaPath.lineTo(x, y)
+            // Draw Systolic Line (Purple)
+            val sysPath = Path()
+            systolicTrends.forEachIndexed { index, sysVal ->
+                val x = index * stepX
+                val normY = ((sysVal - yMin) / (yMax - yMin)).coerceIn(0f, 1f)
+                val y = h - (normY * h)
+                if (index == 0) sysPath.moveTo(x, y) else sysPath.lineTo(x, y)
+            }
+            drawPath(
+                path = sysPath,
+                color = Color(0xFF6E4F76),
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round)
+            )
+
+            // Draw Diastolic Line (Mint Green)
+            val diaPath = Path()
+            diastolicTrends.forEachIndexed { index, diaVal ->
+                val x = index * stepX
+                val normY = ((diaVal - yMin) / (yMax - yMin)).coerceIn(0f, 1f)
+                val y = h - (normY * h)
+                if (index == 0) diaPath.moveTo(x, y) else diaPath.lineTo(x, y)
+            }
+            drawPath(
+                path = diaPath,
+                color = Color(0xFF3D7B59),
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round)
+            )
         }
-        drawPath(
-            path = diaPath,
-            color = Color(0xFF3D7B59),
-            style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round)
-        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun BpReadingsBottomSheet(
+    data: PatientHealthMonitoringData?,
+    selectedDays: Int,
+    onClose: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onClose,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Blood pressure readings",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MomoraPurpleDark
+                )
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFF4ECF8))
+                        .clickable { onClose() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "✕",
+                        fontSize = 14.sp,
+                        color = MomoraPurpleDark
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Last $selectedDays days · ${data?.systolicTrends?.size ?: 0} readings logged",
+                fontSize = 12.sp,
+                color = MomoraBodyMuted
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Latest highlight card
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(MomoraMintBadgeBg)
+                    .padding(14.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "Latest Reading",
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MomoraMintBadgeText
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        val bpStr = if (data?.latestSystolic != null && data?.latestDiastolic != null) {
+                            "${data.latestSystolic}/${data.latestDiastolic} mmHg"
+                        } else {
+                            "—/— mmHg"
+                        }
+                        Text(
+                            text = bpStr,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurpleDark
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = data?.bpReadingTime?.let { "Time: $it" } ?: "Recent",
+                            fontSize = 11.5.sp,
+                            color = Color(0xFF43524E)
+                        )
+                        if (data?.pulse != null) {
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Pulse: ${data.pulse} bpm",
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MomoraPurpleDark
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            val sys = data?.systolicTrends ?: emptyList()
+            val dia = data?.diastolicTrends ?: emptyList()
+
+            if (sys.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Color(0xFFFBF8FC))
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No readings logged in the last $selectedDays days",
+                        fontSize = 13.sp,
+                        color = MomoraBodyMuted
+                    )
+                }
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Color(0xFFFBF8FC))
+                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
+                        .padding(horizontal = 14.dp, vertical = 6.dp)
+                ) {
+                    sys.indices.reversed().forEach { idx ->
+                        val s = sys[idx].toInt()
+                        val d = if (idx < dia.size) dia[idx].toInt() else 0
+                        val isNormal = s < 120 && d < 80
+                        val isElevated = s in 120..129 && d < 80
+                        val statusTag = if (isNormal) "Normal" else if (isElevated) "Elevated" else "High"
+                        val tagBg = if (isNormal) MomoraMintBadgeBg else if (isElevated) Color(0xFFF0EBF4) else Color(0xFFFFE8E8)
+                        val tagColor = if (isNormal) MomoraMintBadgeText else if (isElevated) MomoraPurplePrimary else Color(0xFFC0392B)
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Reading #${idx + 1}",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MomoraPurpleDark
+                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "$s / $d mmHg",
+                                    fontSize = 13.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MomoraPurpleText
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(6.dp))
+                                        .background(tagBg)
+                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                ) {
+                                    Text(
+                                        text = statusTag,
+                                        fontSize = 10.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = tagColor
+                                    )
+                                }
+                            }
+                        }
+                        if (idx > 0) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(0.5.dp)
+                                    .background(Color(0xFFEFE8F4))
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(MomoraPurplePrimary)
+                    .clickable { onClose() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Close",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun WeightReadingsBottomSheet(
+    data: PatientHealthMonitoringData?,
+    onClose: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onClose,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 12.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Weight tracker details",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MomoraPurpleDark
+                )
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFF4ECF8))
+                        .clickable { onClose() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "✕",
+                        fontSize = 14.sp,
+                        color = MomoraPurpleDark
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+            val patientDisplayName = data?.patientName?.takeIf { it.isNotBlank() } ?: "Patient"
+            Text(
+                text = "$patientDisplayName · ${data?.gestationalAge ?: "Gestational progress"}",
+                fontSize = 12.sp,
+                color = MomoraBodyMuted
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            if (data?.latestWeightKg == null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Color(0xFFFBF8FC))
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "No weight readings logged yet",
+                        fontSize = 13.sp,
+                        color = MomoraBodyMuted
+                    )
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(MomoraLavenderCircleBg)
+                        .padding(16.dp)
+                ) {
+                    Column {
+                        Text(
+                            text = "Latest Recorded Weight",
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MomoraPurplePrimary
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "${data.latestWeightKg} kg",
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurpleDark
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Logged at ${data.weightReadingTime ?: "Recent"}",
+                            fontSize = 11.sp,
+                            color = MomoraBodyMuted
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Color(0xFFFBF8FC))
+                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
+                        .padding(14.dp)
+                ) {
+                    Column {
+                        Text(
+                            text = "Clinical Context",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurpleDark
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Weight progression is monitored across trimesters. Expected maternal weight gain is evaluated against baseline pre-pregnancy BMI during clinical consultations.",
+                            fontSize = 12.sp,
+                            lineHeight = 16.sp,
+                            color = Color(0xFF4A3F50)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(MomoraPurplePrimary)
+                    .clickable { onClose() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Close",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
     }
 }
 

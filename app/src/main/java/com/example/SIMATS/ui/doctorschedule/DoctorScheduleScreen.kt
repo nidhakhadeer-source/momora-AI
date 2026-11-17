@@ -1,5 +1,8 @@
 package com.example.SIMATS.ui.doctorschedule
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
+import android.widget.Toast
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -22,8 +25,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -36,6 +41,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -44,6 +50,7 @@ import androidx.compose.ui.unit.sp
 import com.example.SIMATS.data.model.DoctorCompactAppointment
 import com.example.SIMATS.data.model.DoctorMainAppointment
 import com.example.SIMATS.data.model.DoctorScheduleData
+import com.example.SIMATS.navigation.SelectedPatientHolder
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraMintBadgeBg
 import com.example.SIMATS.ui.theme.MomoraMintBadgeText
@@ -51,6 +58,9 @@ import com.example.SIMATS.ui.theme.MomoraPurpleDark
 import com.example.SIMATS.ui.theme.MomoraPurplePrimary
 import com.example.SIMATS.ui.theme.MomoraPurpleText
 import com.example.SIMATS.ui.theme.MomoraScreenBackground
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 @Composable
 fun DoctorScheduleScreen(
@@ -58,27 +68,139 @@ fun DoctorScheduleScreen(
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit = {},
     onViewRecordClick: () -> Unit = {},
+    onPatientClick: (String, String) -> Unit = { _, _ -> onViewRecordClick() },
+    onManageAvailabilityClick: () -> Unit = {},
+    onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    // Show toast on reschedule message
+    LaunchedEffect(uiState.rescheduleSuccessMessage) {
+        uiState.rescheduleSuccessMessage?.let { msg ->
+            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+            viewModel.onEvent(DoctorScheduleUiEvent.OnClearRescheduleMessage)
+        }
+    }
+
+    val showCalendarPicker = {
+        val calendar = Calendar.getInstance()
+        val currDate = uiState.selectedDate ?: uiState.scheduleData?.selectedDate
+        if (!currDate.isNullOrBlank()) {
+            try {
+                val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
+                sdf.parse(currDate)?.let { calendar.time = it }
+            } catch (_: Exception) {}
+        }
+        val datePickerDialog = DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                val chosenDate = String.format(Locale.US, "%04d-%02d-%02d", year, month + 1, dayOfMonth)
+                viewModel.onEvent(DoctorScheduleUiEvent.OnDateSelected(chosenDate))
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        )
+        datePickerDialog.show()
+    }
+
+    val showReschedulePicker = {
+        val data = uiState.scheduleData
+        val mainAppt = data?.mainAppointment
+        val apptId = mainAppt?.id?.toIntOrNull()
+            ?: data?.appointments?.firstOrNull()?.id?.toIntOrNull()
+
+        if (apptId == null || mainAppt == null || mainAppt.patientName == "No appointments" || mainAppt.patientName.isBlank()) {
+            Toast.makeText(context, "No appointment available to reschedule", Toast.LENGTH_SHORT).show()
+        } else {
+            val calendar = Calendar.getInstance()
+            val currDate = uiState.selectedDate ?: data.selectedDate
+            if (!currDate.isNullOrBlank()) {
+                try {
+                    val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
+                    sdf.parse(currDate)?.let { calendar.time = it }
+                } catch (_: Exception) {}
+            }
+
+            val datePickerDialog = DatePickerDialog(
+                context,
+                { _, year, month, dayOfMonth ->
+                    val chosenDate = String.format(Locale.US, "%04d-%02d-%02d", year, month + 1, dayOfMonth)
+
+                    // After picking date, open TimePickerDialog
+                    val timePickerDialog = TimePickerDialog(
+                        context,
+                        { _, hourOfDay, minute ->
+                            val chosenTime = String.format(Locale.US, "%02d:%02d", hourOfDay, minute)
+                            Toast.makeText(
+                                context,
+                                "Rescheduling to $chosenDate at $chosenTime...",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            viewModel.onEvent(
+                                DoctorScheduleUiEvent.OnRescheduleAppointment(
+                                    appointmentId = apptId,
+                                    newDate = chosenDate,
+                                    newTime = chosenTime
+                                )
+                            )
+                        },
+                        10,
+                        30,
+                        true
+                    )
+                    timePickerDialog.show()
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+            )
+            // Disallow past dates
+            datePickerDialog.datePicker.minDate = System.currentTimeMillis() - 1000
+            datePickerDialog.show()
+        }
+    }
 
     DoctorScheduleScreenContent(
         modifier = modifier,
         uiState = uiState,
         onDateTabSelected = { index -> viewModel.onEvent(DoctorScheduleUiEvent.OnDateTabSelected(index)) },
-        onRescheduleClick = { viewModel.onEvent(DoctorScheduleUiEvent.OnRescheduleClicked) },
-        onViewRecordClick = {
-            viewModel.onEvent(DoctorScheduleUiEvent.OnViewRecordClicked)
-            onViewRecordClick()
+        onRescheduleClick = { showReschedulePicker() },
+        onPatientClick = { patientId, patientName ->
+            viewModel.onEvent(DoctorScheduleUiEvent.OnPatientClicked(patientId, patientName))
+            onPatientClick(patientId, patientName)
         },
-        onManageAvailabilityClick = { viewModel.onEvent(DoctorScheduleUiEvent.OnManageAvailabilityClicked) },
-        onCalendarClick = { viewModel.onEvent(DoctorScheduleUiEvent.OnCalendarClicked) },
+        onViewRecordClick = {
+            val data = uiState.scheduleData
+            val mainAppt = data?.mainAppointment
+            val pItem = data?.appointments?.find { it.id == mainAppt?.id } ?: data?.appointments?.firstOrNull()
+            val patientId = pItem?.patientId?.toString() ?: SelectedPatientHolder.selectedPatientId ?: "5"
+            val patientName = mainAppt?.patientName?.takeIf { it.isNotBlank() && it != "No appointments" }
+                ?: pItem?.patientName
+                ?: SelectedPatientHolder.selectedPatientName
+                ?: "Patient"
+
+            SelectedPatientHolder.selectedPatientId = patientId
+            SelectedPatientHolder.selectedPatientName = patientName
+            viewModel.onEvent(DoctorScheduleUiEvent.OnPatientClicked(patientId, patientName))
+            onPatientClick(patientId, patientName)
+        },
+        onManageAvailabilityClick = {
+            viewModel.onEvent(DoctorScheduleUiEvent.OnManageAvailabilityClicked)
+            onManageAvailabilityClick()
+        },
+        onCalendarClick = { showCalendarPicker() },
         onRetryClick = { viewModel.onEvent(DoctorScheduleUiEvent.OnRetryClicked) },
         onBackClick = {
             viewModel.onEvent(DoctorScheduleUiEvent.OnBackClicked)
             onNavigateBack()
         },
-        onNotificationClick = { viewModel.onEvent(DoctorScheduleUiEvent.OnNotificationClicked) },
+        onNotificationClick = {
+            viewModel.onEvent(DoctorScheduleUiEvent.OnNotificationClicked)
+            onNotificationClick()
+        },
         onNavTabSelected = { index ->
             viewModel.onEvent(DoctorScheduleUiEvent.OnNavTabSelected(index))
             onNavTabSelected(index)
@@ -95,6 +217,7 @@ fun DoctorScheduleScreenContent(
             dateText = "Thursday, 29 Oct 2026",
             dateTabs = listOf("27 Oct", "28 Oct", "29 Oct"),
             mainAppointment = DoctorMainAppointment(
+                id = "1",
                 timeRange = "10:30–11:00",
                 statusText = "Confirmed",
                 patientName = "Maya Patel",
@@ -120,11 +243,13 @@ fun DoctorScheduleScreenContent(
                     isVideo = true
                 )
             ),
+            totalVisitsCount = 3,
             visitsSummaryNote = "Today, 27 Oct · 6 visits; 2 completed, 4 upcoming. Next: Nora Williams at 11:30."
         )
     ),
     onDateTabSelected: (Int) -> Unit = {},
     onRescheduleClick: () -> Unit = {},
+    onPatientClick: (String, String) -> Unit = { _, _ -> },
     onViewRecordClick: () -> Unit = {},
     onManageAvailabilityClick: () -> Unit = {},
     onCalendarClick: () -> Unit = {},
@@ -188,16 +313,26 @@ fun DoctorScheduleScreenContent(
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.Start
         ) {
+            // Full-screen Loading state
             if (uiState.isLoading && data == null) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 48.dp),
+                        .padding(vertical = 64.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = MomoraPurplePrimary)
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CircularProgressIndicator(color = MomoraPurplePrimary)
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Loading schedule...",
+                            fontSize = 14.sp,
+                            color = MomoraBodyMuted
+                        )
+                    }
                 }
             } else if (uiState.errorMessage != null && data == null) {
+                // Full-screen Error state
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -240,256 +375,483 @@ fun DoctorScheduleScreenContent(
                     color = MomoraPurpleDark
                 )
 
-            Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
-            Text(
-                text = "${data?.doctorName ?: "Dr Amelia Chen"} · Clinic local time",
-                fontSize = 13.sp,
-                color = MomoraBodyMuted
-            )
+                Text(
+                    text = "${data?.doctorName?.takeIf { it.isNotBlank() } ?: "Dr Amelia Chen"} · Clinic local time",
+                    fontSize = 13.sp,
+                    color = MomoraBodyMuted
+                )
 
-            Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
-            // Date Tabs (27 Oct, 28 Oct, 29 Oct)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color(0xFFF4ECF8))
-                    .padding(4.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                // Date Tabs
+                val tabs = data?.dateTabs?.takeIf { it.isNotEmpty() } ?: listOf("27 Oct", "28 Oct", "29 Oct")
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color(0xFFF4ECF8))
+                        .padding(4.dp)
                 ) {
-                    val tabs = data?.dateTabs ?: listOf("27 Oct", "28 Oct", "29 Oct")
-                    tabs.forEachIndexed { index, label ->
-                        val isSelected = uiState.selectedDateTabIndex == index
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(38.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(if (isSelected) Color.White else Color.Transparent)
-                                .clickable { onDateTabSelected(index) },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = label,
-                                fontSize = 13.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSelected) MomoraPurpleDark else MomoraBodyMuted
-                            )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        tabs.forEachIndexed { index, label ->
+                            val isSelected = uiState.selectedDateTabIndex == index
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(38.dp)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(if (isSelected) Color.White else Color.Transparent)
+                                    .clickable { onDateTabSelected(index) },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = label,
+                                    fontSize = 13.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (isSelected) MomoraPurpleDark else MomoraBodyMuted
+                                )
+                            }
                         }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Selected Date Header Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = data?.dateText ?: "Thursday, 29 Oct 2026",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MomoraPurpleDark
-                )
-
-                Text(
-                    text = "Calendar",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MomoraPurplePrimary,
-                    modifier = Modifier.clickable { onCalendarClick() }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Main Highlighted Appointment Card (Maya Patel)
-            val mainAppt = data?.mainAppointment
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(Color(0xFFF4ECF8))
-                    .padding(14.dp)
-            ) {
-                Column {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = mainAppt?.timeRange ?: "10:30–11:00",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MomoraPurpleDark
-                        )
-
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(50))
-                                .background(MomoraMintBadgeBg)
-                                .padding(horizontal = 12.dp, vertical = 4.dp)
-                        ) {
-                            Text(
-                                text = mainAppt?.statusText ?: "Confirmed",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MomoraMintBadgeText
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFFEDE4F0)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                UserNavIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp))
-                            }
-
-                            Spacer(modifier = Modifier.width(12.dp))
-
-                            Column {
-                                Text(
-                                    text = mainAppt?.patientName ?: "Maya Patel",
-                                    fontSize = 14.5.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MomoraPurpleDark
-                                )
-                                Spacer(modifier = Modifier.height(2.dp))
-                                Text(
-                                    text = mainAppt?.patientSubtitle ?: "24w 3d on 27 Oct · Patient P-13042",
-                                    fontSize = 11.5.sp,
-                                    color = MomoraBodyMuted
-                                )
-                            }
-                        }
-
-                        Text(
-                            text = "›",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color(0xFF8C7F92)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    Text(
-                        text = mainAppt?.notesText ?: "Routine antenatal check · In person, Willow Maternity Clinic · Room 3.",
-                        fontSize = 11.5.sp,
-                        lineHeight = 15.sp,
-                        color = Color(0xFF4A3F50)
+                // Inline loading bar when switching dates
+                if (uiState.isLoading && data != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(3.dp)
+                            .clip(RoundedCornerShape(2.dp)),
+                        color = MomoraPurplePrimary,
+                        trackColor = Color(0xFFF4ECF8)
                     )
+                }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                // Rescheduling indicator
+                if (uiState.isRescheduling) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0xFFEDE4F0))
+                            .padding(8.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(40.dp)
-                                .clip(RoundedCornerShape(50))
-                                .background(Color.White)
-                                .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(50))
-                                .clickable { onRescheduleClick() },
-                            contentAlignment = Alignment.Center
-                        ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp,
+                                color = MomoraPurplePrimary
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
                             Text(
-                                text = "Reschedule",
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold,
+                                text = "Rescheduling appointment...",
+                                fontSize = 12.5.sp,
+                                fontWeight = FontWeight.Medium,
                                 color = MomoraPurpleDark
                             )
                         }
+                    }
+                }
 
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(40.dp)
-                                .clip(RoundedCornerShape(50))
-                                .background(MomoraPurplePrimary)
-                                .clickable { onViewRecordClick() },
-                            contentAlignment = Alignment.Center
+                // Inline error banner if reload or reschedule failed
+                if (uiState.errorMessage != null && data != null) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0xFFFDF2F2))
+                            .border(1.dp, Color(0xFFF2DEDE), RoundedCornerShape(10.dp))
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "View record",
-                                fontSize = 13.sp,
+                                text = uiState.errorMessage ?: "An error occurred",
+                                fontSize = 12.sp,
+                                color = Color(0xFFA94442),
+                                modifier = Modifier.weight(1f)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Retry",
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = MomoraPurplePrimary,
+                                modifier = Modifier.clickable { onRetryClick() }
                             )
                         }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            // Other Compact Appointments List
-            Column(
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                data?.otherAppointments?.forEach { item ->
-                    DoctorCompactAppointmentCard(item = item)
+                // Selected Date Header Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = data?.dateText?.takeIf { it.isNotBlank() } ?: "Thursday, 29 Oct 2026",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurpleDark
+                    )
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(8.dp))
+                            .clickable { onCalendarClick() }
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        CalendarNavIcon(
+                            color = MomoraPurplePrimary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Calendar",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurplePrimary
+                        )
+                    }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-            // Visits Summary Caption
-            Text(
-                text = data?.visitsSummaryNote ?: "Today, 27 Oct · 6 visits; 2 completed, 4 upcoming. Next: Nora Williams at 11:30.",
-                fontSize = 11.5.sp,
-                lineHeight = 15.sp,
-                color = MomoraBodyMuted
-            )
+                val mainAppt = data?.mainAppointment
+                val hasAppointments = data != null && data.totalVisitsCount > 0 &&
+                        mainAppt != null && mainAppt.patientName != "No appointments" && mainAppt.patientName.isNotBlank()
 
-            Spacer(modifier = Modifier.height(14.dp))
+                if (!hasAppointments) {
+                    // EMPTY STATE for chosen date
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(Color.White)
+                            .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(18.dp))
+                            .padding(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Box(
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFF4ECF8)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CalendarNavIcon(color = MomoraPurplePrimary, modifier = Modifier.size(24.dp))
+                            }
 
-            // Manage clinic availability Button
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(Color.White)
-                    .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(50))
-                    .clickable { onManageAvailabilityClick() },
-                contentAlignment = Alignment.Center
-            ) {
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Text(
+                                text = "No appointments scheduled",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MomoraPurpleDark
+                            )
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            Text(
+                                text = "There are no visits booked for ${data?.dateText ?: "this date"}.",
+                                fontSize = 12.5.sp,
+                                color = MomoraBodyMuted,
+                                textAlign = TextAlign.Center
+                            )
+
+                            Spacer(modifier = Modifier.height(16.dp))
+
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(50))
+                                    .background(Color(0xFFF4ECF8))
+                                    .clickable { onCalendarClick() }
+                                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "Pick another date",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MomoraPurplePrimary
+                                )
+                            }
+                        }
+                    }
+
+                    // Optional Next Appointment preview card
+                    val nextAppt = data?.nextAppointment
+                    if (nextAppt != null && nextAppt.patientName != "No appointments" && nextAppt.patientName.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(Color(0xFFF4ECF8))
+                                .padding(12.dp)
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Next Upcoming Consultation",
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MomoraPurplePrimary
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = nextAppt.patientName,
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MomoraPurpleDark
+                                        )
+                                        Text(
+                                            text = "${nextAppt.timeRange} · ${nextAppt.patientSubtitle}",
+                                            fontSize = 11.5.sp,
+                                            color = MomoraBodyMuted
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // MAIN APPOINTMENT CARD
+                    val mainPatient = data?.appointments?.find { it.id == mainAppt?.id }
+                        ?: data?.appointments?.firstOrNull()
+                    val mainPatientId = mainPatient?.patientId?.toString()
+                        ?: SelectedPatientHolder.selectedPatientId
+                        ?: "5"
+                    val mainPatientName = mainAppt?.patientName?.takeIf { it.isNotBlank() && it != "No appointments" }
+                        ?: mainPatient?.patientName
+                        ?: SelectedPatientHolder.selectedPatientName
+                        ?: "Patient"
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(Color(0xFFF4ECF8))
+                            .clickable {
+                                SelectedPatientHolder.selectedPatientId = mainPatientId
+                                SelectedPatientHolder.selectedPatientName = mainPatientName
+                                onPatientClick(mainPatientId, mainPatientName)
+                            }
+                            .padding(14.dp)
+                    ) {
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = mainAppt?.timeRange ?: "10:30–11:00",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MomoraPurpleDark
+                                )
+
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(50))
+                                        .background(MomoraMintBadgeBg)
+                                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                                ) {
+                                    Text(
+                                        text = mainAppt?.statusText ?: "Confirmed",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MomoraMintBadgeText
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFFEDE4F0)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        UserNavIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp))
+                                    }
+
+                                    Spacer(modifier = Modifier.width(12.dp))
+
+                                    Column {
+                                        Text(
+                                            text = mainPatientName,
+                                            fontSize = 14.5.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MomoraPurpleDark
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = mainAppt?.patientSubtitle?.takeIf { it.isNotBlank() }
+                                                ?: "Routine consultation",
+                                            fontSize = 11.5.sp,
+                                            color = MomoraBodyMuted
+                                        )
+                                    }
+                                }
+
+                                Text(
+                                    text = "›",
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = Color(0xFF8C7F92)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Text(
+                                text = mainAppt?.notesText?.takeIf { it.isNotBlank() }
+                                    ?: "Routine antenatal check · In person",
+                                fontSize = 11.5.sp,
+                                lineHeight = 15.sp,
+                                color = Color(0xFF4A3F50)
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(40.dp)
+                                        .clip(RoundedCornerShape(50))
+                                        .background(Color.White)
+                                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(50))
+                                        .clickable { onRescheduleClick() },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "Reschedule",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MomoraPurpleDark
+                                    )
+                                }
+
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(40.dp)
+                                        .clip(RoundedCornerShape(50))
+                                        .background(MomoraPurplePrimary)
+                                        .clickable {
+                                            SelectedPatientHolder.selectedPatientId = mainPatientId
+                                            SelectedPatientHolder.selectedPatientName = mainPatientName
+                                            onPatientClick(mainPatientId, mainPatientName)
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "View record",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Other Compact Appointments List
+                    if (!data?.otherAppointments.isNullOrEmpty()) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            data?.otherAppointments?.forEach { item ->
+                                val patientItem = data.appointments.find { it.id == item.id }
+                                val pId = patientItem?.patientId?.toString()
+                                    ?: item.patientId?.toString()
+                                    ?: "5"
+                                DoctorCompactAppointmentCard(
+                                    item = item,
+                                    onClick = {
+                                        SelectedPatientHolder.selectedPatientId = pId
+                                        SelectedPatientHolder.selectedPatientName = item.patientName
+                                        onPatientClick(pId, item.patientName)
+                                    }
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(14.dp))
+                    }
+                }
+
+                // Visits Summary Caption
                 Text(
-                    text = "Manage clinic availability",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MomoraPurplePrimary
+                    text = data?.visitsSummaryNote?.takeIf { it.isNotBlank() }
+                        ?: "Visits schedule for clinic local time.",
+                    fontSize = 11.5.sp,
+                    lineHeight = 15.sp,
+                    color = MomoraBodyMuted
                 )
-            }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Manage clinic availability Button
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(50))
+                        .clickable { onManageAvailabilityClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Manage clinic availability",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurplePrimary
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -505,7 +867,8 @@ fun DoctorScheduleScreenContent(
 
 @Composable
 private fun DoctorCompactAppointmentCard(
-    item: DoctorCompactAppointment
+    item: DoctorCompactAppointment,
+    onClick: () -> Unit = {}
 ) {
     Box(
         modifier = Modifier
@@ -513,6 +876,7 @@ private fun DoctorCompactAppointmentCard(
             .clip(RoundedCornerShape(16.dp))
             .background(Color.White)
             .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+            .clickable { onClick() }
             .padding(12.dp)
     ) {
         Row(

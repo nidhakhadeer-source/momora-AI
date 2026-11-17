@@ -24,6 +24,8 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -45,6 +47,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.SIMATS.data.model.DoctorAdviceData
+import com.example.SIMATS.data.model.DoctorAdviceSymptomItem
+import com.example.SIMATS.navigation.SelectedPatientHolder
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraPinkCircleBg
 import com.example.SIMATS.ui.theme.MomoraPurpleDark
@@ -57,6 +61,7 @@ fun DoctorAdviceScreen(
     viewModel: DoctorAdviceViewModel,
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit = {},
+    onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -67,13 +72,18 @@ fun DoctorAdviceScreen(
         onSubjectChanged = { s -> viewModel.onEvent(DoctorAdviceUiEvent.OnSubjectChanged(s)) },
         onAdviceTextChanged = { t -> viewModel.onEvent(DoctorAdviceUiEvent.OnAdviceTextChanged(t)) },
         onSaveCopyToggled = { c -> viewModel.onEvent(DoctorAdviceUiEvent.OnSaveCopyToggled(c)) },
+        onQuoteCardClick = { viewModel.onEvent(DoctorAdviceUiEvent.OnQuoteCardClicked) },
+        onDismissTimelineSheet = { viewModel.onEvent(DoctorAdviceUiEvent.OnDismissSymptomTimeline) },
         onSendAdviceClick = { viewModel.onEvent(DoctorAdviceUiEvent.OnSendAdviceClicked) },
         onRetryClick = { viewModel.onEvent(DoctorAdviceUiEvent.OnRetryClicked) },
         onBackClick = {
             viewModel.onEvent(DoctorAdviceUiEvent.OnBackClicked)
             onNavigateBack()
         },
-        onNotificationClick = { viewModel.onEvent(DoctorAdviceUiEvent.OnNotificationClicked) },
+        onNotificationClick = {
+            viewModel.onEvent(DoctorAdviceUiEvent.OnNotificationClicked)
+            onNotificationClick()
+        },
         onNavTabSelected = { index ->
             viewModel.onEvent(DoctorAdviceUiEvent.OnNavTabSelected(index))
             onNavTabSelected(index)
@@ -101,6 +111,8 @@ fun DoctorAdviceScreenContent(
     onSubjectChanged: (String) -> Unit = {},
     onAdviceTextChanged: (String) -> Unit = {},
     onSaveCopyToggled: (Boolean) -> Unit = {},
+    onQuoteCardClick: () -> Unit = {},
+    onDismissTimelineSheet: () -> Unit = {},
     onSendAdviceClick: () -> Unit = {},
     onRetryClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
@@ -109,6 +121,24 @@ fun DoctorAdviceScreenContent(
 ) {
     val scrollState = rememberScrollState()
     val data = uiState.adviceData
+    val resolvedPatientName = data?.patientName?.takeIf { it.isNotBlank() }
+        ?: uiState.patientName?.takeIf { it.isNotBlank() }
+        ?: SelectedPatientHolder.selectedPatientName?.takeIf { it.isNotBlank() }
+        ?: "Patient"
+
+    val patientFirstName = resolvedPatientName.trim().split("\\s+".toRegex()).firstOrNull()?.takeIf { it.isNotBlank() } ?: resolvedPatientName
+
+    val resolvedInitials = data?.patientInitials?.takeIf { it.isNotBlank() }
+        ?: run {
+            val words = resolvedPatientName.trim().split("\\s+".toRegex()).filter { it.isNotBlank() }
+            if (words.size >= 2) {
+                "${words[0].first().uppercaseChar()}${words[1].first().uppercaseChar()}"
+            } else if (resolvedPatientName.isNotEmpty()) {
+                resolvedPatientName.take(2).uppercase()
+            } else {
+                "PT"
+            }
+        }
 
     Column(
         modifier = modifier
@@ -249,7 +279,7 @@ fun DoctorAdviceScreenContent(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = data?.patientInitials ?: "MP",
+                                text = resolvedInitials,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MomoraPurplePrimary
@@ -260,7 +290,7 @@ fun DoctorAdviceScreenContent(
 
                         Column {
                             Text(
-                                text = data?.patientName ?: "Maya Patel",
+                                text = resolvedPatientName,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MomoraPurpleDark
@@ -285,22 +315,36 @@ fun DoctorAdviceScreenContent(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Patient Message Quote Card
+            // Patient Message Quote Card (Clickable to open Symptom Timeline)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
                     .background(MomoraPinkCircleBg)
+                    .clickable { onQuoteCardClick() }
                     .padding(14.dp)
             ) {
                 Column {
-                    Text(
-                        text = data?.patientMessageTimeText ?: "PATIENT MESSAGE · 27 OCT, 08:35",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MomoraBodyMuted,
-                        letterSpacing = 0.5.sp
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = data?.patientMessageTimeText ?: "PATIENT MESSAGE · 27 OCT, 08:35",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraBodyMuted,
+                            letterSpacing = 0.5.sp
+                        )
+
+                        Text(
+                            text = "Timeline ›",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurplePrimary
+                        )
+                    }
 
                     Spacer(modifier = Modifier.height(6.dp))
 
@@ -417,7 +461,7 @@ fun DoctorAdviceScreenContent(
                 Spacer(modifier = Modifier.width(10.dp))
 
                 Text(
-                    text = "Save a copy in Maya's consultation record.",
+                    text = "Save a copy in ${patientFirstName}'s consultation record.",
                     fontSize = 12.sp,
                     color = MomoraPurpleDark
                 )
@@ -509,6 +553,15 @@ fun DoctorAdviceScreenContent(
         DoctorBottomNavBar(
             selectedIndex = uiState.selectedNavIndex,
             onTabSelected = onNavTabSelected
+        )
+    }
+
+    if (uiState.isSymptomTimelineSheetOpen) {
+        SymptomTimelineBottomSheet(
+            patientName = resolvedPatientName,
+            gestationalAge = data?.gestationalAge ?: "",
+            symptoms = data?.recentSymptoms ?: emptyList(),
+            onDismiss = onDismissTimelineSheet
         )
     }
 }
@@ -724,4 +777,190 @@ private fun ChatNavIcon(color: Color, modifier: Modifier = Modifier) {
 @Composable
 fun DoctorAdviceScreenPreview() {
     DoctorAdviceScreenContent()
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SymptomTimelineBottomSheet(
+    patientName: String,
+    gestationalAge: String,
+    symptoms: List<DoctorAdviceSymptomItem>,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 32.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "Symptom Timeline",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurpleDark
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = if (gestationalAge.isNotBlank()) "$patientName · $gestationalAge" else patientName,
+                        fontSize = 12.sp,
+                        color = MomoraBodyMuted
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFF4ECF8))
+                        .clickable { onDismiss() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "✕",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurpleDark
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
+
+            if (symptoms.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Color(0xFFF4ECF8))
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "No Symptoms Logged",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurpleDark
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "The patient has not logged any symptoms yet.",
+                            fontSize = 12.5.sp,
+                            color = MomoraBodyMuted,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            } else {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.verticalScroll(rememberScrollState())
+                ) {
+                    symptoms.forEach { item ->
+                        TimelineSymptomCard(item = item)
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun TimelineSymptomCard(item: DoctorAdviceSymptomItem) {
+    val (badgeBg, badgeText) = when (item.severity.uppercase()) {
+        "SEVERE" -> Color(0xFFFFEBEE) to Color(0xFFC62828)
+        "MODERATE" -> Color(0xFFFFF3E0) to Color(0xFFE65100)
+        else -> Color(0xFFE8F5E9) to Color(0xFF2E7D32)
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(Color.White)
+            .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
+            .padding(14.dp)
+    ) {
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = item.timestampFormatted.takeIf { it.isNotBlank() } ?: item.createdAt,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MomoraBodyMuted
+                )
+
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50))
+                        .background(badgeBg)
+                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = item.severity.uppercase(),
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = badgeText
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = item.symptomName,
+                fontSize = 14.5.sp,
+                fontWeight = FontWeight.Bold,
+                color = MomoraPurpleDark
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            val details = buildList {
+                if (item.startedText.isNotBlank()) add("Started: ${item.startedText}")
+                if (item.durationText.isNotBlank()) add("Duration: ${item.durationText}")
+            }.joinToString(" · ")
+
+            if (details.isNotBlank()) {
+                Text(
+                    text = details,
+                    fontSize = 11.5.sp,
+                    color = MomoraBodyMuted
+                )
+            }
+
+            if (!item.aiGuidance.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFFF4ECF8))
+                        .padding(8.dp)
+                ) {
+                    Text(
+                        text = "AI Guidance: ${item.aiGuidance}",
+                        fontSize = 11.sp,
+                        lineHeight = 14.sp,
+                        color = MomoraPurpleDark
+                    )
+                }
+            }
+        }
+    }
 }

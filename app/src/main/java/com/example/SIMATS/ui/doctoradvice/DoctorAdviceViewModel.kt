@@ -13,10 +13,13 @@ import kotlinx.coroutines.launch
 
 class DoctorAdviceViewModel(
     private val repository: DoctorAdviceRepository = DoctorAdviceRepositoryImpl(),
-    patientId: String? = SelectedPatientHolder.selectedPatientId
+    patientId: String? = SelectedPatientHolder.selectedPatientId,
+    patientName: String? = SelectedPatientHolder.selectedPatientName
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(DoctorAdviceUiState())
+    private val _uiState = MutableStateFlow(
+        DoctorAdviceUiState(patientName = patientName ?: SelectedPatientHolder.selectedPatientName)
+    )
     val uiState: StateFlow<DoctorAdviceUiState> = _uiState.asStateFlow()
 
     private var currentPatientId: String? = patientId ?: SelectedPatientHolder.selectedPatientId
@@ -47,6 +50,12 @@ class DoctorAdviceViewModel(
             is DoctorAdviceUiEvent.OnNavTabSelected -> {
                 _uiState.value = _uiState.value.copy(selectedNavIndex = event.index)
             }
+            DoctorAdviceUiEvent.OnQuoteCardClicked -> {
+                _uiState.value = _uiState.value.copy(isSymptomTimelineSheetOpen = true)
+            }
+            DoctorAdviceUiEvent.OnDismissSymptomTimeline -> {
+                _uiState.value = _uiState.value.copy(isSymptomTimelineSheetOpen = false)
+            }
             DoctorAdviceUiEvent.OnSendAdviceClicked -> {
                 sendAdvice()
             }
@@ -67,10 +76,15 @@ class DoctorAdviceViewModel(
         }
     }
 
-    fun setPatientId(id: String) {
+    fun setPatientId(id: String, name: String? = null) {
+        val resolvedName = name ?: SelectedPatientHolder.selectedPatientName
         if (id.isNotBlank() && (id != currentPatientId || _uiState.value.adviceData == null)) {
             currentPatientId = id
             SelectedPatientHolder.selectedPatientId = id
+            if (!resolvedName.isNullOrBlank()) {
+                SelectedPatientHolder.selectedPatientName = resolvedName
+            }
+            _uiState.value = _uiState.value.copy(patientName = resolvedName ?: _uiState.value.patientName)
             loadData(id)
         }
     }
@@ -81,8 +95,12 @@ class DoctorAdviceViewModel(
             repository.getAdviceData(id).collect { result ->
                 result.fold(
                     onSuccess = { data ->
+                        if (data.patientName.isNotBlank()) {
+                            SelectedPatientHolder.selectedPatientName = data.patientName
+                        }
                         _uiState.value = _uiState.value.copy(
                             adviceData = data,
+                            patientName = data.patientName.ifBlank { _uiState.value.patientName },
                             subjectText = data.defaultSubject,
                             adviceText = data.defaultAdviceText,
                             isLoading = false,
