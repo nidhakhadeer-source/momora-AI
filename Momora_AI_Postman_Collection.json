@@ -2183,7 +2183,7 @@
                     }
                 },
                 {
-                    "name": "Get Assigned Patients",
+                    "name": "Get Assigned Patients (Paginated)",
                     "request": {
                         "method": "GET",
                         "header": [
@@ -2197,7 +2197,7 @@
                             }
                         ],
                         "url": {
-                            "raw": "{{base_url}}/doctor/patients.php?user_id=3",
+                            "raw": "{{base_url}}/doctor/patients.php?page=1&limit=5",
                             "host": [
                                 "{{base_url}}"
                             ],
@@ -2207,8 +2207,12 @@
                             ],
                             "query": [
                                 {
-                                    "key": "user_id",
-                                    "value": "3"
+                                    "key": "page",
+                                    "value": "1"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "5"
                                 }
                             ]
                         }
@@ -2393,6 +2397,100 @@
                                     "key": "user_id",
                                     "value": "3"
                                 }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Reschedule Appointment",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{doctor_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "ngrok-skip-browser-warning",
+                                "value": "true"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"appointmentId\": 1,\n    \"newDate\": \"2026-11-25\",\n    \"newTime\": \"11:30\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/doctor/appointment_reschedule.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "doctor",
+                                "appointment_reschedule.php"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Doctor Weekly Availability",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{doctor_token}}"
+                            },
+                            {
+                                "key": "ngrok-skip-browser-warning",
+                                "value": "true"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/doctor/availability.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "doctor",
+                                "availability.php"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Save Doctor Weekly Availability",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer {{doctor_token}}"
+                            },
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "ngrok-skip-browser-warning",
+                                "value": "true"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"weeklyHours\": [\n        {\n            \"weekday\": \"Monday\",\n            \"startTime\": \"09:00\",\n            \"endTime\": \"17:00\",\n            \"slotMinutes\": 30\n        },\n        {\n            \"weekday\": \"Tuesday\",\n            \"startTime\": \"09:00\",\n            \"endTime\": \"17:00\",\n            \"slotMinutes\": 30\n        },\n        {\n            \"weekday\": \"Wednesday\",\n            \"startTime\": \"09:00\",\n            \"endTime\": \"13:00\",\n            \"slotMinutes\": 30\n        },\n        {\n            \"weekday\": \"Thursday\",\n            \"startTime\": \"09:00\",\n            \"endTime\": \"17:00\",\n            \"slotMinutes\": 30\n        },\n        {\n            \"weekday\": \"Friday\",\n            \"startTime\": \"09:00\",\n            \"endTime\": \"16:00\",\n            \"slotMinutes\": 30\n        }\n    ]\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/doctor/availability.php",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "doctor",
+                                "availability.php"
                             ]
                         }
                     }
