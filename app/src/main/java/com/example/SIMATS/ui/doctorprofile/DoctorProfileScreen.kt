@@ -55,6 +55,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.DoctorProfileData
+import com.example.SIMATS.ui.components.formatDoctorTime
+import com.example.SIMATS.ui.components.formatErrorMessage
+import com.example.SIMATS.ui.components.sanitizeDoctorText
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraIconBtnBg
 import com.example.SIMATS.ui.theme.MomoraMintBadgeBg
@@ -257,7 +260,7 @@ fun DoctorProfileScreenContent(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = uiState.errorMessage ?: "Please check your network and try again.",
+                        text = formatErrorMessage(uiState.errorMessage ?: "Please check your network and try again."),
                         fontSize = 13.sp,
                         color = Color(0xFFA94442),
                         textAlign = TextAlign.Center
@@ -317,7 +320,7 @@ fun DoctorProfileScreenContent(
                             .padding(12.dp)
                     ) {
                         Text(
-                            text = uiState.errorMessage ?: "An error occurred",
+                            text = formatErrorMessage(uiState.errorMessage ?: "An error occurred"),
                             fontSize = 13.sp,
                             color = Color(0xFFD32F2F)
                         )
@@ -504,19 +507,19 @@ fun DoctorProfileScreenContent(
                             .padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        ProfileDetailRow(label = "Specialty", value = uiState.specialty.ifBlank { "Obstetrics" })
+                        ProfileDetailRow(label = "Specialty", value = uiState.specialty.sanitizeDoctorText().ifBlank { "Obstetrics" })
                         ProfileDivider()
-                        ProfileDetailRow(label = "Medical License", value = uiState.licenseId.ifBlank { "Not provided" })
+                        ProfileDetailRow(label = "Medical License", value = uiState.licenseId.sanitizeDoctorText().ifBlank { "Not provided" })
                         ProfileDivider()
-                        ProfileDetailRow(label = "Clinic / Hospital", value = uiState.clinic.ifBlank { "Willow Maternity Clinic" })
+                        ProfileDetailRow(label = "Clinic / Hospital", value = uiState.clinic.sanitizeDoctorText().ifBlank { "Willow Maternity Clinic" })
                         ProfileDivider()
-                        ProfileDetailRow(label = "Gender", value = uiState.gender.ifBlank { "Not specified" })
+                        ProfileDetailRow(label = "Gender", value = uiState.gender.sanitizeDoctorText().ifBlank { "Not specified" })
                         ProfileDivider()
-                        ProfileDetailRow(label = "Phone Number", value = uiState.phone.ifBlank { "Not specified" })
+                        ProfileDetailRow(label = "Phone Number", value = uiState.phone.sanitizeDoctorText().ifBlank { "Not specified" })
                         ProfileDivider()
-                        ProfileDetailRow(label = "Clinic Address", value = uiState.address.ifBlank { "Not specified" })
+                        ProfileDetailRow(label = "Clinic Address", value = uiState.address.sanitizeDoctorText().ifBlank { "Not specified" })
                         ProfileDivider()
-                        ProfileDetailRow(label = "Qualification", value = uiState.qualification.ifBlank { "Not specified" })
+                        ProfileDetailRow(label = "Qualification", value = uiState.qualification.sanitizeDoctorText().ifBlank { "Not specified" })
                         ProfileDivider()
                         ProfileDetailRow(
                             label = "Experience",
@@ -685,21 +688,21 @@ private fun DoctorProfileHeader(
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = fullName.ifBlank { "Dr Amelia Chen" },
+                    text = fullName.sanitizeDoctorText().ifBlank { "Dr Amelia Chen" },
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = MomoraPurpleDark
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = specialty.ifBlank { "Obstetrics" },
+                    text = specialty.sanitizeDoctorText().ifBlank { "Obstetrics" },
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
                     color = MomoraPurplePrimary
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = clinic.ifBlank { "Willow Maternity Clinic" },
+                    text = clinic.sanitizeDoctorText().ifBlank { "Willow Maternity Clinic" },
                     fontSize = 11.5.sp,
                     color = MomoraBodyMuted
                 )

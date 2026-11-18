@@ -47,6 +47,9 @@ import com.example.SIMATS.data.model.PatientMedicationItem
 import com.example.SIMATS.data.model.PatientReportItem
 import com.example.SIMATS.data.model.PatientVisitItem
 import com.example.SIMATS.navigation.SelectedPatientHolder
+import com.example.SIMATS.ui.components.formatDoctorTime
+import com.example.SIMATS.ui.components.formatErrorMessage
+import com.example.SIMATS.ui.components.sanitizeDoctorText
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraMintBadgeBg
 import com.example.SIMATS.ui.theme.MomoraMintBadgeText
@@ -225,7 +228,7 @@ fun PatientHistoryScreenContent(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = uiState.errorMessage ?: "Failed to load patient history",
+                            text = formatErrorMessage(uiState.errorMessage ?: "Failed to load patient history"),
                             fontSize = 14.sp,
                             color = Color(0xFFA94442),
                             textAlign = TextAlign.Center
@@ -302,14 +305,14 @@ fun PatientHistoryScreenContent(
 
                         Column {
                             Text(
-                                text = resolvedPatientName,
+                                text = resolvedPatientName.sanitizeDoctorText(),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MomoraPurpleDark
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "${data?.gestationalAge ?: "24w 3d"} · ${data?.dueDateText ?: "Due 13 Feb 2027"}",
+                                text = "${(data?.gestationalAge ?: "24w 3d").sanitizeDoctorText()} · ${(data?.dueDateText ?: "Due 13 Feb 2027").sanitizeDoctorText()}",
                                 fontSize = 11.5.sp,
                                 color = MomoraBodyMuted
                             )
@@ -317,7 +320,7 @@ fun PatientHistoryScreenContent(
                     }
 
                     Text(
-                        text = data?.patientIdText ?: "P-13042",
+                        text = (data?.patientIdText ?: "P-13042").sanitizeDoctorText(),
                         fontSize = 11.5.sp,
                         fontWeight = FontWeight.Bold,
                         color = MomoraPurplePrimary
@@ -387,7 +390,7 @@ fun PatientHistoryScreenContent(
                             Spacer(modifier = Modifier.height(6.dp))
 
                             Text(
-                                text = data?.clinicalBackgroundText ?: "No clinical background notes recorded.",
+                                text = (data?.clinicalBackgroundText ?: "No clinical background notes recorded.").sanitizeDoctorText(),
                                 fontSize = 11.5.sp,
                                 lineHeight = 16.sp,
                                 color = Color(0xFF4A3F50)
@@ -396,7 +399,7 @@ fun PatientHistoryScreenContent(
                             if (!data?.patientConfirmedDateText.isNullOrBlank()) {
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
-                                    text = data.patientConfirmedDateText,
+                                    text = data.patientConfirmedDateText.sanitizeDoctorText(),
                                     fontSize = 11.sp,
                                     color = MomoraBodyMuted
                                 )
@@ -522,14 +525,14 @@ fun PatientHistoryScreenContent(
 
                                 Column {
                                     Text(
-                                        text = data?.recentCareRecordTitle ?: "Complete blood count",
+                                        text = (data?.recentCareRecordTitle ?: "Complete blood count").sanitizeDoctorText(),
                                         fontSize = 13.5.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = MomoraPurpleDark
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
                                     Text(
-                                        text = data?.recentCareRecordDetails ?: "Reports and clinical notes",
+                                        text = (data?.recentCareRecordDetails ?: "Reports and clinical notes").sanitizeDoctorText(),
                                         fontSize = 11.5.sp,
                                         color = MomoraBodyMuted
                                     )
@@ -659,14 +662,14 @@ fun PatientHistoryScreenContent(
 
                                             Column {
                                                 Text(
-                                                    text = report.title,
+                                                    text = report.title.sanitizeDoctorText(),
                                                     fontSize = 13.5.sp,
                                                     fontWeight = FontWeight.Bold,
                                                     color = MomoraPurpleDark
                                                 )
                                                 Spacer(modifier = Modifier.height(2.dp))
                                                 Text(
-                                                    text = "${report.category ?: "Medical report"} · ${report.reportDate ?: "Recent"}",
+                                                    text = "${(report.category ?: "Medical report").sanitizeDoctorText()} · ${(report.reportDate ?: "Recent").sanitizeDoctorText()}",
                                                     fontSize = 11.5.sp,
                                                     color = MomoraBodyMuted
                                                 )
@@ -681,7 +684,7 @@ fun PatientHistoryScreenContent(
                                                     .padding(horizontal = 8.dp, vertical = 3.dp)
                                             ) {
                                                 Text(
-                                                    text = report.size,
+                                                    text = report.size.sanitizeDoctorText(),
                                                     fontSize = 11.sp,
                                                     fontWeight = FontWeight.Medium,
                                                     color = MomoraPurplePrimary
@@ -779,11 +782,12 @@ fun PatientHistoryScreenContent(
                                                 Spacer(modifier = Modifier.width(12.dp))
 
                                                 Column {
+                                                    val formattedVisitTime = visit.time.formatDoctorTime()
                                                     val dateTimeStr = buildString {
-                                                        append(visit.date ?: "Date TBD")
-                                                        if (!visit.time.isNullOrBlank()) {
+                                                        append((visit.date ?: "Date TBD").sanitizeDoctorText())
+                                                        if (formattedVisitTime.isNotBlank()) {
                                                             append(" · ")
-                                                            append(visit.time)
+                                                            append(formattedVisitTime)
                                                         }
                                                     }
                                                     Text(
@@ -818,7 +822,7 @@ fun PatientHistoryScreenContent(
                                         if (!visit.notes.isNullOrBlank()) {
                                             Spacer(modifier = Modifier.height(8.dp))
                                             Text(
-                                                text = visit.notes,
+                                                text = visit.notes.sanitizeDoctorText(),
                                                 fontSize = 11.5.sp,
                                                 lineHeight = 15.sp,
                                                 color = Color(0xFF4A3F50)
@@ -911,7 +915,7 @@ private fun MedicationDetailsBottomSheet(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = medication.name,
+                            text = medication.name.sanitizeDoctorText(),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = MomoraPurpleText,
@@ -945,7 +949,7 @@ private fun MedicationDetailsBottomSheet(
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = medication.dosageDetails,
+                        text = medication.dosageDetails.sanitizeDoctorText(),
                         fontSize = 13.5.sp,
                         fontWeight = FontWeight.Medium,
                         color = MomoraPurpleDark
@@ -1027,14 +1031,14 @@ private fun MedicationRow(
 
             Column {
                 Text(
-                    text = item.name,
+                    text = item.name.sanitizeDoctorText(),
                     fontSize = 13.5.sp,
                     fontWeight = FontWeight.Bold,
                     color = MomoraPurpleText
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = item.dosageDetails,
+                    text = item.dosageDetails.sanitizeDoctorText(),
                     fontSize = 11.5.sp,
                     color = MomoraBodyMuted
                 )

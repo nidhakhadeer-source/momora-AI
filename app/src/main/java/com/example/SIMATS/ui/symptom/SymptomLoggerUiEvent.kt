@@ -12,4 +12,5 @@ sealed interface SymptomLoggerUiEvent {
     data object OnSaveSymptomClicked : SymptomLoggerUiEvent
     data object OnBackClicked : SymptomLoggerUiEvent
     data object OnNotificationClicked : SymptomLoggerUiEvent
+    data object OnRetryClicked : SymptomLoggerUiEvent
 }

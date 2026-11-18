@@ -9,4 +9,5 @@ sealed interface BabyDevelopmentUiEvent {
     data object OnBackClicked : BabyDevelopmentUiEvent
     data object OnNotificationClicked : BabyDevelopmentUiEvent
     data class OnHighlightClicked(val highlightId: Int) : BabyDevelopmentUiEvent
+    data object OnRetryClicked : BabyDevelopmentUiEvent
 }

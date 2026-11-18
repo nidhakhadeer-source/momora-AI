@@ -1,4 +1,4 @@
-﻿package com.example.SIMATS.data.remote
+package com.example.SIMATS.data.remote
 
 import com.example.SIMATS.data.local.SessionManager
 import okhttp3.Interceptor
@@ -26,7 +26,21 @@ object RetrofitClient {
         builder.addHeader("ngrok-skip-browser-warning", "true")
 
         val newRequest = builder.build()
-        val response = chain.proceed(newRequest)
+        val response = try {
+            chain.proceed(newRequest)
+        } catch (e: Exception) {
+            if (e is java.net.SocketTimeoutException ||
+                e is java.io.InterruptedIOException ||
+                e is java.net.ConnectException ||
+                e is java.net.UnknownHostException ||
+                e.message?.contains("timeout", ignoreCase = true) == true ||
+                e.message?.contains("timed out", ignoreCase = true) == true ||
+                e.message?.contains("connection", ignoreCase = true) == true
+            ) {
+                throw java.io.IOException("Check your connection", e)
+            }
+            throw e
+        }
 
         val path = original.url().encodedPath()
         val isAuthEndpoint = path.contains("auth/login.php") || path.contains("auth/signup.php")

@@ -1,6 +1,7 @@
 package com.example.SIMATS.ui.doctoravailability
 
 sealed interface DoctorAvailabilityUiEvent {
+    data object OnScreenOpened : DoctorAvailabilityUiEvent
     data class OnDayToggled(val weekday: String, val isActive: Boolean) : DoctorAvailabilityUiEvent
     data class OnTimeChanged(val weekday: String, val startTime: String, val endTime: String) : DoctorAvailabilityUiEvent
     data class OnSlotMinutesChanged(val minutes: Int) : DoctorAvailabilityUiEvent

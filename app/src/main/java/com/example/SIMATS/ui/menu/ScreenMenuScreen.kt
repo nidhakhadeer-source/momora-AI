@@ -73,7 +73,8 @@ fun ScreenMenuScreen(
         MenuItemData("16", "Medication Reminders", "Daily routine & pill tracking", Screen.Medication),
         MenuItemData("17", "Appointment Booking", "Select doctor, date & time slot", Screen.AppointmentsCalendar),
         MenuItemData("18", "Medical Reports", "Upload and view lab/ultrasound files", Screen.MedicalReports),
-        MenuItemData("19", "Notifications & Alerts", "Reminders and care team updates", Screen.Notifications)
+        MenuItemData("19", "Notifications & Alerts", "Reminders and care team updates", Screen.Notifications),
+        MenuItemData("19b", "Doctor Advice", "View clinical guidance & care plans", Screen.PatientDoctorAdvice)
     )
 
     val doctorScreens = listOf(

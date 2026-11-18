@@ -59,6 +59,8 @@ import com.example.SIMATS.ui.nutrition.NutritionPlanScreen
 import com.example.SIMATS.ui.nutrition.NutritionPlanViewModel
 import com.example.SIMATS.ui.onboarding.OnboardingScreen
 import com.example.SIMATS.ui.onboarding.OnboardingViewModel
+import com.example.SIMATS.ui.patientadvice.PatientDoctorAdviceScreen
+import com.example.SIMATS.ui.patientadvice.PatientDoctorAdviceViewModel
 import com.example.SIMATS.ui.patienthealthmonitoring.PatientHealthMonitoringScreen
 import com.example.SIMATS.ui.patienthealthmonitoring.PatientHealthMonitoringViewModel
 import com.example.SIMATS.ui.patienthistory.PatientHistoryScreen
@@ -90,7 +92,8 @@ private val PatientScreens: Set<Screen> = setOf(
     Screen.Medication,
     Screen.AppointmentsCalendar,
     Screen.MedicalReports,
-    Screen.Notifications
+    Screen.Notifications,
+    Screen.PatientDoctorAdvice
 )
 
 private val DoctorScreens: Set<Screen> = setOf(
@@ -269,12 +272,13 @@ fun AppNavHost() {
                 onNutritionClick = { currentScreen = Screen.Nutrition },
                 onNotificationClick = { currentScreen = Screen.Notifications },
                 onViewAllDailyCareClick = { currentScreen = Screen.Medication },
+                onDoctorAdviceClick = { currentScreen = Screen.PatientDoctorAdvice },
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
                         1 -> currentScreen = Screen.Symptom
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.AppointmentsCalendar
+                        3 -> currentScreen = Screen.PatientDoctorAdvice
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -522,6 +526,31 @@ fun AppNavHost() {
                     }
                 }
             )
+        }
+        Screen.PatientDoctorAdvice -> {
+            if (SessionManager.getUserRole() == UserRole.DOCTOR) {
+                currentScreen = Screen.DoctorDashboard
+            } else {
+                val patientAdviceViewModel: PatientDoctorAdviceViewModel = viewModel()
+                PatientDoctorAdviceScreen(
+                    viewModel = patientAdviceViewModel,
+                    onNavigateBack = {
+                        currentScreen = Screen.Home
+                    },
+                    onNotificationClick = {
+                        currentScreen = Screen.Notifications
+                    },
+                    onNavTabSelected = { index ->
+                        when (index) {
+                            0 -> currentScreen = Screen.Home
+                            1 -> currentScreen = Screen.Symptom
+                            2 -> currentScreen = Screen.AiChat
+                            3 -> currentScreen = Screen.PatientDoctorAdvice
+                            4 -> currentScreen = Screen.Profile
+                        }
+                    }
+                )
+            }
         }
         Screen.DoctorNotifications -> {
             val notificationsViewModel: NotificationsViewModel = viewModel()

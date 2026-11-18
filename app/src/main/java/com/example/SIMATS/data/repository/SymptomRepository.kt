@@ -6,40 +6,32 @@ import com.example.SIMATS.data.model.SymptomSeverity
 import com.example.SIMATS.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import retrofit2.HttpException
 
 interface SymptomRepository {
-    fun getSymptomEntryData(): Flow<SymptomEntryData>
+    fun getSymptomEntryData(): Flow<Result<SymptomEntryData>>
     fun saveSymptom(data: SymptomEntryData): Flow<Result<Boolean>>
 }
 
 class SymptomRepositoryImpl : SymptomRepository {
     private val apiService = RetrofitClient.apiService
 
-    override fun getSymptomEntryData(): Flow<SymptomEntryData> = flow {
+    override fun getSymptomEntryData(): Flow<Result<SymptomEntryData>> = flow {
         try {
             val response = apiService.getSymptomData(SessionManager.getUserId())
             if (response.success && response.data != null) {
-                emit(response.data)
-                return@flow
+                emit(Result.success(response.data))
+            } else {
+                emit(Result.failure(Exception(response.message ?: "Failed to load symptom data")))
             }
-        } catch (_: Exception) {}
-
-        emit(
-            SymptomEntryData(
-                symptomName = "Heartburn after meals",
-                severity = SymptomSeverity.MILD,
-                startedText = "29 Oct, 13:00",
-                durationText = "About 20 min",
-                aiGuidanceText = "Smaller meals and sitting upright after eating may help. Speak with your maternity team if it persists, worsens, or worries you.",
-                availableSymptoms = listOf(
-                    "Heartburn after meals",
-                    "Morning sickness / Nausea",
-                    "Lower back tension",
-                    "Mild fatigue",
-                    "Swollen ankles"
-                )
-            )
-        )
+        } catch (e: Exception) {
+            if (e is HttpException && e.code() == 401) {
+                SessionManager.notifySessionExpired()
+                emit(Result.failure(Exception("Session expired. Please log in again.")))
+            } else {
+                emit(Result.failure(Exception(e.localizedMessage ?: "Check your connection")))
+            }
+        }
     }
 
     override fun saveSymptom(data: SymptomEntryData): Flow<Result<Boolean>> = flow {

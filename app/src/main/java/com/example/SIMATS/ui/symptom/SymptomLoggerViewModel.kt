@@ -45,6 +45,9 @@ class SymptomLoggerViewModel(
             is SymptomLoggerUiEvent.OnNavTabSelected -> {
                 _uiState.value = _uiState.value.copy(selectedNavIndex = event.index)
             }
+            SymptomLoggerUiEvent.OnRetryClicked -> {
+                loadSymptomData()
+            }
             SymptomLoggerUiEvent.OnSaveSymptomClicked -> {
                 saveSymptom()
             }
@@ -54,15 +57,25 @@ class SymptomLoggerViewModel(
     }
 
     private fun loadSymptomData() {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getSymptomEntryData().collect { data ->
-                _uiState.value = _uiState.value.copy(
-                    entryData = data,
-                    selectedSymptom = data.symptomName,
-                    selectedSeverity = data.severity,
-                    startedText = data.startedText,
-                    durationText = data.durationText
-                )
+            repository.getSymptomEntryData().collect { result ->
+                result.onSuccess { data ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        entryData = data,
+                        selectedSymptom = data.symptomName,
+                        selectedSeverity = data.severity,
+                        startedText = data.startedText,
+                        durationText = data.durationText,
+                        errorMessage = null
+                    )
+                }.onFailure { err ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = err.message ?: "Failed to load symptom data"
+                    )
+                }
             }
         }
     }

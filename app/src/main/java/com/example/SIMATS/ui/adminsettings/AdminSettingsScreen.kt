@@ -41,6 +41,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.SIMATS.ui.components.formatErrorMessage
 import com.example.SIMATS.data.model.AdminSettingsData
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraFooterText
@@ -228,7 +229,7 @@ fun AdminSettingsScreenContent(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = uiState.errorMessage ?: "Failed to load admin settings",
+                            text = formatErrorMessage(uiState.errorMessage ?: "Failed to load admin settings"),
                             fontSize = 14.sp,
                             color = Color(0xFFA94442),
                             textAlign = TextAlign.Center

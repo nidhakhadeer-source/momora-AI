@@ -47,6 +47,8 @@ import androidx.compose.ui.unit.sp
 import com.example.SIMATS.data.model.ChatMessage
 import com.example.SIMATS.data.model.MessageSender
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
+import androidx.compose.material3.CircularProgressIndicator
+import com.example.SIMATS.ui.components.formatErrorMessage
 import com.example.SIMATS.ui.theme.MomoraFooterText
 import com.example.SIMATS.ui.theme.MomoraPinkCircleBg
 import com.example.SIMATS.ui.theme.MomoraPurpleDark
@@ -66,6 +68,7 @@ fun AiChatScreen(
     AiChatScreenContent(
         modifier = modifier,
         uiState = uiState,
+        onRetryClick = { viewModel.onEvent(AiChatUiEvent.OnRetryClicked) },
         onInputQueryChanged = { q -> viewModel.onEvent(AiChatUiEvent.OnInputQueryChanged(q)) },
         onSendMessageClick = { viewModel.onEvent(AiChatUiEvent.OnSendMessageClicked) },
         onSuggestionClick = { s -> viewModel.onEvent(AiChatUiEvent.OnSuggestionClicked(s)) },
@@ -106,6 +109,7 @@ fun AiChatScreenContent(
             )
         )
     ),
+    onRetryClick: () -> Unit = {},
     onInputQueryChanged: (String) -> Unit = {},
     onSendMessageClick: () -> Unit = {},
     onSuggestionClick: (String) -> Unit = {},
@@ -182,28 +186,162 @@ fun AiChatScreenContent(
                 color = MomoraBodyMuted
             )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Date Divider
-            Text(
-                text = "TODAY · 27 OCT 2026",
-                fontSize = 10.5.sp,
-                fontWeight = FontWeight.Bold,
-                color = MomoraFooterText,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Chat Messages Stream
-            uiState.messages.forEach { msg ->
-                if (msg.sender == MessageSender.USER) {
-                    UserChatBubble(msg = msg)
-                } else {
-                    AiChatCard(msg = msg)
+            // Error banner if any
+            if (uiState.errorMessage != null && uiState.messages.isNotEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFFFEBEE))
+                        .border(1.dp, Color(0xFFFFCDD2), RoundedCornerShape(12.dp))
+                        .padding(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = formatErrorMessage(uiState.errorMessage),
+                            fontSize = 12.sp,
+                            color = Color(0xFFC62828),
+                            modifier = Modifier.weight(1f)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Retry",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurplePrimary,
+                            modifier = Modifier.clickable { onRetryClick() }
+                        )
+                    }
                 }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            // Message List or Loading/Error/Empty States
+            if (uiState.isLoading && uiState.messages.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 48.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = MomoraPurplePrimary)
+                }
+            } else if (uiState.errorMessage != null && uiState.messages.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFF2DEDE), RoundedCornerShape(16.dp))
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = formatErrorMessage(uiState.errorMessage),
+                            fontSize = 14.sp,
+                            color = Color(0xFFA94442),
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(MomoraPurplePrimary)
+                                .clickable { onRetryClick() }
+                                .padding(horizontal = 20.dp, vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Retry",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+            } else if (uiState.messages.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "No messages yet",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurpleDark
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = "Ask Momora AI any question about your pregnancy, nutrition, or comfort.",
+                            fontSize = 12.5.sp,
+                            color = MomoraBodyMuted,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            } else {
+                // Date Divider
+                Text(
+                    text = "TODAY · 27 OCT 2026",
+                    fontSize = 10.5.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MomoraFooterText,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
                 Spacer(modifier = Modifier.height(14.dp))
+
+                uiState.messages.forEach { msg ->
+                    if (msg.sender == MessageSender.USER) {
+                        UserChatBubble(msg = msg)
+                    } else {
+                        AiChatCard(msg = msg)
+                    }
+                    Spacer(modifier = Modifier.height(14.dp))
+                }
+            }
+
+            // Typing indicator when waiting for AI response
+            if (uiState.isLoading && uiState.messages.isNotEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            color = MomoraPurplePrimary,
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = "Momora AI is thinking...",
+                            fontSize = 12.sp,
+                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                            color = MomoraBodyMuted
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(10.dp))
             }
 
             // Quick Suggestions Chips Row

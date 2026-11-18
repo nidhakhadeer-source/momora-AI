@@ -47,6 +47,7 @@ import com.example.SIMATS.ui.theme.MomoraIconBtnBg
 import com.example.SIMATS.ui.theme.MomoraMintBadgeBg
 import com.example.SIMATS.ui.theme.MomoraMintBadgeText
 import com.example.SIMATS.ui.theme.MomoraPinkCircleBg
+import com.example.SIMATS.ui.components.formatErrorMessage
 import androidx.compose.material3.CircularProgressIndicator
 import com.example.SIMATS.ui.theme.MomoraPurpleDark
 import com.example.SIMATS.ui.theme.MomoraPurplePrimary
@@ -186,7 +187,7 @@ fun AdminDashboardScreenContent(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = uiState.errorMessage ?: "Failed to load admin dashboard",
+                            text = formatErrorMessage(uiState.errorMessage ?: "Failed to load admin dashboard"),
                             fontSize = 14.sp,
                             color = Color(0xFFA94442),
                             textAlign = TextAlign.Center
@@ -210,6 +211,38 @@ fun AdminDashboardScreenContent(
                     }
                 }
             } else {
+            if (uiState.errorMessage != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFFFEBEE))
+                        .border(1.dp, Color(0xFFFFCDD2), RoundedCornerShape(12.dp))
+                        .padding(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = formatErrorMessage(uiState.errorMessage),
+                            fontSize = 12.sp,
+                            color = Color(0xFFC62828),
+                            modifier = Modifier.weight(1f)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Retry",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurplePrimary,
+                            modifier = Modifier.clickable { onRetryClick() }
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
             Text(
                 text = "Care, well organized",
                 fontSize = 26.sp,

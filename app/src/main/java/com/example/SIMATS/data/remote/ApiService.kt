@@ -21,6 +21,7 @@ import com.example.SIMATS.data.model.MedicationReminderData
 import com.example.SIMATS.data.model.NotificationItem
 import com.example.SIMATS.data.model.NutritionPlanData
 import com.example.SIMATS.data.model.PatientAccountItem
+import com.example.SIMATS.data.model.PatientAdviceItem
 import com.example.SIMATS.data.model.PatientDashboardData
 import com.example.SIMATS.data.model.PatientHealthMonitoringData
 import com.example.SIMATS.data.model.PatientMedicalHistoryData
@@ -287,6 +288,9 @@ interface ApiService {
         @Field("newDate") newDate: String,
         @Field("newTime") newTime: String
     ): BaseResponse
+
+    @GET("patient/advice_fetch.php")
+    suspend fun getPatientAdvice(): DataResponse<List<PatientAdviceItem>>
 
     @GET("doctor/availability.php")
     suspend fun getDoctorAvailability(): DataResponse<DoctorAvailabilityResponseData>

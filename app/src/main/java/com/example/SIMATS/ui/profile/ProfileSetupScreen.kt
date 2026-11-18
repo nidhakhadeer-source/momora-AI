@@ -58,6 +58,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.SIMATS.ui.components.formatErrorMessage
 import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.PatientProfileData
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
@@ -240,7 +241,7 @@ fun ProfileSetupScreenContent(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = uiState.errorMessage ?: "Please check your network and try again.",
+                        text = formatErrorMessage(uiState.errorMessage ?: "Please check your network and try again."),
                         fontSize = 13.sp,
                         color = Color(0xFFD32F2F),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -361,7 +362,7 @@ fun ProfileSetupScreenContent(
                         .padding(horizontal = 14.dp, vertical = 10.dp)
                 ) {
                     Text(
-                        text = uiState.errorMessage,
+                        text = formatErrorMessage(uiState.errorMessage),
                         fontSize = 12.5.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFFC81E1E)

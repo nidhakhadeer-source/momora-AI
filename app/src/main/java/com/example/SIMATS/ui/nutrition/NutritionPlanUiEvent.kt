@@ -6,4 +6,5 @@ sealed interface NutritionPlanUiEvent {
     data class OnPriorityClicked(val priorityId: Int) : NutritionPlanUiEvent
     data object OnBackClicked : NutritionPlanUiEvent
     data object OnNotificationClicked : NutritionPlanUiEvent
+    data object OnRetryClicked : NutritionPlanUiEvent
 }

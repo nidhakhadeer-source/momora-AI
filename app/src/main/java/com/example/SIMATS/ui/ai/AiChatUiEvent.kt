@@ -7,4 +7,5 @@ sealed interface AiChatUiEvent {
     data class OnNavTabSelected(val index: Int) : AiChatUiEvent
     data object OnBackClicked : AiChatUiEvent
     data object OnNotificationClicked : AiChatUiEvent
+    data object OnRetryClicked : AiChatUiEvent
 }

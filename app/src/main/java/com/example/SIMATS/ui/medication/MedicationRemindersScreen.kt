@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.SIMATS.ui.components.formatErrorMessage
 import com.example.SIMATS.data.model.MedicationItem
 import com.example.SIMATS.data.model.MedicationReminderData
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
@@ -191,7 +192,7 @@ fun MedicationRemindersScreenContent(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = uiState.errorMessage ?: "Please check your network and try again.",
+                        text = formatErrorMessage(uiState.errorMessage ?: "Please check your network and try again."),
                         fontSize = 13.sp,
                         color = Color(0xFFD32F2F),
                         textAlign = TextAlign.Center

@@ -7,6 +7,7 @@ import com.example.SIMATS.data.model.DoctorProfileData
 import com.example.SIMATS.data.repository.DoctorProfileRepository
 import com.example.SIMATS.data.repository.DoctorProfileRepositoryImpl
 import com.example.SIMATS.navigation.SelectedPatientHolder
+import com.example.SIMATS.ui.components.sanitizeDoctorText
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -111,15 +112,15 @@ class DoctorProfileViewModel(
 
     private fun populateFromProfile(profile: DoctorProfileData) {
         _uiState.value = _uiState.value.copy(
-            fullName = profile.fullName.ifBlank { SessionManager.getUserName() },
+            fullName = profile.fullName.ifBlank { SessionManager.getUserName() }.sanitizeDoctorText(),
             email = profile.email.ifBlank { SessionManager.getUserEmail() },
-            specialty = profile.specialty,
-            licenseId = profile.licenseId,
-            clinic = profile.clinic,
+            specialty = profile.specialty.sanitizeDoctorText(),
+            licenseId = profile.licenseId.sanitizeDoctorText(),
+            clinic = profile.clinic.sanitizeDoctorText(),
             gender = profile.gender ?: "",
             phone = profile.phone ?: "",
-            address = profile.address ?: "",
-            qualification = profile.qualification ?: "",
+            address = (profile.address ?: "").sanitizeDoctorText(),
+            qualification = (profile.qualification ?: "").sanitizeDoctorText(),
             experienceYears = profile.experienceYears?.toString() ?: "",
             photoUrl = profile.photoUrl
         )

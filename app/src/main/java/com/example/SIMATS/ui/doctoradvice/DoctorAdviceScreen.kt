@@ -46,9 +46,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.SIMATS.ui.components.formatErrorMessage
 import com.example.SIMATS.data.model.DoctorAdviceData
 import com.example.SIMATS.data.model.DoctorAdviceSymptomItem
 import com.example.SIMATS.navigation.SelectedPatientHolder
+import com.example.SIMATS.ui.components.formatDoctorTime
+import com.example.SIMATS.ui.components.sanitizeDoctorText
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraPinkCircleBg
 import com.example.SIMATS.ui.theme.MomoraPurpleDark
@@ -213,7 +216,7 @@ fun DoctorAdviceScreenContent(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = uiState.errorMessage ?: "Failed to load advice details",
+                            text = formatErrorMessage(uiState.errorMessage ?: "Failed to load advice details"),
                             fontSize = 14.sp,
                             color = Color(0xFFA94442),
                             textAlign = TextAlign.Center
@@ -290,14 +293,14 @@ fun DoctorAdviceScreenContent(
 
                         Column {
                             Text(
-                                text = resolvedPatientName,
+                                text = resolvedPatientName.sanitizeDoctorText(),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MomoraPurpleDark
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "${data?.gestationalAge ?: "24w 3d"} · ${data?.dueDateText ?: "Due 13 Feb 2027"}",
+                                text = "${(data?.gestationalAge ?: "24w 3d").sanitizeDoctorText()} · ${(data?.dueDateText ?: "Due 13 Feb 2027").sanitizeDoctorText()}",
                                 fontSize = 11.5.sp,
                                 color = MomoraBodyMuted
                             )
@@ -305,7 +308,7 @@ fun DoctorAdviceScreenContent(
                     }
 
                     Text(
-                        text = data?.patientIdText ?: "P-13042",
+                        text = (data?.patientIdText ?: "P-13042").sanitizeDoctorText(),
                         fontSize = 11.5.sp,
                         fontWeight = FontWeight.Bold,
                         color = MomoraPurplePrimary
@@ -331,7 +334,7 @@ fun DoctorAdviceScreenContent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = data?.patientMessageTimeText ?: "PATIENT MESSAGE · 27 OCT, 08:35",
+                            text = (data?.patientMessageTimeText ?: "PATIENT MESSAGE · 27 OCT, 08:35").sanitizeDoctorText(),
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             color = MomoraBodyMuted,
@@ -349,7 +352,7 @@ fun DoctorAdviceScreenContent(
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
-                        text = data?.patientMessageQuote ?: "\"I've had mild heartburn after lunch. What can I try?\"",
+                        text = (data?.patientMessageQuote ?: "\"I've had mild heartburn after lunch. What can I try?\"").sanitizeDoctorText(),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
                         color = MomoraPurpleDark
@@ -499,7 +502,7 @@ fun DoctorAdviceScreenContent(
             if (uiState.errorMessage != null && data != null) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = uiState.errorMessage ?: "Failed to send advice",
+                    text = formatErrorMessage(uiState.errorMessage ?: "Failed to send advice"),
                     fontSize = 12.sp,
                     color = Color(0xFFA94442),
                     textAlign = TextAlign.Center,
@@ -898,8 +901,9 @@ private fun TimelineSymptomCard(item: DoctorAdviceSymptomItem) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val rawTime = item.timestampFormatted.takeIf { it.isNotBlank() } ?: item.createdAt
                 Text(
-                    text = item.timestampFormatted.takeIf { it.isNotBlank() } ?: item.createdAt,
+                    text = rawTime.sanitizeDoctorText(),
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = MomoraBodyMuted
@@ -923,7 +927,7 @@ private fun TimelineSymptomCard(item: DoctorAdviceSymptomItem) {
             Spacer(modifier = Modifier.height(6.dp))
 
             Text(
-                text = item.symptomName,
+                text = item.symptomName.sanitizeDoctorText(),
                 fontSize = 14.5.sp,
                 fontWeight = FontWeight.Bold,
                 color = MomoraPurpleDark
@@ -932,8 +936,8 @@ private fun TimelineSymptomCard(item: DoctorAdviceSymptomItem) {
             Spacer(modifier = Modifier.height(4.dp))
 
             val details = buildList {
-                if (item.startedText.isNotBlank()) add("Started: ${item.startedText}")
-                if (item.durationText.isNotBlank()) add("Duration: ${item.durationText}")
+                if (item.startedText.isNotBlank()) add("Started: ${item.startedText.sanitizeDoctorText()}")
+                if (item.durationText.isNotBlank()) add("Duration: ${item.durationText.sanitizeDoctorText()}")
             }.joinToString(" · ")
 
             if (details.isNotBlank()) {
@@ -954,7 +958,7 @@ private fun TimelineSymptomCard(item: DoctorAdviceSymptomItem) {
                         .padding(8.dp)
                 ) {
                     Text(
-                        text = "AI Guidance: ${item.aiGuidance}",
+                        text = "AI Guidance: ${item.aiGuidance.sanitizeDoctorText()}",
                         fontSize = 11.sp,
                         lineHeight = 14.sp,
                         color = MomoraPurpleDark

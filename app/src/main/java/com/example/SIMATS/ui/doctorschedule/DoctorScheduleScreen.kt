@@ -47,10 +47,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.SIMATS.ui.components.formatErrorMessage
 import com.example.SIMATS.data.model.DoctorCompactAppointment
 import com.example.SIMATS.data.model.DoctorMainAppointment
 import com.example.SIMATS.data.model.DoctorScheduleData
 import com.example.SIMATS.navigation.SelectedPatientHolder
+import com.example.SIMATS.ui.components.formatDoctorTime
+import com.example.SIMATS.ui.components.sanitizeDoctorText
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraMintBadgeBg
 import com.example.SIMATS.ui.theme.MomoraMintBadgeText
@@ -344,7 +347,7 @@ fun DoctorScheduleScreenContent(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = uiState.errorMessage ?: "Failed to load schedule",
+                            text = formatErrorMessage(uiState.errorMessage ?: "Failed to load schedule"),
                             fontSize = 14.sp,
                             color = Color(0xFFA94442),
                             textAlign = TextAlign.Center
@@ -378,7 +381,7 @@ fun DoctorScheduleScreenContent(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "${data?.doctorName?.takeIf { it.isNotBlank() } ?: "Dr Amelia Chen"} · Clinic local time",
+                    text = "${(data?.doctorName?.takeIf { it.isNotBlank() } ?: "Dr Amelia Chen").sanitizeDoctorText()} · Clinic local time",
                     fontSize = 13.sp,
                     color = MomoraBodyMuted
                 )
@@ -478,7 +481,7 @@ fun DoctorScheduleScreenContent(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = uiState.errorMessage ?: "An error occurred",
+                                text = formatErrorMessage(uiState.errorMessage ?: "An error occurred"),
                                 fontSize = 12.sp,
                                 color = Color(0xFFA94442),
                                 modifier = Modifier.weight(1f)
@@ -504,7 +507,7 @@ fun DoctorScheduleScreenContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = data?.dateText?.takeIf { it.isNotBlank() } ?: "Thursday, 29 Oct 2026",
+                        text = (data?.dateText?.takeIf { it.isNotBlank() } ?: "Thursday, 29 Oct 2026").sanitizeDoctorText(),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
                         color = MomoraPurpleDark
@@ -571,7 +574,7 @@ fun DoctorScheduleScreenContent(
                             Spacer(modifier = Modifier.height(4.dp))
 
                             Text(
-                                text = "There are no visits booked for ${data?.dateText ?: "this date"}.",
+                                text = "There are no visits booked for ${(data?.dateText ?: "this date").sanitizeDoctorText()}.",
                                 fontSize = 12.5.sp,
                                 color = MomoraBodyMuted,
                                 textAlign = TextAlign.Center
@@ -623,13 +626,13 @@ fun DoctorScheduleScreenContent(
                                 ) {
                                     Column {
                                         Text(
-                                            text = nextAppt.patientName,
+                                            text = nextAppt.patientName.sanitizeDoctorText(),
                                             fontSize = 14.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = MomoraPurpleDark
                                         )
                                         Text(
-                                            text = "${nextAppt.timeRange} · ${nextAppt.patientSubtitle}",
+                                            text = "${nextAppt.timeRange.formatDoctorTime()} · ${nextAppt.patientSubtitle.sanitizeDoctorText()}",
                                             fontSize = 11.5.sp,
                                             color = MomoraBodyMuted
                                         )
@@ -669,7 +672,7 @@ fun DoctorScheduleScreenContent(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = mainAppt?.timeRange ?: "10:30–11:00",
+                                    text = (mainAppt?.timeRange ?: "10:30–11:00").formatDoctorTime(),
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = MomoraPurpleDark
@@ -715,15 +718,15 @@ fun DoctorScheduleScreenContent(
 
                                     Column {
                                         Text(
-                                            text = mainPatientName,
+                                            text = mainPatientName.sanitizeDoctorText(),
                                             fontSize = 14.5.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = MomoraPurpleDark
                                         )
                                         Spacer(modifier = Modifier.height(2.dp))
                                         Text(
-                                            text = mainAppt?.patientSubtitle?.takeIf { it.isNotBlank() }
-                                                ?: "Routine consultation",
+                                            text = (mainAppt?.patientSubtitle?.takeIf { it.isNotBlank() }
+                                                ?: "Routine consultation").sanitizeDoctorText(),
                                             fontSize = 11.5.sp,
                                             color = MomoraBodyMuted
                                         )
@@ -741,8 +744,8 @@ fun DoctorScheduleScreenContent(
                             Spacer(modifier = Modifier.height(10.dp))
 
                             Text(
-                                text = mainAppt?.notesText?.takeIf { it.isNotBlank() }
-                                    ?: "Routine antenatal check · In person",
+                                text = (mainAppt?.notesText?.takeIf { it.isNotBlank() }
+                                    ?: "Routine antenatal check · In person").sanitizeDoctorText(),
                                 fontSize = 11.5.sp,
                                 lineHeight = 15.sp,
                                 color = Color(0xFF4A3F50)
@@ -825,8 +828,8 @@ fun DoctorScheduleScreenContent(
 
                 // Visits Summary Caption
                 Text(
-                    text = data?.visitsSummaryNote?.takeIf { it.isNotBlank() }
-                        ?: "Visits schedule for clinic local time.",
+                    text = (data?.visitsSummaryNote?.takeIf { it.isNotBlank() }
+                        ?: "Visits schedule for clinic local time.").sanitizeDoctorText(),
                     fontSize = 11.5.sp,
                     lineHeight = 15.sp,
                     color = MomoraBodyMuted
@@ -907,14 +910,14 @@ private fun DoctorCompactAppointmentCard(
 
                 Column {
                     Text(
-                        text = "${item.patientName} · ${item.timeText}",
+                        text = "${item.patientName.sanitizeDoctorText()} · ${item.timeText.formatDoctorTime()}",
                         fontSize = 13.5.sp,
                         fontWeight = FontWeight.Bold,
                         color = MomoraPurpleDark
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = item.visitTypeAndMode,
+                        text = item.visitTypeAndMode.sanitizeDoctorText(),
                         fontSize = 11.5.sp,
                         color = MomoraBodyMuted
                     )

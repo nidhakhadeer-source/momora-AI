@@ -47,6 +47,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.SIMATS.ui.components.formatErrorMessage
 import androidx.compose.ui.unit.sp
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraIconBtnBg
@@ -334,7 +335,7 @@ fun SignUpScreenContent(
 
             if (uiState.errorMessage != null) {
                 Text(
-                    text = uiState.errorMessage,
+                    text = formatErrorMessage(uiState.errorMessage),
                     fontSize = 12.sp,
                     color = Color.Red,
                     modifier = Modifier.padding(bottom = 8.dp)

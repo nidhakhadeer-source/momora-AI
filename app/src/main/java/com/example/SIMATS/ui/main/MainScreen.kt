@@ -46,6 +46,9 @@ import com.example.SIMATS.data.model.DoctorDashboardData
 import com.example.SIMATS.data.model.DoctorNextAppointment
 import com.example.SIMATS.data.model.DoctorReviewItem
 import com.example.SIMATS.navigation.SelectedPatientHolder
+import com.example.SIMATS.ui.components.formatDoctorTime
+import com.example.SIMATS.ui.components.formatErrorMessage
+import com.example.SIMATS.ui.components.sanitizeDoctorText
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraFooterText
 import com.example.SIMATS.ui.theme.MomoraIconBtnBg
@@ -271,7 +274,7 @@ fun MainScreenContent(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = uiState.errorMessage ?: "Failed to load doctor dashboard",
+                            text = formatErrorMessage(uiState.errorMessage ?: "Failed to load doctor dashboard"),
                             fontSize = 14.sp,
                             color = Color(0xFFA94442),
                             textAlign = TextAlign.Center
@@ -295,8 +298,40 @@ fun MainScreenContent(
                     }
                 }
             } else {
+                if (uiState.errorMessage != null && data != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFFFFEBEE))
+                            .border(1.dp, Color(0xFFFFCDD2), RoundedCornerShape(12.dp))
+                            .padding(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = formatErrorMessage(uiState.errorMessage),
+                                fontSize = 12.sp,
+                                color = Color(0xFFC62828),
+                                modifier = Modifier.weight(1f)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Retry",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MomoraPurplePrimary,
+                                modifier = Modifier.clickable { onRetryClick() }
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
                 Text(
-                    text = "Good morning, ${data?.doctorName ?: "Dr Chen"}",
+                    text = "Good morning, ${(data?.doctorName ?: "Dr Chen").sanitizeDoctorText()}",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = MomoraPurpleDark
@@ -305,7 +340,7 @@ fun MainScreenContent(
             Spacer(modifier = Modifier.height(2.dp))
 
             Text(
-                text = "${data?.dateText ?: "Tuesday, 27 Oct 2026"} · ${data?.clinicName ?: "Willow Maternity Clinic"}",
+                text = "${(data?.dateText ?: "Tuesday, 27 Oct 2026").sanitizeDoctorText()} · ${(data?.clinicName ?: "Willow Maternity Clinic").sanitizeDoctorText()}",
                 fontSize = 12.sp,
                 color = MomoraBodyMuted
             )
@@ -544,14 +579,14 @@ fun MainScreenContent(
 
                         Column {
                             Text(
-                                text = nextAppt?.patientName ?: "Nora Williams",
+                                text = (nextAppt?.patientName ?: "Nora Williams").sanitizeDoctorText(),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MomoraPurpleDark
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "${nextAppt?.timeText ?: "Today, 11:30"} · ${nextAppt?.visitType ?: "Routine antenatal"} · ${nextAppt?.mode ?: "Video"}",
+                                text = "${(nextAppt?.timeText ?: "Today, 11:30").sanitizeDoctorText()} · ${(nextAppt?.visitType ?: "Routine antenatal").sanitizeDoctorText()} · ${(nextAppt?.mode ?: "Video").sanitizeDoctorText()}",
                                 fontSize = 11.5.sp,
                                 color = MomoraBodyMuted
                             )
@@ -570,8 +605,9 @@ fun MainScreenContent(
             Spacer(modifier = Modifier.height(6.dp))
 
             val patientForNote = SelectedPatientHolder.selectedPatientName?.takeIf { it.isNotBlank() } ?: "Patient"
+            val rawFutureNote = nextAppt?.futureNote?.takeIf { it.isNotBlank() } ?: "$patientForNote's next visit · Scheduled"
             Text(
-                text = nextAppt?.futureNote?.takeIf { it.isNotBlank() } ?: "$patientForNote's next visit · Scheduled",
+                text = rawFutureNote.sanitizeDoctorText(),
                 fontSize = 11.5.sp,
                 color = MomoraBodyMuted
             )
@@ -658,14 +694,14 @@ private fun DoctorReviewRow(
 
             Column {
                 Text(
-                    text = item.patientName,
+                    text = item.patientName.sanitizeDoctorText(),
                     fontSize = 13.5.sp,
                     fontWeight = FontWeight.Bold,
                     color = MomoraPurpleText
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = "${item.gestationalAge} · ${item.reportType}",
+                    text = "${item.gestationalAge.sanitizeDoctorText()} · ${item.reportType.sanitizeDoctorText()}",
                     fontSize = 11.5.sp,
                     color = MomoraBodyMuted
                 )

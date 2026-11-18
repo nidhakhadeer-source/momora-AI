@@ -44,6 +44,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.SIMATS.ui.components.formatErrorMessage
 import com.example.SIMATS.data.model.HealthMonitoringData
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraFooterText
@@ -187,7 +188,7 @@ fun HealthReportScreenContent(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = uiState.errorMessage ?: "Please check your network and try again.",
+                        text = formatErrorMessage(uiState.errorMessage ?: "Please check your network and try again."),
                         fontSize = 13.sp,
                         color = Color(0xFFD32F2F),
                         textAlign = TextAlign.Center

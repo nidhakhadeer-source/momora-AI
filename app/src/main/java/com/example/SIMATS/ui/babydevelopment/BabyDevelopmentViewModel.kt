@@ -44,6 +44,9 @@ class BabyDevelopmentViewModel(
             is BabyDevelopmentUiEvent.OnNavTabSelected -> {
                 _uiState.value = _uiState.value.copy(selectedNavIndex = event.index)
             }
+            BabyDevelopmentUiEvent.OnRetryClicked -> {
+                loadData(_uiState.value.currentWeek)
+            }
             BabyDevelopmentUiEvent.OnTimelineClicked -> {}
             BabyDevelopmentUiEvent.OnBackClicked -> {}
             BabyDevelopmentUiEvent.OnNotificationClicked -> {}
@@ -52,9 +55,21 @@ class BabyDevelopmentViewModel(
     }
 
     private fun loadData(week: Int) {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getDevelopmentData(week).collect { data ->
-                _uiState.value = _uiState.value.copy(developmentData = data)
+            repository.getDevelopmentData(week).collect { result ->
+                result.onSuccess { data ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        developmentData = data,
+                        errorMessage = null
+                    )
+                }.onFailure { err ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = err.message ?: "Failed to load baby development data"
+                    )
+                }
             }
         }
     }

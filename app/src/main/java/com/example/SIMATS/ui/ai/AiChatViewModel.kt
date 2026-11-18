@@ -38,15 +38,30 @@ class AiChatViewModel(
             is AiChatUiEvent.OnNavTabSelected -> {
                 _uiState.value = _uiState.value.copy(selectedNavIndex = event.index)
             }
+            AiChatUiEvent.OnRetryClicked -> {
+                loadInitialMessages()
+            }
             AiChatUiEvent.OnBackClicked -> {}
             AiChatUiEvent.OnNotificationClicked -> {}
         }
     }
 
     private fun loadInitialMessages() {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getInitialChatMessages().collect { list ->
-                _uiState.value = _uiState.value.copy(messages = list)
+            repository.getInitialChatMessages().collect { result ->
+                result.onSuccess { list ->
+                    _uiState.value = _uiState.value.copy(
+                        messages = list,
+                        isLoading = false,
+                        errorMessage = null
+                    )
+                }.onFailure { err ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = err.message ?: "Failed to load chat history"
+                    )
+                }
             }
         }
     }
@@ -65,15 +80,24 @@ class AiChatViewModel(
         _uiState.value = _uiState.value.copy(
             messages = updatedList,
             inputQuery = "",
-            isLoading = true
+            isLoading = true,
+            errorMessage = null
         )
 
         viewModelScope.launch {
-            repository.sendMessage(queryText).collect { aiResponse ->
-                _uiState.value = _uiState.value.copy(
-                    messages = _uiState.value.messages + aiResponse,
-                    isLoading = false
-                )
+            repository.sendMessage(queryText).collect { result ->
+                result.onSuccess { aiResponse ->
+                    _uiState.value = _uiState.value.copy(
+                        messages = _uiState.value.messages + aiResponse,
+                        isLoading = false,
+                        errorMessage = null
+                    )
+                }.onFailure { err ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = err.message ?: "Failed to send message"
+                    )
+                }
             }
         }
     }

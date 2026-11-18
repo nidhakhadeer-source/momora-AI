@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.SIMATS.ui.components.formatErrorMessage
 import com.example.SIMATS.data.model.BloodPressureData
 import com.example.SIMATS.data.model.ChartPoint
 import com.example.SIMATS.data.model.toPairList
@@ -208,7 +209,7 @@ fun BloodPressureScreenContent(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = uiState.errorMessage ?: "Failed to load blood pressure data",
+                            text = formatErrorMessage(uiState.errorMessage ?: "Failed to load blood pressure data"),
                             fontSize = 14.sp,
                             color = Color(0xFFA94442),
                             textAlign = TextAlign.Center

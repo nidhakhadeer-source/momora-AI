@@ -44,6 +44,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.SIMATS.ui.components.formatErrorMessage
 import com.example.SIMATS.data.model.DoctorAccountItem
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraFooterText
@@ -323,7 +324,7 @@ fun ManageDoctorsScreenContent(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = uiState.errorMessage ?: "Failed to load doctors list",
+                            text = formatErrorMessage(uiState.errorMessage ?: "Failed to load doctors list"),
                             fontSize = 14.sp,
                             color = Color(0xFFA94442),
                             textAlign = TextAlign.Center
@@ -347,6 +348,38 @@ fun ManageDoctorsScreenContent(
                     }
                 }
             } else if (filteredDoctors.isEmpty()) {
+                if (uiState.errorMessage != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFFFFEBEE))
+                            .border(1.dp, Color(0xFFFFCDD2), RoundedCornerShape(12.dp))
+                            .padding(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = formatErrorMessage(uiState.errorMessage),
+                                fontSize = 12.sp,
+                                color = Color(0xFFC62828),
+                                modifier = Modifier.weight(1f)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Retry",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MomoraPurplePrimary,
+                                modifier = Modifier.clickable { onRetryClick() }
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -373,6 +406,38 @@ fun ManageDoctorsScreenContent(
                     }
                 }
             } else {
+                if (uiState.errorMessage != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFFFFEBEE))
+                            .border(1.dp, Color(0xFFFFCDD2), RoundedCornerShape(12.dp))
+                            .padding(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = formatErrorMessage(uiState.errorMessage),
+                                fontSize = 12.sp,
+                                color = Color(0xFFC62828),
+                                modifier = Modifier.weight(1f)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Retry",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MomoraPurplePrimary,
+                                modifier = Modifier.clickable { onRetryClick() }
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
                 Column(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     modifier = Modifier.fillMaxWidth()

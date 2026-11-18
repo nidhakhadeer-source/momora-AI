@@ -45,6 +45,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.SIMATS.data.model.AssignedPatientItem
+import com.example.SIMATS.ui.components.formatDoctorTime
+import com.example.SIMATS.ui.components.formatErrorMessage
+import com.example.SIMATS.ui.components.sanitizeDoctorText
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraIconBtnBg
 import com.example.SIMATS.ui.theme.MomoraLavenderCircleBg
@@ -341,7 +344,7 @@ fun PatientListScreenContent(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = uiState.errorMessage ?: "Failed to load assigned patients",
+                            text = formatErrorMessage(uiState.errorMessage ?: "Failed to load assigned patients"),
                             fontSize = 13.5.sp,
                             color = Color(0xFFA94442),
                             textAlign = TextAlign.Center
@@ -390,6 +393,38 @@ fun PatientListScreenContent(
                     }
                 }
             } else {
+                if (uiState.errorMessage != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFFFFEBEE))
+                            .border(1.dp, Color(0xFFFFCDD2), RoundedCornerShape(12.dp))
+                            .padding(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = formatErrorMessage(uiState.errorMessage),
+                                fontSize = 12.sp,
+                                color = Color(0xFFC62828),
+                                modifier = Modifier.weight(1f)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Retry",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MomoraPurplePrimary,
+                                modifier = Modifier.clickable { onRetryClick() }
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
                 Column(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier.fillMaxWidth()
@@ -551,7 +586,7 @@ private fun PatientCardItem(
 
                     Column {
                         Text(
-                            text = item.name,
+                            text = item.name.sanitizeDoctorText(),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = MomoraPurpleDark
@@ -560,12 +595,12 @@ private fun PatientCardItem(
                         Spacer(modifier = Modifier.height(2.dp))
 
                         val subtitleText = buildString {
-                            append("${item.patientIdText} · ${item.gestationalAge}")
+                            append("${item.patientIdText.sanitizeDoctorText()} · ${item.gestationalAge.sanitizeDoctorText()}")
                             if (!item.dueDateText.isNullOrEmpty()) {
-                                append(" · ${item.dueDateText}")
+                                append(" · ${item.dueDateText.sanitizeDoctorText()}")
                             }
                             if (!item.visitNote.isNullOrEmpty()) {
-                                append(" · ${item.visitNote}")
+                                append(" · ${item.visitNote.sanitizeDoctorText()}")
                             }
                         }
 
@@ -606,7 +641,7 @@ private fun PatientCardItem(
             if (!item.latestVitalsNote.isNullOrEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = item.latestVitalsNote,
+                    text = item.latestVitalsNote.sanitizeDoctorText(),
                     fontSize = 11.sp,
                     color = MomoraBodyMuted
                 )

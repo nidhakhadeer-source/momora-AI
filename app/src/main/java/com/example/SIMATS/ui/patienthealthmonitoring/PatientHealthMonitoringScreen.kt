@@ -44,6 +44,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.SIMATS.data.model.PatientHealthMonitoringData
 import com.example.SIMATS.navigation.SelectedPatientHolder
+import com.example.SIMATS.ui.components.formatDoctorTime
+import com.example.SIMATS.ui.components.formatErrorMessage
+import com.example.SIMATS.ui.components.sanitizeDoctorText
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraLavenderCircleBg
 import com.example.SIMATS.ui.theme.MomoraMintBadgeBg
@@ -216,7 +219,7 @@ fun PatientHealthMonitoringScreenContent(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = uiState.errorMessage ?: "Failed to load health monitoring data",
+                            text = formatErrorMessage(uiState.errorMessage ?: "Failed to load health monitoring data"),
                             fontSize = 14.sp,
                             color = Color(0xFFA94442),
                             textAlign = TextAlign.Center
@@ -250,7 +253,7 @@ fun PatientHealthMonitoringScreenContent(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = "Patient-entered readings · ${data?.dateText ?: "27 Oct 2026"}",
+                text = "Patient-entered readings · ${(data?.dateText ?: "27 Oct 2026").sanitizeDoctorText()}",
                 fontSize = 13.sp,
                 color = MomoraBodyMuted
             )
@@ -293,14 +296,14 @@ fun PatientHealthMonitoringScreenContent(
 
                         Column {
                             Text(
-                                text = resolvedPatientName,
+                                text = resolvedPatientName.sanitizeDoctorText(),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MomoraPurpleDark
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "${data?.gestationalAge ?: "24w 3d"} · ${data?.dueDateText ?: "Due 13 Feb 2027"}",
+                                text = "${(data?.gestationalAge ?: "24w 3d").sanitizeDoctorText()} · ${(data?.dueDateText ?: "Due 13 Feb 2027").sanitizeDoctorText()}",
                                 fontSize = 11.5.sp,
                                 color = MomoraBodyMuted
                             )
@@ -365,7 +368,7 @@ fun PatientHealthMonitoringScreenContent(
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = data?.bpReadingTime?.let { "mmHg · $it" } ?: "mmHg · Tap to view",
+                            text = data?.bpReadingTime?.let { "mmHg · ${it.formatDoctorTime()}" } ?: "mmHg · Tap to view",
                             fontSize = 10.5.sp,
                             color = Color(0xFF43524E)
                         )
@@ -410,7 +413,7 @@ fun PatientHealthMonitoringScreenContent(
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = data?.weightReadingTime?.let { "kg · $it" } ?: "kg · Tap to view",
+                            text = data?.weightReadingTime?.let { "kg · ${it.formatDoctorTime()}" } ?: "kg · Tap to view",
                             fontSize = 10.5.sp,
                             color = MomoraBodyMuted
                         )
@@ -589,8 +592,10 @@ fun PatientHealthMonitoringScreenContent(
                             Column {
                                 Text(text = "Temperature", fontSize = 11.sp, color = MomoraBodyMuted)
                                 Spacer(modifier = Modifier.height(2.dp))
+                                val rawUnit = data?.temperatureUnit
+                                val tempUnit = if (rawUnit?.contains("??") == true || rawUnit.isNullOrBlank()) "°C" else rawUnit.sanitizeDoctorText()
                                 val tempStr = if (data?.temperature != null) {
-                                    "${data.temperature} ${data.temperatureUnit ?: "°C"}"
+                                    "${data.temperature} $tempUnit"
                                 } else {
                                     "—"
                                 }
@@ -618,7 +623,7 @@ fun PatientHealthMonitoringScreenContent(
                             Text(text = "Latest symptom", fontSize = 11.sp, color = MomoraBodyMuted)
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = data?.latestSymptom?.takeIf { it.isNotBlank() } ?: "No symptoms reported",
+                                text = (data?.latestSymptom?.takeIf { it.isNotBlank() } ?: "No symptoms reported").sanitizeDoctorText(),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MomoraPurpleDark
@@ -628,9 +633,10 @@ fun PatientHealthMonitoringScreenContent(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
+                    val rawVitals = data?.additionalVitalsText?.takeIf { it.isNotBlank() }
+                        ?: "Home vitals and symptoms recorded by patient."
                     Text(
-                        text = data?.additionalVitalsText?.takeIf { it.isNotBlank() }
-                            ?: "Home vitals and symptoms recorded by patient.",
+                        text = rawVitals.sanitizeDoctorText(),
                         fontSize = 11.5.sp,
                         lineHeight = 15.sp,
                         color = Color(0xFF4A3F50)
@@ -896,7 +902,7 @@ private fun BpReadingsBottomSheet(
                     }
                     Column(horizontalAlignment = Alignment.End) {
                         Text(
-                            text = data?.bpReadingTime?.let { "Time: $it" } ?: "Recent",
+                            text = data?.bpReadingTime?.let { "Time: ${it.formatDoctorTime()}" } ?: "Recent",
                             fontSize = 11.5.sp,
                             color = Color(0xFF43524E)
                         )
@@ -1069,7 +1075,7 @@ private fun WeightReadingsBottomSheet(
             Spacer(modifier = Modifier.height(4.dp))
             val patientDisplayName = data?.patientName?.takeIf { it.isNotBlank() } ?: "Patient"
             Text(
-                text = "$patientDisplayName · ${data?.gestationalAge ?: "Gestational progress"}",
+                text = "${patientDisplayName.sanitizeDoctorText()} · ${(data?.gestationalAge ?: "Gestational progress").sanitizeDoctorText()}",
                 fontSize = 12.sp,
                 color = MomoraBodyMuted
             )
@@ -1115,7 +1121,7 @@ private fun WeightReadingsBottomSheet(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Logged at ${data.weightReadingTime ?: "Recent"}",
+                            text = "Logged at ${(data.weightReadingTime ?: "Recent").formatDoctorTime()}",
                             fontSize = 11.sp,
                             color = MomoraBodyMuted
                         )

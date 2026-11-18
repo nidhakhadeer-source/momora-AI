@@ -42,6 +42,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.SIMATS.data.model.NotificationItem
 import com.example.SIMATS.data.model.NotificationType
+import com.example.SIMATS.ui.components.formatDoctorTime
+import com.example.SIMATS.ui.components.formatErrorMessage
+import com.example.SIMATS.ui.components.sanitizeDoctorText
 import com.example.SIMATS.ui.notifications.NotificationsUiEvent
 import com.example.SIMATS.ui.notifications.NotificationsUiState
 import com.example.SIMATS.ui.notifications.NotificationsViewModel
@@ -240,7 +243,7 @@ fun DoctorNotificationsScreenContent(
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = uiState.errorMessage ?: "Failed to load notifications",
+                                text = formatErrorMessage(uiState.errorMessage ?: "Failed to load notifications"),
                                 fontSize = 13.sp,
                                 color = Color(0xFFD32F2F),
                                 textAlign = TextAlign.Center
@@ -421,7 +424,7 @@ private fun DoctorNotificationCardItem(
 
                 Column {
                     Text(
-                        text = item.title,
+                        text = item.title.sanitizeDoctorText(),
                         fontSize = 13.5.sp,
                         fontWeight = FontWeight.Bold,
                         color = MomoraPurpleDark
@@ -430,7 +433,7 @@ private fun DoctorNotificationCardItem(
                     Spacer(modifier = Modifier.height(2.dp))
 
                     Text(
-                        text = item.subtitle,
+                        text = item.subtitle.sanitizeDoctorText(),
                         fontSize = 11.5.sp,
                         color = MomoraBodyMuted
                     )
@@ -438,7 +441,7 @@ private fun DoctorNotificationCardItem(
                     if (item.detailText.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = item.detailText,
+                            text = item.detailText.sanitizeDoctorText(),
                             fontSize = 11.sp,
                             color = MomoraBodyMuted
                         )

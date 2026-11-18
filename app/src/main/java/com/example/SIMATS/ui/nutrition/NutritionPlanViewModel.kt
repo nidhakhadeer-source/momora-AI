@@ -26,6 +26,9 @@ class NutritionPlanViewModel(
             is NutritionPlanUiEvent.OnNavTabSelected -> {
                 _uiState.value = _uiState.value.copy(selectedNavIndex = event.index)
             }
+            NutritionPlanUiEvent.OnRetryClicked -> {
+                loadData()
+            }
             NutritionPlanUiEvent.OnFeaturedMealClicked -> {}
             is NutritionPlanUiEvent.OnPriorityClicked -> {}
             NutritionPlanUiEvent.OnBackClicked -> {}
@@ -34,9 +37,21 @@ class NutritionPlanViewModel(
     }
 
     private fun loadData() {
+        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            repository.getNutritionPlan().collect { data ->
-                _uiState.value = _uiState.value.copy(planData = data)
+            repository.getNutritionPlan().collect { result ->
+                result.onSuccess { data ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        planData = data,
+                        errorMessage = null
+                    )
+                }.onFailure { err ->
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = err.message ?: "Failed to load nutrition plan"
+                    )
+                }
             }
         }
     }

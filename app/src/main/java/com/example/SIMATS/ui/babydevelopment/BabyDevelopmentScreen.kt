@@ -47,6 +47,8 @@ import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraMintBadgeBg
 import com.example.SIMATS.ui.theme.MomoraPinkCircleBg
 import com.example.SIMATS.ui.theme.MomoraPurpleDark
+import androidx.compose.material3.CircularProgressIndicator
+import com.example.SIMATS.ui.components.formatErrorMessage
 import com.example.SIMATS.ui.theme.MomoraPurplePrimary
 import com.example.SIMATS.ui.theme.MomoraPurpleText
 import com.example.SIMATS.ui.theme.MomoraScreenBackground
@@ -63,6 +65,7 @@ fun BabyDevelopmentScreen(
     BabyDevelopmentScreenContent(
         modifier = modifier,
         uiState = uiState,
+        onRetryClick = { viewModel.onEvent(BabyDevelopmentUiEvent.OnRetryClicked) },
         onPreviousWeekClick = { viewModel.onEvent(BabyDevelopmentUiEvent.OnPreviousWeekClicked) },
         onNextWeekClick = { viewModel.onEvent(BabyDevelopmentUiEvent.OnNextWeekClicked) },
         onTimelineClick = { viewModel.onEvent(BabyDevelopmentUiEvent.OnTimelineClicked) },
@@ -82,31 +85,8 @@ fun BabyDevelopmentScreen(
 @Composable
 fun BabyDevelopmentScreenContent(
     modifier: Modifier = Modifier,
-    uiState: BabyDevelopmentUiState = BabyDevelopmentUiState(
-        currentWeek = 24,
-        developmentData = BabyDevelopmentData(
-            currentWeek = 24,
-            weekSubtitle = "Week 24 · Your baby's weekly development.",
-            lengthCmText = "30 cm",
-            lengthSubText = "Head to heel · approximate",
-            weightGramText = "600 g",
-            weightSubText = "educational estimate",
-            highlights = listOf(
-                BabyDevelopmentHighlight(
-                    id = 1,
-                    title = "A world of sound",
-                    subtitle = "Hearing continues to develop this week.",
-                    iconType = HighlightIconType.SOUND
-                ),
-                BabyDevelopmentHighlight(
-                    id = 2,
-                    title = "Little movements",
-                    subtitle = "You may notice your baby's own rhythm.",
-                    iconType = HighlightIconType.MOVEMENT
-                )
-            )
-        )
-    ),
+    uiState: BabyDevelopmentUiState = BabyDevelopmentUiState(),
+    onRetryClick: () -> Unit = {},
     onPreviousWeekClick: () -> Unit = {},
     onNextWeekClick: () -> Unit = {},
     onTimelineClick: () -> Unit = {},
@@ -162,17 +142,146 @@ fun BabyDevelopmentScreenContent(
             }
         }
 
-        // 2. Scrollable Body Content
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(scrollState)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.Start
-        ) {
-            Text(
-                text = "Hello, little one",
-                fontSize = 26.sp,
+        // 2. Body
+        if (uiState.isLoading && data == null) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = MomoraPurplePrimary)
+            }
+        } else if (uiState.errorMessage != null && data == null) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Unable to load development data",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurpleDark
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = formatErrorMessage(uiState.errorMessage),
+                        fontSize = 13.sp,
+                        color = Color(0xFFD32F2F),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(MomoraPurplePrimary)
+                            .clickable { onRetryClick() }
+                            .padding(horizontal = 24.dp, vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Retry",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+        } else if (data == null || (data.highlights.isEmpty() && data.weekSubtitle.isEmpty())) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "No development milestones yet",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurpleDark
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Development milestones for week ${uiState.currentWeek} will appear here.",
+                        fontSize = 13.sp,
+                        color = MomoraBodyMuted,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(MomoraPurplePrimary)
+                            .clickable { onRetryClick() }
+                            .padding(horizontal = 24.dp, vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Retry",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+        } else {
+            // Scrollable Body Content
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.Start
+            ) {
+                if (uiState.errorMessage != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFFFFEBEE))
+                            .border(1.dp, Color(0xFFFFCDD2), RoundedCornerShape(12.dp))
+                            .padding(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = formatErrorMessage(uiState.errorMessage),
+                                fontSize = 12.sp,
+                                color = Color(0xFFC62828),
+                                modifier = Modifier.weight(1f)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Retry",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MomoraPurplePrimary,
+                                modifier = Modifier.clickable { onRetryClick() }
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+                Text(
+                    text = "Hello, little one",
+                    fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
                 color = MomoraPurpleDark
             )
@@ -413,6 +522,7 @@ fun BabyDevelopmentScreenContent(
 
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
 
         // 3. Bottom Dashboard Navigation Bar
         DashboardBottomNavBar(

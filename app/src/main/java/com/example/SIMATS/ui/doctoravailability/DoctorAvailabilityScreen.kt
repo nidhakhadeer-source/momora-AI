@@ -46,6 +46,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.SIMATS.data.model.DoctorAvailabilitySlot
+import com.example.SIMATS.ui.components.formatDoctorTime
+import com.example.SIMATS.ui.components.formatErrorMessage
+import com.example.SIMATS.ui.components.sanitizeDoctorText
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraMintBadgeBg
 import com.example.SIMATS.ui.theme.MomoraMintBadgeText
@@ -65,10 +68,13 @@ fun DoctorAvailabilityScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
+    LaunchedEffect(Unit) {
+        viewModel.onEvent(DoctorAvailabilityUiEvent.OnScreenOpened)
+    }
+
     LaunchedEffect(uiState.saveSuccessMessage) {
         uiState.saveSuccessMessage?.let { msg ->
             Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-            viewModel.onEvent(DoctorAvailabilityUiEvent.OnClearMessages)
         }
     }
 
@@ -193,7 +199,7 @@ fun DoctorAvailabilityScreenContent(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = uiState.errorMessage,
+                        text = formatErrorMessage(uiState.errorMessage),
                         fontSize = 14.sp,
                         color = Color(0xFFA94442),
                         textAlign = TextAlign.Center
@@ -271,21 +277,21 @@ fun DoctorAvailabilityScreenContent(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            val durations = listOf(15, 20, 30, 45, 60)
+                            val durations = listOf(15, 20, 30, 60)
                             durations.forEach { mins ->
                                 val isSelected = uiState.slotMinutes == mins
                                 Box(
                                     modifier = Modifier
                                         .weight(1f)
-                                        .height(36.dp)
+                                        .height(38.dp)
                                         .clip(RoundedCornerShape(10.dp))
                                         .background(if (isSelected) MomoraPurplePrimary else Color(0xFFF4ECF8))
                                         .clickable { onSlotMinutesChanged(mins) },
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = "${mins}m",
-                                        fontSize = 12.5.sp,
+                                        text = "${mins} min",
+                                        fontSize = 12.sp,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                         color = if (isSelected) Color.White else MomoraPurpleDark
                                     )
@@ -296,25 +302,6 @@ fun DoctorAvailabilityScreenContent(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // Inline error banner if any
-                if (uiState.errorMessage != null) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFFFDF2F2))
-                            .border(1.dp, Color(0xFFF2DEDE), RoundedCornerShape(10.dp))
-                            .padding(12.dp)
-                    ) {
-                        Text(
-                            text = uiState.errorMessage,
-                            fontSize = 12.sp,
-                            color = Color(0xFFA94442)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-                }
 
                 Text(
                     text = "Weekly Hours",
@@ -367,7 +354,56 @@ fun DoctorAvailabilityScreenContent(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Inline success message banner
+                if (!uiState.saveSuccessMessage.isNullOrBlank()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFFE8F5E9))
+                            .border(1.dp, Color(0xFFA5D6A7), RoundedCornerShape(12.dp))
+                            .padding(14.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "✓",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF2E7D32)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = uiState.saveSuccessMessage ?: "",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFF2E7D32)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+
+                // Inline error message banner
+                if (!uiState.errorMessage.isNullOrBlank()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFFFDF2F2))
+                            .border(1.dp, Color(0xFFF2DEDE), RoundedCornerShape(12.dp))
+                            .padding(14.dp)
+                    ) {
+                        Text(
+                            text = formatErrorMessage(uiState.errorMessage),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFFA94442)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
 
                 // Save Availability Button
                 Box(
@@ -437,10 +473,10 @@ private fun AvailabilityDayCard(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = slot.weekday,
+                        text = slot.weekday.sanitizeDoctorText(),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (slot.isActive) MomoraPurpleDark else MomoraBodyMuted
+                        color = if (slot.isActive) MomoraPurpleDark else MomoraPurpleDark.copy(alpha = 0.6f)
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))
@@ -459,6 +495,20 @@ private fun AvailabilityDayCard(
                                 color = MomoraMintBadgeText
                             )
                         }
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(Color(0xFFF0ECF4))
+                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = "Closed",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MomoraBodyMuted
+                            )
+                        }
                     }
                 }
 
@@ -474,63 +524,64 @@ private fun AvailabilityDayCard(
                 )
             }
 
-            if (slot.isActive) {
-                Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+            // Start & End Time Pickers (available on all 7 weekdays)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                // Start Time Button
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(38.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(if (slot.isActive) Color(0xFFF4ECF8) else Color(0xFFF8F6FA))
+                        .clickable { onPickStartTime() },
+                    contentAlignment = Alignment.Center
                 ) {
-                    // Start Time Button
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(38.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFFF4ECF8))
-                            .clickable { onPickStartTime() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = slot.startTime,
-                            fontSize = 13.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MomoraPurpleDark
-                        )
-                    }
-
                     Text(
-                        text = "to",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MomoraBodyMuted
+                        text = slot.startTime.formatDoctorTime(),
+                        fontSize = 13.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (slot.isActive) MomoraPurpleDark else MomoraPurpleDark.copy(alpha = 0.5f)
                     )
-
-                    // End Time Button
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(38.dp)
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFFF4ECF8))
-                            .clickable { onPickEndTime() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = slot.endTime,
-                            fontSize = 13.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MomoraPurpleDark
-                        )
-                    }
                 }
-            } else {
+
+                Text(
+                    text = "to",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = if (slot.isActive) MomoraBodyMuted else MomoraBodyMuted.copy(alpha = 0.5f)
+                )
+
+                // End Time Button
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(38.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(if (slot.isActive) Color(0xFFF4ECF8) else Color(0xFFF8F6FA))
+                        .clickable { onPickEndTime() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = slot.endTime.formatDoctorTime(),
+                        fontSize = 13.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (slot.isActive) MomoraPurpleDark else MomoraPurpleDark.copy(alpha = 0.5f)
+                    )
+                }
+            }
+
+            if (!slot.isActive) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = "Closed / Off duty",
-                    fontSize = 12.sp,
-                    color = MomoraBodyMuted
+                    fontSize = 11.sp,
+                    color = MomoraBodyMuted.copy(alpha = 0.8f)
                 )
             }
         }

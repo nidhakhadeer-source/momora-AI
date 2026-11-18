@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,6 +46,8 @@ import com.example.SIMATS.data.model.PriorityIconType
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraMintBadgeBg
 import com.example.SIMATS.ui.theme.MomoraMintBadgeText
+import androidx.compose.material3.CircularProgressIndicator
+import com.example.SIMATS.ui.components.formatErrorMessage
 import com.example.SIMATS.ui.theme.MomoraPinkCircleBg
 import com.example.SIMATS.ui.theme.MomoraPurpleDark
 import com.example.SIMATS.ui.theme.MomoraPurplePrimary
@@ -63,6 +66,7 @@ fun NutritionPlanScreen(
     NutritionPlanScreenContent(
         modifier = modifier,
         uiState = uiState,
+        onRetryClick = { viewModel.onEvent(NutritionPlanUiEvent.OnRetryClicked) },
         onFeaturedMealClick = { viewModel.onEvent(NutritionPlanUiEvent.OnFeaturedMealClicked) },
         onPriorityClick = { id -> viewModel.onEvent(NutritionPlanUiEvent.OnPriorityClicked(id)) },
         onBackClick = {
@@ -80,34 +84,8 @@ fun NutritionPlanScreen(
 @Composable
 fun NutritionPlanScreenContent(
     modifier: Modifier = Modifier,
-    uiState: NutritionPlanUiState = NutritionPlanUiState(
-        planData = NutritionPlanData(
-            trimesterTitle = "Balanced ideas for your second trimester.",
-            featuredMealCategory = "LUNCH INSPIRATION",
-            featuredMealTitle = "Chickpea & quinoa bowl",
-            featuredMealDetails = "25 min · Plant-based · Protein & fiber",
-            priorities = listOf(
-                NutritionPriority(
-                    id = 1,
-                    title = "Iron-rich foods",
-                    subtitle = "Lentils, beans and well-cooked lean meats.",
-                    iconType = PriorityIconType.IRON
-                ),
-                NutritionPriority(
-                    id = 2,
-                    title = "Calcium & protein",
-                    subtitle = "Pasteurized yogurt or fortified alternatives.",
-                    iconType = PriorityIconType.CALCIUM
-                ),
-                NutritionPriority(
-                    id = 3,
-                    title = "Keep water nearby",
-                    subtitle = "Sip regularly; adapt to your care plan.",
-                    iconType = PriorityIconType.HYDRATION
-                )
-            )
-        )
-    ),
+    uiState: NutritionPlanUiState = NutritionPlanUiState(),
+    onRetryClick: () -> Unit = {},
     onFeaturedMealClick: () -> Unit = {},
     onPriorityClick: (Int) -> Unit = {},
     onBackClick: () -> Unit = {},
@@ -161,17 +139,146 @@ fun NutritionPlanScreenContent(
             }
         }
 
-        // 2. Scrollable Body Content
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(scrollState)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.Start
-        ) {
-            Text(
-                text = "Nourish you both",
-                fontSize = 26.sp,
+        // 2. Body
+        if (uiState.isLoading && data == null) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = MomoraPurplePrimary)
+            }
+        } else if (uiState.errorMessage != null && data == null) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Unable to load nutrition plan",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurpleDark
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = formatErrorMessage(uiState.errorMessage),
+                        fontSize = 13.sp,
+                        color = Color(0xFFD32F2F),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(MomoraPurplePrimary)
+                            .clickable { onRetryClick() }
+                            .padding(horizontal = 24.dp, vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Retry",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+        } else if (data == null || (data.priorities.isEmpty() && data.featuredMealTitle.isEmpty())) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "No nutrition plans available",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurpleDark
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Nutritional guidance tailored to your trimester will appear here.",
+                        fontSize = 13.sp,
+                        color = MomoraBodyMuted,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(MomoraPurplePrimary)
+                            .clickable { onRetryClick() }
+                            .padding(horizontal = 24.dp, vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Retry",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+        } else {
+            // Scrollable Body Content
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.Start
+            ) {
+                if (uiState.errorMessage != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFFFFEBEE))
+                            .border(1.dp, Color(0xFFFFCDD2), RoundedCornerShape(12.dp))
+                            .padding(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = formatErrorMessage(uiState.errorMessage),
+                                fontSize = 12.sp,
+                                color = Color(0xFFC62828),
+                                modifier = Modifier.weight(1f)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Retry",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MomoraPurplePrimary,
+                                modifier = Modifier.clickable { onRetryClick() }
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+                Text(
+                    text = "Nourish you both",
+                    fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
                 color = MomoraPurpleDark
             )
@@ -320,6 +427,7 @@ fun NutritionPlanScreenContent(
 
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
 
         // 3. Bottom Dashboard Navigation Bar
         DashboardBottomNavBar(

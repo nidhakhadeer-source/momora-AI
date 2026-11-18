@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -47,6 +48,8 @@ import androidx.compose.ui.unit.sp
 import com.example.SIMATS.data.model.SymptomEntryData
 import com.example.SIMATS.data.model.SymptomSeverity
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
+import androidx.compose.material3.CircularProgressIndicator
+import com.example.SIMATS.ui.components.formatErrorMessage
 import com.example.SIMATS.ui.theme.MomoraMintBadgeBg
 import com.example.SIMATS.ui.theme.MomoraMintBadgeText
 import com.example.SIMATS.ui.theme.MomoraPurpleDark
@@ -66,6 +69,7 @@ fun SymptomLoggerScreen(
     SymptomLoggerScreenContent(
         modifier = modifier,
         uiState = uiState,
+        onRetryClick = { viewModel.onEvent(SymptomLoggerUiEvent.OnRetryClicked) },
         onSymptomSelected = { symptom -> viewModel.onEvent(SymptomLoggerUiEvent.OnSymptomSelected(symptom)) },
         onSeveritySelected = { severity -> viewModel.onEvent(SymptomLoggerUiEvent.OnSeveritySelected(severity)) },
         onStartedChanged = { started -> viewModel.onEvent(SymptomLoggerUiEvent.OnStartedChanged(started)) },
@@ -87,22 +91,8 @@ fun SymptomLoggerScreen(
 @Composable
 fun SymptomLoggerScreenContent(
     modifier: Modifier = Modifier,
-    uiState: SymptomLoggerUiState = SymptomLoggerUiState(
-        entryData = SymptomEntryData(
-            symptomName = "Heartburn after meals",
-            severity = SymptomSeverity.MILD,
-            startedText = "26 Oct, 13:00",
-            durationText = "About 20 min",
-            aiGuidanceText = "Smaller meals and sitting upright after eating may help. Speak with your maternity team if it persists, worsens, or worries you.",
-            availableSymptoms = listOf(
-                "Heartburn after meals",
-                "Morning sickness / Nausea",
-                "Lower back tension",
-                "Mild fatigue",
-                "Swollen ankles"
-            )
-        )
-    ),
+    uiState: SymptomLoggerUiState = SymptomLoggerUiState(),
+    onRetryClick: () -> Unit = {},
     onSymptomSelected: (String) -> Unit = {},
     onSeveritySelected: (SymptomSeverity) -> Unit = {},
     onStartedChanged: (String) -> Unit = {},
@@ -159,17 +149,146 @@ fun SymptomLoggerScreenContent(
             }
         }
 
-        // 2. Scrollable Body Content
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(scrollState)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.Start
-        ) {
-            Text(
-                text = "How are you feeling?",
-                fontSize = 26.sp,
+        // 2. Body
+        if (uiState.isLoading && uiState.entryData == null) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = MomoraPurplePrimary)
+            }
+        } else if (uiState.errorMessage != null && uiState.entryData == null) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "Unable to load symptoms",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurpleDark
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = formatErrorMessage(uiState.errorMessage),
+                        fontSize = 13.sp,
+                        color = Color(0xFFD32F2F),
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(MomoraPurplePrimary)
+                            .clickable { onRetryClick() }
+                            .padding(horizontal = 24.dp, vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Retry",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+        } else if (uiState.entryData == null || (uiState.entryData.availableSymptoms.isEmpty() && uiState.entryData.symptomName.isEmpty())) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "No symptoms logged",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurpleDark
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "You can record and monitor symptoms to share with your maternity team.",
+                        fontSize = 13.sp,
+                        color = MomoraBodyMuted,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(MomoraPurplePrimary)
+                            .clickable { onRetryClick() }
+                            .padding(horizontal = 24.dp, vertical = 10.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Retry",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
+        } else {
+            // Scrollable Body Content
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.Start
+            ) {
+                if (uiState.errorMessage != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFFFFEBEE))
+                            .border(1.dp, Color(0xFFFFCDD2), RoundedCornerShape(12.dp))
+                            .padding(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = formatErrorMessage(uiState.errorMessage),
+                                fontSize = 12.sp,
+                                color = Color(0xFFC62828),
+                                modifier = Modifier.weight(1f)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Retry",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MomoraPurplePrimary,
+                                modifier = Modifier.clickable { onRetryClick() }
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+                Text(
+                    text = "How are you feeling?",
+                    fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
                 color = MomoraPurpleDark
             )
@@ -401,6 +520,7 @@ fun SymptomLoggerScreenContent(
 
             Spacer(modifier = Modifier.height(16.dp))
         }
+    }
 
         // 3. Bottom Dashboard Navigation Bar
         DashboardBottomNavBar(

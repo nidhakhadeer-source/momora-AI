@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.SIMATS.ui.components.formatErrorMessage
 import com.example.SIMATS.data.model.DailyCareItem
 import com.example.SIMATS.data.model.PatientDashboardData
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
@@ -65,6 +66,7 @@ fun HomeScreen(
     onNutritionClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onViewAllDailyCareClick: () -> Unit = {},
+    onDoctorAdviceClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -72,6 +74,7 @@ fun HomeScreen(
     HomeScreenContent(
         modifier = modifier,
         uiState = uiState,
+        onDoctorAdviceClick = onDoctorAdviceClick,
         onNavTabSelected = { index ->
             viewModel.onEvent(HomeUiEvent.OnNavTabSelected(index))
             onNavTabSelected(index)
@@ -156,6 +159,7 @@ fun HomeScreenContent(
     onBabyGrowthClick: () -> Unit = {},
     onNutritionClick: () -> Unit = {},
     onViewAllDailyCareClick: () -> Unit = {},
+    onDoctorAdviceClick: () -> Unit = {},
     onRetryClick: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -234,7 +238,7 @@ fun HomeScreenContent(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = uiState.errorMessage ?: "Please check your network and try again.",
+                        text = formatErrorMessage(uiState.errorMessage ?: "Please check your network and try again."),
                         fontSize = 13.sp,
                         color = Color(0xFFD32F2F),
                         textAlign = TextAlign.Center
@@ -280,7 +284,7 @@ fun HomeScreenContent(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = uiState.errorMessage ?: "Sync error",
+                                text = formatErrorMessage(uiState.errorMessage ?: "Sync error"),
                                 fontSize = 12.sp,
                                 color = Color(0xFFD32F2F),
                                 modifier = Modifier.weight(1f)
@@ -569,6 +573,60 @@ fun HomeScreenContent(
                     onClick = onNutritionClick,
                     modifier = Modifier.weight(1f)
                 )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Doctor Advice Card
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color.White)
+                    .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                    .clickable { onDoctorAdviceClick() }
+                    .padding(14.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(CircleShape)
+                                .background(MomoraLavenderCircleBg),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            DoctorAdviceCardIcon(
+                                color = MomoraPurplePrimary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "Doctor advice",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MomoraPurpleDark
+                            )
+                            Text(
+                                text = "View clinical guidance & care plans from your doctor",
+                                fontSize = 11.5.sp,
+                                color = MomoraBodyMuted
+                            )
+                        }
+                    }
+                    Text(
+                        text = "➔",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurplePrimary
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -994,6 +1052,27 @@ private fun TopBarHeartIcon(color: Color, modifier: Modifier = Modifier) {
         }
 
         drawPath(heartPath, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round))
+    }
+}
+
+@Composable
+private fun DoctorAdviceCardIcon(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val stroke = 1.8.dp.toPx()
+        val p = Path().apply {
+            moveTo(w * 0.2f, h * 0.15f)
+            lineTo(w * 0.65f, h * 0.15f)
+            lineTo(w * 0.8f, h * 0.30f)
+            lineTo(w * 0.8f, h * 0.85f)
+            lineTo(w * 0.2f, h * 0.85f)
+            close()
+        }
+        drawPath(p, color = color, style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        drawLine(color = color, start = Offset(w * 0.32f, h * 0.42f), end = Offset(w * 0.68f, h * 0.42f), strokeWidth = stroke, cap = StrokeCap.Round)
+        drawLine(color = color, start = Offset(w * 0.32f, h * 0.55f), end = Offset(w * 0.68f, h * 0.55f), strokeWidth = stroke, cap = StrokeCap.Round)
+        drawLine(color = color, start = Offset(w * 0.32f, h * 0.68f), end = Offset(w * 0.52f, h * 0.68f), strokeWidth = stroke, cap = StrokeCap.Round)
     }
 }
 
