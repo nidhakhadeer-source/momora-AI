@@ -21,8 +21,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -66,6 +72,7 @@ fun AppointmentsCalendarScreen(
         onDateSelected = { day -> viewModel.onEvent(AppointmentsCalendarUiEvent.OnDateSelected(day)) },
         onTimeSlotSelected = { slot -> viewModel.onEvent(AppointmentsCalendarUiEvent.OnTimeSlotSelected(slot)) },
         onConfirmAppointmentClick = { viewModel.onEvent(AppointmentsCalendarUiEvent.OnConfirmAppointmentClicked) },
+        onDismissConfirmationDialog = { viewModel.onEvent(AppointmentsCalendarUiEvent.OnDismissConfirmationDialog) },
         onNextMonthClick = { viewModel.onEvent(AppointmentsCalendarUiEvent.OnNextMonthClicked) },
         onBackClick = {
             viewModel.onEvent(AppointmentsCalendarUiEvent.OnBackClicked)
@@ -87,23 +94,28 @@ fun AppointmentsCalendarScreenContent(
         bookingData = AppointmentBookingData(
             doctorName = "Dr Amelia Chen",
             doctorSpecialty = "Obstetrician · Willow Maternity Clinic",
-            monthTitle = "October 2026",
+            monthTitle = "November 2026",
             availableDates = listOf(
-                CalendarDateItem("Tue", 27, false),
-                CalendarDateItem("Wed", 28, false),
-                CalendarDateItem("Thu", 29, true),
-                CalendarDateItem("Fri", 30, false),
-                CalendarDateItem("Sat", 31, false)
+                CalendarDateItem("Thu", 19, false),
+                CalendarDateItem("Fri", 20, false),
+                CalendarDateItem("Sat", 21, true),
+                CalendarDateItem("Sun", 22, false),
+                CalendarDateItem("Mon", 23, false)
             ),
             availableTimeSlots = listOf("09:00", "10:30", "14:00"),
             defaultType = "Routine antenatal check",
             defaultLocationNotes = "Willow Maternity Clinic · Room 3. Bring your pregnancy notes and recent reports."
-        )
+        ),
+        selectedDayOfMonth = 21,
+        selectedDayOfWeek = "Sat",
+        selectedMonthTitle = "November 2026",
+        selectedTimeSlot = "10:30"
     ),
     onVisitTypeToggled: (Boolean) -> Unit = {},
     onDateSelected: (Int) -> Unit = {},
     onTimeSlotSelected: (String) -> Unit = {},
     onConfirmAppointmentClick: () -> Unit = {},
+    onDismissConfirmationDialog: () -> Unit = {},
     onNextMonthClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
@@ -300,49 +312,39 @@ fun AppointmentsCalendarScreenContent(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Visit Mode Selector (In person vs Video visit)
+            // In-Person Appointment Option (Video Visit option removed)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(RoundedCornerShape(14.dp))
                     .background(Color(0xFFF4ECF8))
                     .padding(4.dp)
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(40.dp)
+                        .clip(RoundedCornerShape(11.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFE2D6EA), RoundedCornerShape(11.dp)),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(38.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(if (uiState.isInPerson) Color.White else Color.Transparent)
-                            .clickable { onVisitTypeToggled(true) },
-                        contentAlignment = Alignment.Center
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
                     ) {
-                        Text(
-                            text = "In person",
-                            fontSize = 13.sp,
-                            fontWeight = if (uiState.isInPerson) FontWeight.Bold else FontWeight.Normal,
-                            color = if (uiState.isInPerson) MomoraPurpleDark else MomoraBodyMuted
+                        Box(
+                            modifier = Modifier
+                                .size(7.dp)
+                                .clip(CircleShape)
+                                .background(MomoraPurplePrimary)
                         )
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(38.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(if (!uiState.isInPerson) Color.White else Color.Transparent)
-                            .clickable { onVisitTypeToggled(false) },
-                        contentAlignment = Alignment.Center
-                    ) {
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Video visit",
-                            fontSize = 13.sp,
-                            fontWeight = if (!uiState.isInPerson) FontWeight.Bold else FontWeight.Normal,
-                            color = if (!uiState.isInPerson) MomoraPurpleDark else MomoraBodyMuted
+                            text = "In-person appointment",
+                            fontSize = 13.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurpleDark
                         )
                     }
                 }
@@ -489,39 +491,91 @@ fun AppointmentsCalendarScreenContent(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Appointment Summary Card
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MomoraPinkCircleBg)
-                    .padding(14.dp)
+            Card(
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(containerColor = MomoraPinkCircleBg),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Column {
-                    Text(
-                        text = data?.defaultType ?: "Routine antenatal check",
-                        fontSize = 14.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MomoraPurpleDark
-                    )
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = data?.defaultType ?: "Routine antenatal check",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurpleDark
+                        )
+
+                        // Mode Badge
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(Color.White)
+                                .border(1.dp, Color(0xFFE2D6EA), RoundedCornerShape(50))
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = "In-person visit",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MomoraPurplePrimary
+                            )
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "Thu, ${uiState.selectedDayOfMonth} Oct 2026 · ${uiState.selectedTimeSlot}–11:00",
+                        text = "Assigned Doctor: ${data?.doctorName ?: "Dr Amelia Chen"}",
                         fontSize = 12.5.sp,
-                        fontWeight = FontWeight.Medium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MomoraPurplePrimary
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    val dayOfWeekStr = uiState.selectedDayOfWeek
+                        ?: data?.availableDates?.find { it.dayOfMonth == uiState.selectedDayOfMonth }?.dayOfWeek
+                        ?: "Selected Day"
+                    val dayOfMonthVal = uiState.selectedDayOfMonth
+                        ?: data?.availableDates?.firstOrNull()?.dayOfMonth
+                        ?: 19
+                    val monthTitleStr = uiState.selectedMonthTitle
+                        ?: data?.monthTitle
+                        ?: SimpleDateFormat("MMMM yyyy", Locale.US).format(Date())
+                    val timeSlotStr = uiState.selectedTimeSlot ?: "10:30"
+
+                    Text(
+                        text = "$dayOfWeekStr, $dayOfMonthVal $monthTitleStr · $timeSlotStr",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
                         color = MomoraPurpleText
                     )
 
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
                         text = data?.defaultLocationNotes ?: "Willow Maternity Clinic · Room 3. Bring your pregnancy notes and recent reports.",
                         fontSize = 11.5.sp,
-                        lineHeight = 15.sp,
+                        lineHeight = 16.sp,
                         color = MomoraBodyMuted
                     )
                 }
+            }
+
+            if (!uiState.errorMessage.isNullOrBlank() && data != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = uiState.errorMessage,
+                    fontSize = 12.sp,
+                    color = Color(0xFFD32F2F),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -590,6 +644,45 @@ fun AppointmentsCalendarScreenContent(
         DashboardBottomNavBar(
             selectedIndex = uiState.selectedNavIndex,
             onTabSelected = onNavTabSelected
+        )
+    }
+
+    // Confirmation Success Dialog
+    if (uiState.isConfirmedSuccess) {
+        AlertDialog(
+            onDismissRequest = onDismissConfirmationDialog,
+            title = {
+                Text(
+                    text = "Appointment Confirmed",
+                    fontWeight = FontWeight.Bold,
+                    color = MomoraPurpleDark
+                )
+            },
+            text = {
+                Text(
+                    text = uiState.confirmationMessage
+                        ?: "Your appointment has been confirmed successfully.",
+                    fontSize = 13.5.sp,
+                    lineHeight = 18.sp,
+                    color = MomoraPurpleText
+                )
+            },
+            confirmButton = {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50))
+                        .background(MomoraPurplePrimary)
+                        .clickable { onDismissConfirmationDialog() }
+                        .padding(horizontal = 20.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        text = "Done",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
+                }
+            }
         )
     }
 }

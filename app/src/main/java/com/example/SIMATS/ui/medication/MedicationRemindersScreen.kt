@@ -40,6 +40,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 import com.example.SIMATS.ui.components.formatErrorMessage
 import com.example.SIMATS.data.model.MedicationItem
 import com.example.SIMATS.data.model.MedicationReminderData
@@ -64,6 +68,7 @@ fun MedicationRemindersScreen(
         modifier = modifier,
         uiState = uiState,
         onTabSelected = { index -> viewModel.onEvent(MedicationRemindersUiEvent.OnTabSelected(index)) },
+        onScheduleDaySelected = { index -> viewModel.onEvent(MedicationRemindersUiEvent.OnScheduleDaySelected(index)) },
         onMarkAsTakenClick = { id -> viewModel.onEvent(MedicationRemindersUiEvent.OnMarkAsTakenClicked(id)) },
         onAddMedicationClick = { viewModel.onEvent(MedicationRemindersUiEvent.OnAddMedicationClicked) },
         onSettingsClick = { viewModel.onEvent(MedicationRemindersUiEvent.OnSettingsClicked) },
@@ -107,6 +112,7 @@ fun MedicationRemindersScreenContent(
         )
     ),
     onTabSelected: (Int) -> Unit = {},
+    onScheduleDaySelected: (Int) -> Unit = {},
     onMarkAsTakenClick: (Int) -> Unit = {},
     onAddMedicationClick: () -> Unit = {},
     onSettingsClick: () -> Unit = {},
@@ -278,156 +284,302 @@ fun MedicationRemindersScreenContent(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Progress Status Tag
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(50))
-                    .background(MomoraMintBadgeBg)
-                    .padding(horizontal = 14.dp, vertical = 6.dp)
-            ) {
-                Text(
-                    text = data?.progressStatusText ?: "1 OF 2 TAKEN · EVENING REMINDER SET",
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MomoraMintBadgeText,
-                    letterSpacing = 0.5.sp
-                )
-            }
+            when (uiState.selectedTab) {
+                0 -> {
+                    // TAB 0: TODAY
+                    val takenCount = data?.medications?.count { it.isTaken } ?: 0
+                    val totalCount = data?.medications?.size ?: 0
+                    val remainingCount = (totalCount - takenCount).coerceAtLeast(0)
+                    val progressText = if (totalCount == 0) {
+                        "NO MEDICATIONS SCHEDULED"
+                    } else if (remainingCount == 0) {
+                        "$totalCount OF $totalCount TAKEN · ALL COMPLETED TODAY"
+                    } else {
+                        "$takenCount OF $totalCount TAKEN · $remainingCount REMAINING TODAY"
+                    }
 
-            Spacer(modifier = Modifier.height(14.dp))
+                    // Progress Status Tag
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(MomoraMintBadgeBg)
+                            .padding(horizontal = 14.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = progressText,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraMintBadgeText,
+                            letterSpacing = 0.5.sp
+                        )
+                    }
 
-            // "Today's schedule" Section
-            Text(
-                text = "Today's schedule",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                color = MomoraPurpleDark
-            )
+                    Spacer(modifier = Modifier.height(14.dp))
 
-            Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = "Today's schedule",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurpleDark
+                    )
 
-            // Medication Cards List
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                if (data?.medications.isNullOrEmpty()) {
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    if (data?.medications.isNullOrEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color.White)
+                                .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                                .padding(20.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "No medications scheduled",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MomoraPurpleDark
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "You have no active medication reminders for today.",
+                                    fontSize = 12.sp,
+                                    color = MomoraBodyMuted
+                                )
+                            }
+                        }
+                    } else {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            data?.medications?.forEach { item ->
+                                MedicationCard(
+                                    item = item,
+                                    onMarkAsTakenClick = { onMarkAsTakenClick(item.id) }
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Add prescribed medication Button
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(Color.White)
-                            .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
-                            .padding(20.dp),
+                            .height(50.dp)
+                            .clip(RoundedCornerShape(50))
+                            .background(MomoraPurplePrimary)
+                            .clickable { onAddMedicationClick() },
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "No medications scheduled",
-                                fontSize = 14.sp,
+                                text = "Add prescribed medication",
+                                fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MomoraPurpleDark
+                                color = Color.White
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "You have no active medication reminders for today.",
-                                fontSize = 12.sp,
-                                color = MomoraBodyMuted
+                                text = "+",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
                             )
                         }
                     }
-                } else {
-                    data?.medications?.forEach { item ->
-                        MedicationCard(
-                            item = item,
-                            onMarkAsTakenClick = { onMarkAsTakenClick(item.id) }
-                        )
-                    }
-                }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
-            // Add prescribed medication Button
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(MomoraPurplePrimary)
-                    .clickable { onAddMedicationClick() },
-                contentAlignment = Alignment.Center
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "Add prescribed medication",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "+",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Medical Safety Disclaimer Card
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFFF4ECF8))
-                    .padding(horizontal = 14.dp, vertical = 11.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                    // Medical Safety Disclaimer Card
                     Box(
                         modifier = Modifier
-                            .size(30.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFEBE0F2)),
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(Color(0xFFF4ECF8))
+                            .padding(horizontal = 14.dp, vertical = 11.dp)
                     ) {
-                        ShieldIcon(
-                            color = MomoraPurplePrimary,
-                            modifier = Modifier.size(14.dp)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFEBE0F2)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                ShieldIcon(
+                                    color = MomoraPurplePrimary,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(10.dp))
+
+                            Text(
+                                text = "Follow your prescription. Do not start, stop or double a dose based on app reminders. Ask your pharmacist about missed doses.",
+                                fontSize = 11.5.sp,
+                                lineHeight = 15.sp,
+                                color = MomoraPurplePrimary,
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+                1 -> {
+                    // TAB 1: SCHEDULE
+                    val cal = Calendar.getInstance()
+                    val scheduleDays = (0..6).map { offset ->
+                        val dayCal = (cal.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, offset) }
+                        val dayOfWeek = SimpleDateFormat("EEE", Locale.US).format(dayCal.time)
+                        val dayOfMonth = dayCal.get(Calendar.DAY_OF_MONTH)
+                        val fullDate = SimpleDateFormat("EEEE, d MMMM", Locale.US).format(dayCal.time)
+                        Triple(dayOfWeek, dayOfMonth, fullDate)
                     }
 
-                    Spacer(modifier = Modifier.width(10.dp))
+                    val selectedDayInfo = scheduleDays.getOrElse(uiState.selectedScheduleDayIndex) { scheduleDays[0] }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        scheduleDays.forEachIndexed { idx, (dow, dom, _) ->
+                            val isSelected = uiState.selectedScheduleDayIndex == idx
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(if (isSelected) MomoraPurplePrimary else Color.White)
+                                    .border(1.dp, if (isSelected) MomoraPurplePrimary else Color(0xFFEFE8F4), RoundedCornerShape(12.dp))
+                                    .clickable { onScheduleDaySelected(idx) }
+                                    .padding(vertical = 8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = dow,
+                                        fontSize = 11.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) Color.White.copy(alpha = 0.85f) else MomoraBodyMuted
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = "$dom",
+                                        fontSize = 14.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSelected) Color.White else MomoraPurpleDark
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     Text(
-                        text = "Follow your prescription. Do not start, stop or double a dose based on app reminders. Ask your pharmacist about missed doses.",
-                        fontSize = 11.5.sp,
-                        lineHeight = 15.sp,
-                        color = MomoraPurplePrimary,
-                        modifier = Modifier.weight(1f)
+                        text = if (uiState.selectedScheduleDayIndex == 0) "Today's Schedule" else "Schedule for ${selectedDayInfo.third}",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurpleDark
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Scheduled daily medications & reminder times",
+                        fontSize = 12.sp,
+                        color = MomoraBodyMuted
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    if (data?.medications.isNullOrEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color.White)
+                                .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                                .padding(20.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "No scheduled medications for this date",
+                                fontSize = 13.sp,
+                                color = MomoraBodyMuted
+                            )
+                        }
+                    } else {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            data?.medications?.forEach { item ->
+                                ScheduleMedicationCard(item = item)
+                            }
+                        }
+                    }
+                }
+                2 -> {
+                    // TAB 2: HISTORY
+                    Text(
+                        text = "Medication Activity & History",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurpleDark
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Recorded doses, timestamps and adherence history",
+                        fontSize = 12.sp,
+                        color = MomoraBodyMuted
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    if (data?.medications.isNullOrEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color.White)
+                                .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                                .padding(24.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "No medication history recorded yet",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MomoraPurpleDark
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "Your recorded doses and reminder adherence will appear here.",
+                                    fontSize = 12.sp,
+                                    color = MomoraBodyMuted,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    } else {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            data?.medications?.forEach { item ->
+                                HistoryMedicationCard(item = item)
+                            }
+                        }
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Reminder settings link
-            Text(
-                text = "Reminder settings · Sound & notification privacy ➔",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-                color = MomoraPurplePrimary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onSettingsClick() }
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 
@@ -559,6 +711,163 @@ private fun MedicationCard(
                         color = MomoraPurpleDark
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ScheduleMedicationCard(
+    item: MedicationItem,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color.White)
+            .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+            .padding(14.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFEDE4F0)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    PillCapsuleIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp))
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column {
+                    Text(
+                        text = item.name,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurpleDark
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = item.dosageAndTime,
+                        fontSize = 12.sp,
+                        color = MomoraPurplePrimary,
+                        fontWeight = FontWeight.Medium
+                    )
+                    if (!item.doctorPrescriptionNote.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = item.doctorPrescriptionNote,
+                            fontSize = 11.sp,
+                            color = MomoraBodyMuted
+                        )
+                    }
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(Color(0xFFF4ECF8))
+                    .padding(horizontal = 10.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = "Scheduled",
+                    fontSize = 10.5.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MomoraPurplePrimary
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HistoryMedicationCard(
+    item: MedicationItem,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color.White)
+            .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+            .padding(14.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(CircleShape)
+                        .background(if (item.isTaken) MomoraMintBadgeBg else Color(0xFFF4ECF8)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    PillCapsuleIcon(
+                        color = if (item.isTaken) MomoraMintBadgeText else MomoraPurplePrimary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column {
+                    Text(
+                        text = item.name,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurpleDark
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = item.dosageAndTime,
+                        fontSize = 11.5.sp,
+                        color = MomoraBodyMuted
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = if (item.isTaken) {
+                            item.takenTimeNote ?: "Recorded as taken today"
+                        } else {
+                            "Not recorded / Pending"
+                        },
+                        fontSize = 11.sp,
+                        fontWeight = if (item.isTaken) FontWeight.SemiBold else FontWeight.Normal,
+                        color = if (item.isTaken) MomoraMintBadgeText else Color(0xFFC47B2B)
+                    )
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(if (item.isTaken) MomoraMintBadgeBg else Color(0xFFFDF4E7))
+                    .padding(horizontal = 10.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = if (item.isTaken) "✓ Taken" else "Pending",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (item.isTaken) MomoraMintBadgeText else Color(0xFFB86A1D)
+                )
             }
         }
     }

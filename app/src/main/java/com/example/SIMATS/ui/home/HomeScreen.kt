@@ -21,6 +21,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,9 +42,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.SIMATS.ui.components.formatErrorMessage
 import com.example.SIMATS.data.model.DailyCareItem
 import com.example.SIMATS.data.model.PatientDashboardData
+import com.example.SIMATS.ui.components.formatErrorMessage
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraIconBtnBg
 import com.example.SIMATS.ui.theme.MomoraLavenderCircleBg
@@ -66,6 +68,8 @@ fun HomeScreen(
     onNutritionClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onViewAllDailyCareClick: () -> Unit = {},
+    onMedicationClick: () -> Unit = onViewAllDailyCareClick,
+    onAppointmentClick: () -> Unit = {},
     onDoctorAdviceClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
@@ -74,7 +78,10 @@ fun HomeScreen(
     HomeScreenContent(
         modifier = modifier,
         uiState = uiState,
-        onDoctorAdviceClick = onDoctorAdviceClick,
+        onDoctorAdviceClick = {
+            viewModel.onEvent(HomeUiEvent.OnDoctorAdviceClicked)
+            onDoctorAdviceClick()
+        },
         onNavTabSelected = { index ->
             viewModel.onEvent(HomeUiEvent.OnNavTabSelected(index))
             onNavTabSelected(index)
@@ -111,6 +118,14 @@ fun HomeScreen(
             viewModel.onEvent(HomeUiEvent.OnViewAllDailyCareClicked)
             onViewAllDailyCareClick()
         },
+        onMedicationClick = {
+            viewModel.onEvent(HomeUiEvent.OnMedicationClicked)
+            onMedicationClick()
+        },
+        onAppointmentClick = {
+            viewModel.onEvent(HomeUiEvent.OnAppointmentClicked)
+            onAppointmentClick()
+        },
         onRetryClick = {
             viewModel.onEvent(HomeUiEvent.OnRetryClicked)
         }
@@ -143,7 +158,7 @@ fun HomeScreenContent(
                 DailyCareItem(
                     id = 2,
                     title = "Dr Amelia Chen",
-                    subtitle = "29 Oct 2026 · 10:30 · In-person",
+                    subtitle = "19 Nov 2026 · 11:30 · In-person",
                     isTaken = false,
                     isAppointment = true
                 )
@@ -159,6 +174,8 @@ fun HomeScreenContent(
     onBabyGrowthClick: () -> Unit = {},
     onNutritionClick: () -> Unit = {},
     onViewAllDailyCareClick: () -> Unit = {},
+    onMedicationClick: () -> Unit = onViewAllDailyCareClick,
+    onAppointmentClick: () -> Unit = {},
     onDoctorAdviceClick: () -> Unit = {},
     onRetryClick: () -> Unit = {}
 ) {
@@ -303,346 +320,417 @@ fun HomeScreenContent(
                 }
 
                 // Greeting Header
-            Text(
-                text = "Good morning, ${data?.patientName ?: "Maya"}",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = MomoraPurpleDark
-            )
+                Text(
+                    text = "Good morning, ${data?.patientName ?: "Maya"}",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MomoraPurpleDark
+                )
 
-            Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(2.dp))
 
-            Text(
-                text = data?.dateText ?: "Tuesday, 27 Oct 2026 · A little care, every day.",
-                fontSize = 12.sp,
-                color = MomoraBodyMuted
-            )
+                Text(
+                    text = data?.dateText ?: "Tuesday, 27 Oct 2026 · A little care, every day.",
+                    fontSize = 12.5.sp,
+                    color = MomoraBodyMuted
+                )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            // Pregnancy Progress Hero Card
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(MomoraPinkCircleBg)
-                    .padding(16.dp)
-            ) {
-                Column {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.Top
+                // Pregnancy Summary Card (Feature 2)
+                Card(
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(containerColor = MomoraPinkCircleBg),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(18.dp))
+                        .clickable { onPregnancyDetailsClick() }
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = data?.trimesterText ?: "SECOND TRIMESTER",
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MomoraPurplePrimary,
+                                    letterSpacing = 0.5.sp
+                                )
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                Text(
+                                    text = data?.gestationalAgeText ?: "24 weeks, 3 days",
+                                    fontSize = 23.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MomoraPurpleDark
+                                )
+
+                                Spacer(modifier = Modifier.height(6.dp))
+
+                                // Clickable prompt row with clean arrow
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .clickable { onPregnancyDetailsClick() }
+                                        .padding(vertical = 2.dp)
+                                ) {
+                                    val cleanedDueText = (data?.dueDateText ?: "Due 13 Feb 2027 · Pregnancy details ➔")
+                                        .replace("➔", "")
+                                        .replace("->", "")
+                                        .trim()
+
+                                    Text(
+                                        text = cleanedDueText,
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MomoraPurplePrimary
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "›",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MomoraPurplePrimary
+                                    )
+                                }
+                            }
+
+                            // Circular Baby Badge Graphic
+                            Box(
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White)
+                                    .border(1.dp, Color(0xFFF0E4EC), CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                BabyFaceIcon(
+                                    color = MomoraPurplePrimary,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // Progress Track Bar
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                                .clip(RoundedCornerShape(50))
+                                .background(Color(0xFFEFE8F4))
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth((data?.progressPercent ?: 0.60f).coerceIn(0.05f, 1f))
+                                    .height(6.dp)
+                                    .clip(RoundedCornerShape(50))
+                                    .background(MomoraPurplePrimary)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Vitals Grid (Blood Pressure & Weight) (Feature 3)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Blood Pressure Card
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MomoraMintBadgeBg),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(16.dp))
+                            .clickable { onBloodPressureClick() }
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Blood pressure",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF334440)
+                                )
+                                Text(
+                                    text = "›",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF556662)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
                             Text(
-                                text = data?.trimesterText ?: "SECOND TRIMESTER",
-                                fontSize = 10.sp,
+                                text = data?.bloodPressureValue ?: "112/72",
+                                fontSize = 22.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MomoraPurplePrimary,
-                                letterSpacing = 0.5.sp
+                                color = Color(0xFF1E2C28)
                             )
 
-                            Spacer(modifier = Modifier.height(4.dp))
+                            Spacer(modifier = Modifier.height(3.dp))
 
                             Text(
-                                text = data?.gestationalAgeText ?: "24 weeks, 3 days",
+                                text = data?.bloodPressureTime ?: "mmHg · Today, 08:15",
+                                fontSize = 10.5.sp,
+                                color = Color(0xFF5A6B66)
+                            )
+                        }
+                    }
+
+                    // Weight Card
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MomoraLavenderCircleBg),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(16.dp))
+                            .clickable { onWeightClick() }
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Weight",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MomoraPurplePrimary
+                                )
+                                Text(
+                                    text = "›",
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MomoraPurplePrimary
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            val rawWeight = data?.weightValue
+                            val weightDisplay = if (!rawWeight.isNullOrBlank()) {
+                                if (rawWeight.contains("kg", ignoreCase = true)) rawWeight else "$rawWeight kg"
+                            } else "64.2 kg"
+
+                            Text(
+                                text = weightDisplay,
                                 fontSize = 22.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MomoraPurpleDark
                             )
 
-                            Spacer(modifier = Modifier.height(4.dp))
+                            Spacer(modifier = Modifier.height(3.dp))
 
                             Text(
-                                text = data?.dueDateText ?: "Due 13 Feb 2027 · Pregnancy details ➔",
-                                fontSize = 11.5.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = MomoraPurplePrimary,
-                                modifier = Modifier.clickable { onPregnancyDetailsClick() }
-                            )
-                        }
-
-                        // Circular Baby Badge Graphic
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(CircleShape)
-                                .background(Color.White)
-                                .border(1.dp, Color(0xFFF0E4EC), CircleShape),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            BabyFaceIcon(
-                                color = MomoraPurplePrimary,
-                                modifier = Modifier.size(24.dp)
+                                text = data?.weightTime ?: "kg · Today, 08:10",
+                                fontSize = 10.5.sp,
+                                color = MomoraBodyMuted
                             )
                         }
                     }
+                }
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
-                    // Progress Track Bar
-                    Box(
+                // "Your daily care" Section (Feature 4)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Your daily care",
+                        fontSize = 15.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurpleDark
+                    )
+
+                    Text(
+                        text = "View all",
+                        fontSize = 12.5.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MomoraPurplePrimary,
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(5.dp)
-                            .clip(RoundedCornerShape(50))
-                            .background(Color(0xFFEFE8F4))
-                    ) {
-                        Box(
+                            .clip(RoundedCornerShape(6.dp))
+                            .clickable { onViewAllDailyCareClick() }
+                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Daily Care Items Container
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    if (data?.dailyCareItems.isNullOrEmpty()) {
+                        Card(
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                             modifier = Modifier
-                                .fillMaxWidth(data?.progressPercent ?: 0.60f)
-                                .height(5.dp)
-                                .clip(RoundedCornerShape(50))
-                                .background(MomoraPurplePrimary)
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Vitals Grid (Blood Pressure & Weight)
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // Blood Pressure Card
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(MomoraMintBadgeBg)
-                        .clickable { onBloodPressureClick() }
-                        .padding(14.dp)
-                ) {
-                    Column {
-                        Text(
-                            text = "Blood pressure",
-                            fontSize = 11.5.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color(0xFF43524E)
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = data?.bloodPressureValue ?: "112/72",
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1E2C28)
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = data?.bloodPressureTime ?: "mmHg · Today, 08:15",
-                            fontSize = 10.5.sp,
-                            color = Color(0xFF7A8984)
-                        )
+                                .fillMaxWidth()
+                                .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                                .padding(20.dp)
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = "No daily care tasks for today",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MomoraPurpleDark
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "You're all caught up with your daily routine.",
+                                    fontSize = 12.sp,
+                                    color = MomoraBodyMuted
+                                )
+                            }
+                        }
+                    } else {
+                        data?.dailyCareItems?.forEach { item ->
+                            DailyCareCardItem(
+                                item = item,
+                                onMedicationClick = onMedicationClick,
+                                onAppointmentClick = onAppointmentClick
+                            )
+                        }
                     }
                 }
 
-                // Weight Card
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(MomoraLavenderCircleBg)
-                        .clickable { onWeightClick() }
-                        .padding(14.dp)
-                ) {
-                    Column {
-                        Text(
-                            text = "Weight",
-                            fontSize = 11.5.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MomoraPurplePrimary
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        val rawWeight = data?.weightValue
-                        val weightDisplay = if (!rawWeight.isNullOrBlank()) {
-                            if (rawWeight.contains("kg", ignoreCase = true)) rawWeight else "$rawWeight kg"
-                        } else "64.2 kg"
-                        Text(
-                            text = weightDisplay,
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MomoraPurpleDark
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = data?.weightTime ?: "kg · Today, 08:10",
-                            fontSize = 10.5.sp,
-                            color = MomoraBodyMuted
-                        )
-                    }
-                }
-            }
+                Spacer(modifier = Modifier.height(20.dp))
 
-            Spacer(modifier = Modifier.height(18.dp))
-
-            // "Your daily care" Section
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+                // "Explore your care" Section (Feature 7)
                 Text(
-                    text = "Your daily care",
-                    fontSize = 15.sp,
+                    text = "Explore your care",
+                    fontSize = 15.5.sp,
                     fontWeight = FontWeight.Bold,
                     color = MomoraPurpleDark
                 )
 
-                Text(
-                    text = "View all",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MomoraPurplePrimary,
-                    modifier = Modifier.clickable { onViewAllDailyCareClick() }
-                )
-            }
+                Spacer(modifier = Modifier.height(10.dp))
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Daily Care Items Container
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                if (data?.dailyCareItems.isNullOrEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(Color.White)
-                            .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
-                            .padding(20.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = "No daily care tasks for today",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MomoraPurpleDark
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = "You're all caught up with your daily routine.",
-                                fontSize = 12.sp,
-                                color = MomoraBodyMuted
-                            )
-                        }
-                    }
-                } else {
-                    data?.dailyCareItems?.forEach { item ->
-                        DailyCareCardItem(item = item)
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            // "Explore your care" Section
-            Text(
-                text = "Explore your care",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                color = MomoraPurpleDark
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                ExploreCard(
-                    title = "Ask AI",
-                    icon = { SparklesIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp)) },
-                    onClick = onAskAiClick,
-                    modifier = Modifier.weight(1f)
-                )
-                ExploreCard(
-                    title = "Baby growth",
-                    icon = { BabyFaceIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp)) },
-                    onClick = onBabyGrowthClick,
-                    modifier = Modifier.weight(1f)
-                )
-                ExploreCard(
-                    title = "Nutrition",
-                    icon = { NutritionIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp)) },
-                    onClick = onNutritionClick,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Doctor Advice Card
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.White)
-                    .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
-                    .clickable { onDoctorAdviceClick() }
-                    .padding(14.dp)
-            ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(38.dp)
-                                .clip(CircleShape)
-                                .background(MomoraLavenderCircleBg),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            DoctorAdviceCardIcon(
-                                color = MomoraPurplePrimary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = "Doctor advice",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MomoraPurpleDark
-                            )
-                            Text(
-                                text = "View clinical guidance & care plans from your doctor",
-                                fontSize = 11.5.sp,
-                                color = MomoraBodyMuted
-                            )
-                        }
-                    }
-                    Text(
-                        text = "➔",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MomoraPurplePrimary
+                    ExploreCard(
+                        title = "Baby growth",
+                        icon = { BabyFaceIcon(color = MomoraPurplePrimary, modifier = Modifier.size(20.dp)) },
+                        onClick = onBabyGrowthClick,
+                        modifier = Modifier.weight(1f)
+                    )
+                    ExploreCard(
+                        title = "Nutrition",
+                        icon = { NutritionIcon(color = MomoraPurplePrimary, modifier = Modifier.size(20.dp)) },
+                        onClick = onNutritionClick,
+                        modifier = Modifier.weight(1f)
                     )
                 }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Doctor Advice Card (Feature 5: Fixed alignment, no arrow overlap)
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                        .clip(RoundedCornerShape(16.dp))
+                        .clickable { onDoctorAdviceClick() }
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(MomoraLavenderCircleBg),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                DoctorAdviceCardIcon(
+                                    color = MomoraPurplePrimary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Doctor advice",
+                                    fontSize = 14.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MomoraPurpleDark
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "View clinical guidance & care plans from your doctor",
+                                    fontSize = 11.5.sp,
+                                    lineHeight = 16.sp,
+                                    color = MomoraBodyMuted
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Text(
+                            text = "›",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF8C7F92)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = "Health monitoring · Reports · Notifications ➔",
-                fontSize = 11.5.sp,
-                fontWeight = FontWeight.Medium,
-                color = MomoraPurplePrimary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
         }
-    }
 
         // 3. Bottom Dashboard Navigation Bar
         DashboardBottomNavBar(
@@ -653,80 +741,158 @@ fun HomeScreenContent(
 }
 
 /**
- * Daily Care Row Item Card.
+ * Daily Care Row Item Card with proper alignment and clickability.
  */
 @Composable
 private fun DailyCareCardItem(
     item: DailyCareItem,
+    onMedicationClick: () -> Unit,
+    onAppointmentClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Row(
+    val onClick = if (item.isAppointment) onAppointmentClick else onMedicationClick
+
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color.White)
             .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
-            .padding(horizontal = 14.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
+            .clip(RoundedCornerShape(16.dp))
+            .clickable { onClick() }
     ) {
         Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.weight(1f)
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .clip(CircleShape)
-                    .background(if (item.isTaken) MomoraMintBadgeBg else Color(0xFFEDE4F0)),
-                contentAlignment = Alignment.Center
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
             ) {
-                if (item.isTaken) {
-                    PillCapsuleIcon(color = MomoraMintBadgeText, modifier = Modifier.size(18.dp))
-                } else {
-                    CalendarIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp))
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(
+                            when {
+                                item.isTaken -> MomoraMintBadgeBg
+                                item.isAppointment -> Color(0xFFF4ECF8)
+                                else -> Color(0xFFEDE4F0)
+                            }
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (item.isAppointment) {
+                        CalendarIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp))
+                    } else {
+                        PillCapsuleIcon(
+                            color = if (item.isTaken) MomoraMintBadgeText else MomoraPurplePrimary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    if (item.isAppointment) {
+                        val appointmentTitle = if (item.title.isNotBlank() && !item.title.startsWith("Dr", ignoreCase = true)) {
+                            item.title
+                        } else {
+                            "Antenatal Consultation"
+                        }
+                        val doctorAndClinic = if (item.title.isNotBlank() && item.title.startsWith("Dr", ignoreCase = true)) {
+                            "${item.title} · Willow Maternity Clinic"
+                        } else {
+                            "Dr Amelia Chen · Willow Maternity Clinic"
+                        }
+
+                        Text(
+                            text = appointmentTitle,
+                            fontSize = 13.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurpleText
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = doctorAndClinic,
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MomoraPurplePrimary
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = item.subtitle,
+                            fontSize = 11.sp,
+                            lineHeight = 15.sp,
+                            color = MomoraBodyMuted
+                        )
+                    } else {
+                        Text(
+                            text = item.title,
+                            fontSize = 13.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurpleText
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = item.subtitle,
+                            fontSize = 11.5.sp,
+                            lineHeight = 15.sp,
+                            color = MomoraBodyMuted
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(10.dp))
 
-            Column {
-                Text(
-                    text = item.title,
-                    fontSize = 13.5.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MomoraPurpleText
-                )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = item.subtitle,
-                    fontSize = 11.5.sp,
-                    color = MomoraBodyMuted
-                )
+            if (item.isTaken) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50))
+                        .background(MomoraMintBadgeBg)
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "✓ Taken",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraMintBadgeText
+                    )
+                }
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (item.isAppointment) {
+                        val mode = if (item.subtitle.contains("Video", ignoreCase = true)) "Video visit" else "In-person"
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(Color(0xFFF4ECF8))
+                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                        ) {
+                            Text(
+                                text = mode,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MomoraPurplePrimary
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(6.dp))
+                    }
+                    Text(
+                        text = "›",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF8C7F92)
+                    )
+                }
             }
-        }
-
-        if (item.isTaken) {
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(50))
-                    .background(MomoraMintBadgeBg)
-                    .padding(horizontal = 12.dp, vertical = 4.dp)
-            ) {
-                Text(
-                    text = "Taken",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MomoraMintBadgeText
-                )
-            }
-        } else {
-            Text(
-                text = "›",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color(0xFF8C7F92)
-            )
         }
     }
 }
@@ -741,24 +907,38 @@ private fun ExploreCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Box(
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = modifier
+            .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFFF4ECF8))
             .clickable { onClick() }
-            .padding(vertical = 16.dp),
-        contentAlignment = Alignment.Center
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp, horizontal = 6.dp)
         ) {
-            icon()
-            Spacer(modifier = Modifier.height(6.dp))
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFF4ECF8)),
+                contentAlignment = Alignment.Center
+            ) {
+                icon()
+            }
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = title,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                color = MomoraPurpleDark
+                color = MomoraPurpleDark,
+                textAlign = TextAlign.Center
             )
         }
     }

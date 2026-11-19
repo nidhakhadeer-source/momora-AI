@@ -1,5 +1,9 @@
 package com.example.SIMATS.ui.duedate
 
+import android.app.DatePickerDialog
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,10 +24,13 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -40,28 +47,33 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.SIMATS.ui.components.formatErrorMessage
 import com.example.SIMATS.data.model.PregnancyDetailsData
+import com.example.SIMATS.ui.components.formatErrorMessage
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
-import com.example.SIMATS.ui.theme.MomoraIconBtnBg
+import com.example.SIMATS.ui.theme.MomoraMintBadgeBg
+import com.example.SIMATS.ui.theme.MomoraMintBadgeText
 import com.example.SIMATS.ui.theme.MomoraPinkCircleBg
 import com.example.SIMATS.ui.theme.MomoraPurpleDark
 import com.example.SIMATS.ui.theme.MomoraPurplePrimary
 import com.example.SIMATS.ui.theme.MomoraPurpleText
 import com.example.SIMATS.ui.theme.MomoraScreenBackground
+import java.util.Calendar
 
 @Composable
 fun DueDateScreen(
     viewModel: DueDateViewModel,
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit = {},
+    onDoctorCardClick: () -> Unit = {},
+    onNextVisitClick: () -> Unit = {},
+    onNotificationClick: () -> Unit = {},
+    onBabyDevelopmentClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -70,14 +82,32 @@ fun DueDateScreen(
         modifier = modifier,
         uiState = uiState,
         onDueDateChanged = { dueDate -> viewModel.onEvent(DueDateUiEvent.OnDueDateChanged(dueDate)) },
+        onLmpChanged = { lmp -> viewModel.onEvent(DueDateUiEvent.OnLmpChanged(lmp)) },
+        onTrimesterTabSelected = { tri -> viewModel.onEvent(DueDateUiEvent.OnTrimesterTabSelected(tri)) },
         onSaveClick = { viewModel.onEvent(DueDateUiEvent.OnSaveClicked) },
+        onDismissSaveSuccess = { viewModel.onEvent(DueDateUiEvent.OnDismissSaveSuccess) },
         onBackClick = {
             viewModel.onEvent(DueDateUiEvent.OnBackClicked)
             onNavigateBack()
         },
-        onNotificationClick = { viewModel.onEvent(DueDateUiEvent.OnNotificationClicked) },
-        onDoctorCardClick = { viewModel.onEvent(DueDateUiEvent.OnDoctorCardClicked) },
-        onNextVisitClick = { viewModel.onEvent(DueDateUiEvent.OnNextVisitClicked) },
+        onNotificationClick = {
+            viewModel.onEvent(DueDateUiEvent.OnNotificationClicked)
+            onNotificationClick()
+        },
+        onDoctorCardClick = {
+            viewModel.onEvent(DueDateUiEvent.OnDoctorCardClicked)
+            onDoctorCardClick()
+        },
+        onNextVisitClick = {
+            viewModel.onEvent(DueDateUiEvent.OnNextVisitClicked)
+        },
+        onNavigateToAppointments = {
+            viewModel.onEvent(DueDateUiEvent.OnDismissAppointmentDetail)
+            onNextVisitClick()
+        },
+        onDismissAppointmentDetail = { viewModel.onEvent(DueDateUiEvent.OnDismissAppointmentDetail) },
+        onCancelAppointmentClick = { viewModel.onEvent(DueDateUiEvent.OnCancelAppointmentClicked) },
+        onBabyDevelopmentClick = onBabyDevelopmentClick,
         onRetryClick = { viewModel.onEvent(DueDateUiEvent.OnRetryClicked) },
         onNavTabSelected = { index ->
             viewModel.onEvent(DueDateUiEvent.OnNavTabSelected(index))
@@ -86,33 +116,252 @@ fun DueDateScreen(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DueDateScreenContent(
     modifier: Modifier = Modifier,
-    uiState: DueDateUiState = DueDateUiState(
-        pregnancyData = PregnancyDetailsData(
-            trimesterText = "SECOND TRIMESTER",
-            gestationalAgeText = "24 weeks, 3 days",
-            countdownText = "15 weeks, 4 days until your estimated due date.",
-            estimatedDueDate = "13 Feb 2027",
-            lastMenstrualPeriod = "09 May 2026",
-            assignedDoctorName = "Dr Amelia Chen",
-            assignedDoctorSpecialty = "Obstetrics · Your assigned doctor",
-            nextVisitDate = "29 Oct 2026 · 10:30",
-            nextVisitClinic = "Willow Clinic"
-        )
-    ),
+    uiState: DueDateUiState = DueDateUiState(),
     onDueDateChanged: (String) -> Unit = {},
+    onLmpChanged: (String) -> Unit = {},
+    onTrimesterTabSelected: (Int) -> Unit = {},
     onSaveClick: () -> Unit = {},
+    onDismissSaveSuccess: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onDoctorCardClick: () -> Unit = {},
     onNextVisitClick: () -> Unit = {},
+    onNavigateToAppointments: () -> Unit = {},
+    onDismissAppointmentDetail: () -> Unit = {},
+    onCancelAppointmentClick: () -> Unit = {},
+    onBabyDevelopmentClick: () -> Unit = {},
     onRetryClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
     val data = uiState.pregnancyData
+    val context = LocalContext.current
+
+    // Date Picker for Estimated Due Date
+    val showEddDatePicker = {
+        val parsed = PregnancyCalculator.parseDate(uiState.estimatedDueDate)
+        val cal = Calendar.getInstance()
+        if (parsed != null) cal.time = parsed
+        val dpd = DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                val pickedCal = Calendar.getInstance()
+                pickedCal.set(year, month, dayOfMonth)
+                val formatted = PregnancyCalculator.formatDate(pickedCal.time)
+                onDueDateChanged(formatted)
+            },
+            cal.get(Calendar.YEAR),
+            cal.get(Calendar.MONTH),
+            cal.get(Calendar.DAY_OF_MONTH)
+        )
+        dpd.show()
+    }
+
+    // Date Picker for Last Menstrual Period
+    val showLmpDatePicker = {
+        val parsed = PregnancyCalculator.parseDate(uiState.lastMenstrualPeriod)
+        val cal = Calendar.getInstance()
+        if (parsed != null) cal.time = parsed
+        val dpd = DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                val pickedCal = Calendar.getInstance()
+                pickedCal.set(year, month, dayOfMonth)
+                val formatted = PregnancyCalculator.formatDate(pickedCal.time)
+                onLmpChanged(formatted)
+            },
+            cal.get(Calendar.YEAR),
+            cal.get(Calendar.MONTH),
+            cal.get(Calendar.DAY_OF_MONTH)
+        )
+        dpd.show()
+    }
+
+    // Appointment Details Modal Bottom Sheet
+    if (uiState.isAppointmentDetailOpen) {
+        ModalBottomSheet(
+            onDismissRequest = onDismissAppointmentDetail,
+            containerColor = Color.White,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 32.dp)
+            ) {
+                // Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(38.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFEDE4F0)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CalendarIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp))
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "Next Antenatal Visit",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurpleDark
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFF4ECF8))
+                            .clickable { onDismissAppointmentDetail() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "✕",
+                            fontSize = 14.sp,
+                            color = MomoraPurplePrimary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Status Badge
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(if (uiState.appointmentStatus == "Confirmed") MomoraMintBadgeBg else Color(0xFFFFEBEE))
+                            .padding(horizontal = 12.dp, vertical = 5.dp)
+                    ) {
+                        Text(
+                            text = if (uiState.appointmentStatus == "Confirmed") "Confirmed · Routine Antenatal Visit" else "Cancelled",
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (uiState.appointmentStatus == "Confirmed") MomoraMintBadgeText else Color(0xFFC62828)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Detail card
+                Card(
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFAF7FC)),
+                    border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFF0E8F4))),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        AppointmentInfoRow(label = "Date & Time", value = data?.nextVisitDate ?: "29 Oct 2026 · 10:30")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        AppointmentInfoRow(label = "Doctor", value = data?.assignedDoctorName ?: "Dr Amelia Chen")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        AppointmentInfoRow(label = "Clinic / Location", value = "${data?.nextVisitClinic ?: "Willow Clinic"} · Room 3")
+                        Spacer(modifier = Modifier.height(8.dp))
+                        AppointmentInfoRow(label = "Care Purpose", value = "Standard gestational vitals, fetal heart rate check, and ultrasound review")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Clinical notes box
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFF4ECF8))
+                        .padding(12.dp)
+                ) {
+                    Text(
+                        text = "Please bring your pregnancy health booklet, recent ultrasound scans, and blood pressure logs. Drink water beforehand if scheduled for a scan.",
+                        fontSize = 11.5.sp,
+                        lineHeight = 16.sp,
+                        color = MomoraPurplePrimary
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Reschedule Action Button
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(46.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MomoraPurplePrimary)
+                        .clickable { onNavigateToAppointments() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Reschedule Visit in Calendar",
+                        fontSize = 14.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+
+                if (uiState.appointmentStatus == "Confirmed") {
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Cancel Visit Button
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(42.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.White)
+                            .border(1.dp, Color(0xFFFFCDD2), RoundedCornerShape(12.dp))
+                            .clickable { onCancelAppointmentClick() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Cancel Visit",
+                            fontSize = 13.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFFC62828)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Dismiss / Close
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(42.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFF7F2FA))
+                        .clickable { onDismissAppointmentDetail() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Close",
+                        fontSize = 13.5.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MomoraPurpleText
+                    )
+                }
+            }
+        }
+    }
 
     Column(
         modifier = modifier
@@ -212,7 +461,7 @@ fun DueDateScreenContent(
                 }
             }
         } else {
-            // Scrollable Body Content
+            // Scrollable Content
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -220,202 +469,567 @@ fun DueDateScreenContent(
                     .padding(horizontal = 24.dp),
                 horizontalAlignment = Alignment.Start
             ) {
-            Text(
-                text = "Your pregnancy",
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Bold,
-                color = MomoraPurpleDark
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = "A beautiful journey, one week at a time.",
-                fontSize = 13.sp,
-                color = MomoraBodyMuted
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Trimester & Gestational Hero Card
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(18.dp))
-                    .background(MomoraPinkCircleBg)
-                    .padding(16.dp)
-            ) {
-                Column {
-                    Text(
-                        text = data?.trimesterText ?: "SECOND TRIMESTER",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MomoraPurplePrimary,
-                        letterSpacing = 0.5.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = data?.gestationalAgeText ?: "24 weeks, 3 days",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MomoraPurpleDark
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = data?.countdownText ?: "15 weeks, 4 days until your estimated due date.",
-                        fontSize = 12.sp,
-                        color = MomoraBodyMuted
-                    )
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    // Trimester Badges Row
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                if (uiState.isSavedSuccess) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MomoraMintBadgeBg)
+                            .border(1.dp, Color(0xFFC8E6C9), RoundedCornerShape(12.dp))
+                            .padding(12.dp)
                     ) {
-                        TrimesterPill(
-                            label = "1st · 1-13w",
-                            isActive = false,
-                            modifier = Modifier.weight(1f)
-                        )
-                        TrimesterPill(
-                            label = "2nd · 14-27w",
-                            isActive = true,
-                            modifier = Modifier.weight(1f)
-                        )
-                        TrimesterPill(
-                            label = "3rd · 28-40w",
-                            isActive = false,
-                            modifier = Modifier.weight(1f)
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "✓ Pregnancy details updated and saved successfully",
+                                fontSize = 12.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MomoraMintBadgeText,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Text(
+                                text = "✕",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MomoraMintBadgeText,
+                                modifier = Modifier.clickable { onDismissSaveSuccess() }
+                            )
+                        }
                     }
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
-            }
 
-            Spacer(modifier = Modifier.height(18.dp))
-
-            // Estimated Due Date Input Field
-            FormFieldLabel(text = "Estimated due date")
-            CustomInputField(
-                value = uiState.estimatedDueDate,
-                onValueChange = onDueDateChanged,
-                placeholder = "DD Month YYYY",
-                trailingIcon = { CalendarIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp)) }
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = "Last menstrual period · ${data?.lastMenstrualPeriod ?: "09 May 2026"}",
-                fontSize = 11.5.sp,
-                color = MomoraBodyMuted
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // "Your care plan" Section
-            Text(
-                text = "Your care plan",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                color = MomoraPurpleDark
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Color.White)
-                    .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
-                    .padding(horizontal = 14.dp, vertical = 6.dp)
-            ) {
-                // Item 1: Assigned Doctor
-                CarePlanRow(
-                    title = data?.assignedDoctorName ?: "Dr Amelia Chen",
-                    subtitle = data?.assignedDoctorSpecialty ?: "Obstetrics · Your assigned doctor",
-                    icon = { StethoscopeIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp)) },
-                    onClick = onDoctorCardClick
+                Text(
+                    text = "Your pregnancy",
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MomoraPurpleDark
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                // Item 2: Next Antenatal Visit
-                CarePlanRow(
-                    title = "Next antenatal visit",
-                    subtitle = "${data?.nextVisitDate ?: "29 Oct 2026 · 10:30"} · ${data?.nextVisitClinic ?: "Willow Clinic"}",
-                    icon = { CalendarIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp)) },
-                    onClick = onNextVisitClick
+                Text(
+                    text = "A beautiful journey, one week at a time.",
+                    fontSize = 13.sp,
+                    color = MomoraBodyMuted
                 )
-            }
 
-            Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            // Disclaimer Card
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFFF4ECF8))
-                    .padding(horizontal = 14.dp, vertical = 11.dp)
-            ) {
+                // Trimester & Gestational Hero Card
+                Card(
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(containerColor = MomoraPinkCircleBg),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = uiState.currentTrimesterText,
+                                fontSize = 10.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MomoraPurplePrimary,
+                                letterSpacing = 0.5.sp
+                            )
+
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(50))
+                                    .background(Color.White.copy(alpha = 0.8f))
+                                    .padding(horizontal = 8.dp, vertical = 3.dp)
+                            ) {
+                                Text(
+                                    text = "${uiState.remainingDaysCount} days remaining",
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MomoraPurplePrimary
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = uiState.gestationalAgeText,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurpleDark
+                        )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        Text(
+                            text = uiState.countdownText,
+                            fontSize = 12.sp,
+                            color = MomoraBodyMuted
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Progress Bar (40 weeks progress)
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "Week ${uiState.gestationalWeeks} of 40",
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MomoraPurpleDark
+                                )
+                                Text(
+                                    text = "${(uiState.progressFraction * 100).toInt()}%",
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MomoraPurplePrimary
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            LinearProgressIndicator(
+                                progress = { uiState.progressFraction },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(6.dp)
+                                    .clip(RoundedCornerShape(50)),
+                                color = MomoraPurplePrimary,
+                                trackColor = Color.White.copy(alpha = 0.6f)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // Interactive Trimester Pills Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            TrimesterPill(
+                                label = "1st · 1-13w",
+                                isSelected = uiState.selectedTrimesterView == 1,
+                                isCurrent = uiState.currentTrimester == 1,
+                                onClick = { onTrimesterTabSelected(1) },
+                                modifier = Modifier.weight(1f)
+                            )
+                            TrimesterPill(
+                                label = "2nd · 14-27w",
+                                isSelected = uiState.selectedTrimesterView == 2,
+                                isCurrent = uiState.currentTrimester == 2,
+                                onClick = { onTrimesterTabSelected(2) },
+                                modifier = Modifier.weight(1f)
+                            )
+                            TrimesterPill(
+                                label = "3rd · 28-40w",
+                                isSelected = uiState.selectedTrimesterView == 3,
+                                isCurrent = uiState.currentTrimester == 3,
+                                onClick = { onTrimesterTabSelected(3) },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Selected Trimester Information Preview
+                        val triInfo = when (uiState.selectedTrimesterView) {
+                            1 -> "Weeks 1–13: Vital organogenesis, early heartbeat, and cellular division. Focus on gentle folate intake, hydration, and restful sleep."
+                            3 -> "Weeks 28–40: Rapid weight gain, lung maturation, and preparing for delivery. Practice pelvic floor relaxation, nesting, and hospital prep."
+                            else -> "Weeks 14–27: Distinct baby movements (quickening), sensory sharpening, and bone hardening. Focus on dietary iron, calcium, and side-sleeping comfort."
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color.White.copy(alpha = 0.85f))
+                                .padding(10.dp)
+                        ) {
+                            Column {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = when (uiState.selectedTrimesterView) {
+                                            1 -> "Trimester 1 Overview"
+                                            3 -> "Trimester 3 Overview"
+                                            else -> "Trimester 2 Overview"
+                                        },
+                                        fontSize = 11.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MomoraPurpleDark
+                                    )
+
+                                    if (uiState.selectedTrimesterView == uiState.currentTrimester) {
+                                        Text(
+                                            text = "Your Current Stage",
+                                            fontSize = 9.5.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MomoraMintBadgeText
+                                        )
+                                    } else {
+                                        Text(
+                                            text = "Preview · Current: T${uiState.currentTrimester}",
+                                            fontSize = 9.5.sp,
+                                            color = MomoraBodyMuted
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = triInfo,
+                                    fontSize = 11.sp,
+                                    lineHeight = 15.sp,
+                                    color = MomoraPurpleText
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(18.dp))
+
+                // Interactive Estimated Due Date Field
+                FormFieldLabel(text = "Estimated due date")
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
+                        .clickable { showEddDatePicker() }
+                        .padding(horizontal = 14.dp),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = uiState.estimatedDueDate,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MomoraPurpleDark
+                        )
+                        CalendarIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp))
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                // Last Menstrual Period Row
                 Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showLmpDatePicker() }
+                        .padding(vertical = 2.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(30.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFEBE0F2)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        ShieldIcon(
-                            color = MomoraPurplePrimary,
-                            modifier = Modifier.size(14.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(10.dp))
-
                     Text(
-                        text = "Dates are estimates. Your maternity team may adjust your due date after clinical assessment.",
+                        text = "Last menstrual period · ${uiState.lastMenstrualPeriod}",
                         fontSize = 11.5.sp,
-                        lineHeight = 15.sp,
-                        color = MomoraPurplePrimary,
-                        modifier = Modifier.weight(1f)
+                        color = MomoraBodyMuted
+                    )
+                    Text(
+                        text = "Edit LMP",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurplePrimary
                     )
                 }
-            }
 
-            Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
-            // Save pregnancy details Button
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(MomoraPurplePrimary)
-                    .clickable { if (!uiState.isLoading) onSaveClick() },
-                contentAlignment = Alignment.Center
-            ) {
+                // Feature 5: Weekly Pregnancy Information Section
+                val weeklyInfo = PregnancyInfoHelper.getInfoForWeek(uiState.gestationalWeeks)
+
                 Text(
-                    text = if (uiState.isLoading) "Saving..." else "Save pregnancy details",
+                    text = "Week ${uiState.gestationalWeeks} pregnancy guide",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = MomoraPurpleDark
                 )
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = "Tailored insights for your baby's growth and your changing body.",
+                    fontSize = 12.sp,
+                    color = MomoraBodyMuted
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        // Baby Development Row
+                        Row(verticalAlignment = Alignment.Top) {
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFEDE4F0)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = "👶", fontSize = 16.sp)
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Baby Development",
+                                        fontSize = 13.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MomoraPurpleDark
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(50))
+                                            .background(MomoraMintBadgeBg)
+                                            .padding(horizontal = 8.dp, vertical = 2.dp)
+                                    ) {
+                                        Text(
+                                            text = weeklyInfo.babySizeComparison,
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MomoraMintBadgeText
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(3.dp))
+                                Text(
+                                    text = weeklyInfo.babyDevelopment,
+                                    fontSize = 12.sp,
+                                    lineHeight = 17.sp,
+                                    color = MomoraPurpleText
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Color(0xFFF7F2FA)))
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Mother's Body Changes Row
+                        Row(verticalAlignment = Alignment.Top) {
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFFBE9E7)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = "🤰", fontSize = 16.sp)
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Mother's Body",
+                                    fontSize = 13.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MomoraPurpleDark
+                                )
+                                Spacer(modifier = Modifier.height(3.dp))
+                                Text(
+                                    text = weeklyInfo.motherBodyChanges,
+                                    fontSize = 12.sp,
+                                    lineHeight = 17.sp,
+                                    color = MomoraPurpleText
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Color(0xFFF7F2FA)))
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Care & Comfort Tip Row
+                        Row(verticalAlignment = Alignment.Top) {
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(CircleShape)
+                                    .background(MomoraMintBadgeBg),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = "💡", fontSize = 16.sp)
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Care & Comfort Tip",
+                                    fontSize = 13.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MomoraPurpleDark
+                                )
+                                Spacer(modifier = Modifier.height(3.dp))
+                                Text(
+                                    text = weeklyInfo.careTip,
+                                    fontSize = 12.sp,
+                                    lineHeight = 17.sp,
+                                    color = MomoraPurpleText
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Link to full timeline
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(8.dp))
+                                .clickable { onBabyDevelopmentClick() }
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Explore full pregnancy timeline (Weeks 1 to 40)",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MomoraPurplePrimary
+                            )
+                            Text(
+                                text = "›",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MomoraPurplePrimary
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // "Your care plan" Section
+                Text(
+                    text = "Your care plan",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MomoraPurpleDark
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                    ) {
+                        // Item 1: Assigned Doctor (Entire card & chevron clickable)
+                        CarePlanRow(
+                            title = data?.assignedDoctorName ?: "Dr Amelia Chen",
+                            subtitle = data?.assignedDoctorSpecialty ?: "Obstetrics · Your assigned doctor",
+                            icon = { StethoscopeIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp)) },
+                            onClick = onDoctorCardClick
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .background(Color(0xFFF7F2FA))
+                        )
+
+                        // Item 2: Next Antenatal Visit (Entire card & chevron clickable)
+                        CarePlanRow(
+                            title = "Next antenatal visit",
+                            subtitle = "${data?.nextVisitDate ?: "29 Oct 2026 · 10:30"} · ${data?.nextVisitClinic ?: "Willow Clinic"}",
+                            tag = uiState.appointmentStatus,
+                            icon = { CalendarIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp)) },
+                            onClick = onNextVisitClick
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Disclaimer Card
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Color(0xFFF4ECF8))
+                        .padding(horizontal = 14.dp, vertical = 11.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFEBE0F2)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            ShieldIcon(
+                                color = MomoraPurplePrimary,
+                                modifier = Modifier.size(14.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(10.dp))
+
+                        Text(
+                            text = "Dates are estimates. Your maternity team may adjust your due date after clinical ultrasound assessments.",
+                            fontSize = 11.5.sp,
+                            lineHeight = 15.sp,
+                            color = MomoraPurplePrimary,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Save pregnancy details Button
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(MomoraPurplePrimary)
+                        .clickable { if (!uiState.isLoading) onSaveClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = if (uiState.isLoading) "Saving..." else "Save pregnancy details",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+            }
         }
-    }
 
         // 3. Bottom Dashboard Navigation Bar
         DashboardBottomNavBar(
@@ -426,29 +1040,66 @@ fun DueDateScreenContent(
 }
 
 @Composable
+private fun AppointmentInfoRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Top
+    ) {
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            color = MomoraBodyMuted,
+            modifier = Modifier.weight(0.4f)
+        )
+        Text(
+            text = value,
+            fontSize = 12.5.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = MomoraPurpleDark,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(0.6f)
+        )
+    }
+}
+
+@Composable
 private fun TrimesterPill(
     label: String,
-    isActive: Boolean,
+    isSelected: Boolean,
+    isCurrent: Boolean,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(50))
-            .background(if (isActive) Color(0xFFF4ECF8) else Color(0xFFF5EBF0))
+            .background(if (isSelected) Color(0xFFF4ECF8) else Color(0xFFF5EBF0))
             .border(
                 width = 1.dp,
-                color = if (isActive) MomoraPurplePrimary else Color.Transparent,
+                color = if (isSelected) MomoraPurplePrimary else Color.Transparent,
                 shape = RoundedCornerShape(50)
             )
-            .padding(vertical = 6.dp),
+            .clickable { onClick() }
+            .padding(vertical = 7.dp, horizontal = 2.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = label,
-            fontSize = 10.5.sp,
-            fontWeight = if (isActive) FontWeight.Bold else FontWeight.Normal,
-            color = if (isActive) MomoraPurplePrimary else MomoraBodyMuted
-        )
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = label,
+                fontSize = 10.5.sp,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                color = if (isSelected) MomoraPurplePrimary else MomoraBodyMuted
+            )
+            if (isCurrent) {
+                Text(
+                    text = "● Current",
+                    fontSize = 8.5.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isSelected) MomoraPurplePrimary else MomoraMintBadgeText
+                )
+            }
+        }
     }
 }
 
@@ -457,13 +1108,15 @@ private fun CarePlanRow(
     title: String,
     subtitle: String,
     icon: @Composable () -> Unit,
+    tag: String? = null,
     onClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
             .clickable { onClick() }
-            .padding(vertical = 10.dp),
+            .padding(horizontal = 4.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -484,12 +1137,30 @@ private fun CarePlanRow(
             Spacer(modifier = Modifier.width(12.dp))
 
             Column {
-                Text(
-                    text = title,
-                    fontSize = 13.5.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MomoraPurpleText
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = title,
+                        fontSize = 13.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurpleText
+                    )
+                    if (tag != null) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(if (tag == "Confirmed") MomoraMintBadgeBg else Color(0xFFFFEBEE))
+                                .padding(horizontal = 6.dp, vertical = 1.dp)
+                        ) {
+                            Text(
+                                text = tag,
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (tag == "Confirmed") MomoraMintBadgeText else Color(0xFFC62828)
+                            )
+                        }
+                    }
+                }
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = subtitle,
@@ -519,57 +1190,6 @@ private fun FormFieldLabel(text: String) {
         color = MomoraPurpleText
     )
     Spacer(modifier = Modifier.height(5.dp))
-}
-
-@Composable
-private fun CustomInputField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String,
-    keyboardType: KeyboardType = KeyboardType.Text,
-    trailingIcon: @Composable () -> Unit = {}
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(48.dp)
-            .clip(RoundedCornerShape(14.dp))
-            .background(Color.White)
-            .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
-            .padding(horizontal = 14.dp),
-        contentAlignment = Alignment.CenterStart
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Box(modifier = Modifier.weight(1f)) {
-                if (value.isEmpty()) {
-                    Text(
-                        text = placeholder,
-                        fontSize = 13.5.sp,
-                        color = Color(0xFFA098A6)
-                    )
-                }
-                BasicTextField(
-                    value = value,
-                    onValueChange = onValueChange,
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-                    textStyle = TextStyle(
-                        fontSize = 13.5.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = MomoraPurpleText
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-            trailingIcon()
-        }
-    }
 }
 
 /**

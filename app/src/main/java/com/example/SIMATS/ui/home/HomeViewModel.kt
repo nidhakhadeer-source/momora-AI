@@ -34,6 +34,9 @@ class HomeViewModel(
             HomeUiEvent.OnBabyGrowthClicked -> {}
             HomeUiEvent.OnNutritionClicked -> {}
             HomeUiEvent.OnViewAllDailyCareClicked -> {}
+            HomeUiEvent.OnMedicationClicked -> {}
+            HomeUiEvent.OnAppointmentClicked -> {}
+            HomeUiEvent.OnDoctorAdviceClicked -> {}
             HomeUiEvent.OnRetryClicked -> {
                 loadDashboardData()
             }

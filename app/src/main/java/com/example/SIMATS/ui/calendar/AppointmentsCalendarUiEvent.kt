@@ -6,6 +6,7 @@ sealed interface AppointmentsCalendarUiEvent {
     data class OnTimeSlotSelected(val timeSlot: String) : AppointmentsCalendarUiEvent
     data class OnNavTabSelected(val index: Int) : AppointmentsCalendarUiEvent
     data object OnConfirmAppointmentClicked : AppointmentsCalendarUiEvent
+    data object OnDismissConfirmationDialog : AppointmentsCalendarUiEvent
     data object OnNextMonthClicked : AppointmentsCalendarUiEvent
     data object OnBackClicked : AppointmentsCalendarUiEvent
     data object OnNotificationClicked : AppointmentsCalendarUiEvent

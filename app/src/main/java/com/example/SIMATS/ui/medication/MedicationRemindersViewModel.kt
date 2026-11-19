@@ -26,6 +26,9 @@ class MedicationRemindersViewModel(
             is MedicationRemindersUiEvent.OnTabSelected -> {
                 _uiState.value = _uiState.value.copy(selectedTab = event.index)
             }
+            is MedicationRemindersUiEvent.OnScheduleDaySelected -> {
+                _uiState.value = _uiState.value.copy(selectedScheduleDayIndex = event.index)
+            }
             is MedicationRemindersUiEvent.OnMarkAsTakenClicked -> {
                 markTaken(event.medicationId)
             }

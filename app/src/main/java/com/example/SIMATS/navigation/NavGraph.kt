@@ -272,13 +272,15 @@ fun AppNavHost() {
                 onNutritionClick = { currentScreen = Screen.Nutrition },
                 onNotificationClick = { currentScreen = Screen.Notifications },
                 onViewAllDailyCareClick = { currentScreen = Screen.Medication },
+                onMedicationClick = { currentScreen = Screen.Medication },
+                onAppointmentClick = { currentScreen = Screen.AppointmentsCalendar },
                 onDoctorAdviceClick = { currentScreen = Screen.PatientDoctorAdvice },
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.Symptom
+                        1 -> currentScreen = Screen.DueDate
                         2 -> currentScreen = Screen.AiChat
-                        3 -> currentScreen = Screen.PatientDoctorAdvice
+                        3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile
                     }
                 }
@@ -312,10 +314,22 @@ fun AppNavHost() {
                 onNavigateBack = {
                     currentScreen = Screen.Home
                 },
+                onDoctorCardClick = {
+                    currentScreen = Screen.PatientDoctorAdvice
+                },
+                onNextVisitClick = {
+                    currentScreen = Screen.AppointmentsCalendar
+                },
+                onNotificationClick = {
+                    currentScreen = Screen.Notifications
+                },
+                onBabyDevelopmentClick = {
+                    currentScreen = Screen.BabyDevelopment
+                },
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.Symptom
+                        1 -> currentScreen = Screen.DueDate
                         2 -> currentScreen = Screen.AiChat
                         3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile

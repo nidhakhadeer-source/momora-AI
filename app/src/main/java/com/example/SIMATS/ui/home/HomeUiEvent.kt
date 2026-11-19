@@ -10,5 +10,8 @@ sealed interface HomeUiEvent {
     data object OnBabyGrowthClicked : HomeUiEvent
     data object OnNutritionClicked : HomeUiEvent
     data object OnViewAllDailyCareClicked : HomeUiEvent
+    data object OnMedicationClicked : HomeUiEvent
+    data object OnAppointmentClicked : HomeUiEvent
+    data object OnDoctorAdviceClicked : HomeUiEvent
     data object OnRetryClicked : HomeUiEvent
 }
