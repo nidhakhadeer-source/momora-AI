@@ -18,7 +18,24 @@ class BabyDevelopmentRepositoryImpl : BabyDevelopmentRepository {
         try {
             val response = apiService.getBabyDevelopment(week)
             if (response.success && response.data != null) {
-                emit(Result.success(response.data))
+                val cleaned = response.data.let { d ->
+                    d.copy(
+                        weekSubtitle = d.weekSubtitle.replace(Regex("""\s*\?\?\s*"""), " · "),
+                        lengthCmText = d.lengthCmText.replace(Regex("""\s*\?\?\s*"""), " · "),
+                        lengthSubText = d.lengthSubText.replace(Regex("""\s*\?\?\s*"""), " · "),
+                        weightGramText = d.weightGramText.replace(Regex("""\s*\?\?\s*"""), " · "),
+                        weightSubText = d.weightSubText.replace(Regex("""\s*\?\?\s*"""), " · "),
+                        highlights = d.highlights.map { h ->
+                            h.copy(
+                                title = h.title.replace(Regex("""\s*\?\?\s*"""), " · "),
+                                subtitle = h.subtitle.replace(Regex("""\s*\?\?\s*"""), " · "),
+                                detail = h.detail.replace(Regex("""\s*\?\?\s*"""), " · "),
+                                tip = h.tip.replace(Regex("""\s*\?\?\s*"""), " · ")
+                            )
+                        }
+                    )
+                }
+                emit(Result.success(cleaned))
             } else {
                 emit(Result.failure(Exception(response.message ?: "Failed to load baby development data")))
             }

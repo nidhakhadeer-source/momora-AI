@@ -14,7 +14,9 @@ data class BabyDevelopmentHighlight(
     val id: Int,
     val title: String,
     val subtitle: String,
-    val iconType: HighlightIconType
+    val iconType: HighlightIconType,
+    val detail: String = "",
+    val tip: String = ""
 )
 
 enum class HighlightIconType {

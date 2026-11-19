@@ -12,15 +12,21 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -47,11 +53,14 @@ import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraMintBadgeBg
 import com.example.SIMATS.ui.theme.MomoraPinkCircleBg
 import com.example.SIMATS.ui.theme.MomoraPurpleDark
-import androidx.compose.material3.CircularProgressIndicator
 import com.example.SIMATS.ui.components.formatErrorMessage
 import com.example.SIMATS.ui.theme.MomoraPurplePrimary
 import com.example.SIMATS.ui.theme.MomoraPurpleText
 import com.example.SIMATS.ui.theme.MomoraScreenBackground
+
+private fun cleanDots(text: String): String {
+    return text.replace(Regex("""\s*\?\?\s*"""), " · ")
+}
 
 @Composable
 fun BabyDevelopmentScreen(
@@ -69,7 +78,10 @@ fun BabyDevelopmentScreen(
         onPreviousWeekClick = { viewModel.onEvent(BabyDevelopmentUiEvent.OnPreviousWeekClicked) },
         onNextWeekClick = { viewModel.onEvent(BabyDevelopmentUiEvent.OnNextWeekClicked) },
         onTimelineClick = { viewModel.onEvent(BabyDevelopmentUiEvent.OnTimelineClicked) },
+        onDismissTimeline = { viewModel.onEvent(BabyDevelopmentUiEvent.OnDismissTimeline) },
+        onSelectWeek = { week -> viewModel.onEvent(BabyDevelopmentUiEvent.OnWeekChanged(week)) },
         onHighlightClick = { id -> viewModel.onEvent(BabyDevelopmentUiEvent.OnHighlightClicked(id)) },
+        onDismissHighlightDetail = { viewModel.onEvent(BabyDevelopmentUiEvent.OnDismissHighlightDetail) },
         onBackClick = {
             viewModel.onEvent(BabyDevelopmentUiEvent.OnBackClicked)
             onNavigateBack()
@@ -90,7 +102,10 @@ fun BabyDevelopmentScreenContent(
     onPreviousWeekClick: () -> Unit = {},
     onNextWeekClick: () -> Unit = {},
     onTimelineClick: () -> Unit = {},
+    onDismissTimeline: () -> Unit = {},
+    onSelectWeek: (Int) -> Unit = {},
     onHighlightClick: (Int) -> Unit = {},
+    onDismissHighlightDetail: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
@@ -143,7 +158,7 @@ fun BabyDevelopmentScreenContent(
         }
 
         // 2. Body
-        if (uiState.isLoading && data == null) {
+        if (uiState.isLoading) {
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -289,7 +304,7 @@ fun BabyDevelopmentScreenContent(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                text = data?.weekSubtitle ?: "Week 24 · Your baby's weekly development.",
+                text = cleanDots(data?.weekSubtitle ?: "Week ${uiState.currentWeek} · Your baby's weekly development."),
                 fontSize = 13.sp,
                 color = MomoraBodyMuted
             )
@@ -310,19 +325,23 @@ fun BabyDevelopmentScreenContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Previous Week Tab
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(38.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable { onPreviousWeekClick() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "‹ Week ${uiState.currentWeek - 1}",
-                            fontSize = 12.5.sp,
-                            color = MomoraBodyMuted
-                        )
+                    if (uiState.currentWeek > 1) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(38.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable { onPreviousWeekClick() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "‹ Week ${uiState.currentWeek - 1}",
+                                fontSize = 12.5.sp,
+                                color = MomoraBodyMuted
+                            )
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
                     }
 
                     // Current Active Week Tab
@@ -343,19 +362,23 @@ fun BabyDevelopmentScreenContent(
                     }
 
                     // Next Week Tab
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(38.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .clickable { onNextWeekClick() },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Week ${uiState.currentWeek + 1} ›",
-                            fontSize = 12.5.sp,
-                            color = MomoraBodyMuted
-                        )
+                    if (uiState.currentWeek < 40) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(38.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable { onNextWeekClick() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Week ${uiState.currentWeek + 1} ›",
+                                fontSize = 12.5.sp,
+                                color = MomoraBodyMuted
+                            )
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
                     }
                 }
             }
@@ -400,14 +423,14 @@ fun BabyDevelopmentScreenContent(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = data?.lengthCmText ?: "30 cm",
+                            text = cleanDots(data?.lengthCmText ?: "30 cm"),
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
                             color = MomoraPurpleDark
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = data?.lengthSubText ?: "Head to heel · approximate",
+                            text = cleanDots(data?.lengthSubText ?: "Head to heel · approximate"),
                             fontSize = 10.5.sp,
                             color = MomoraBodyMuted
                         )
@@ -431,14 +454,14 @@ fun BabyDevelopmentScreenContent(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = data?.weightGramText ?: "600 g",
+                            text = cleanDots(data?.weightGramText ?: "600 g"),
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF1E2C28)
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = data?.weightSubText ?: "educational estimate",
+                            text = cleanDots(data?.weightSubText ?: "educational estimate"),
                             fontSize = 10.5.sp,
                             color = Color(0xFF7A8984)
                         )
@@ -530,6 +553,312 @@ fun BabyDevelopmentScreenContent(
             onTabSelected = onNavTabSelected
         )
     }
+
+    if (uiState.isTimelineOpen) {
+        PregnancyTimelineBottomSheet(
+            currentWeek = uiState.currentWeek,
+            onWeekSelected = { week ->
+                onDismissTimeline()
+                onSelectWeek(week)
+            },
+            onDismiss = onDismissTimeline
+        )
+    }
+
+    if (uiState.selectedHighlight != null) {
+        HighlightDetailBottomSheet(
+            highlight = uiState.selectedHighlight,
+            onDismiss = onDismissHighlightDetail
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun HighlightDetailBottomSheet(
+    highlight: BabyDevelopmentHighlight,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 32.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFEDE4F0)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (highlight.iconType == HighlightIconType.SOUND) {
+                            EarSoundIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp))
+                        } else {
+                            FootprintIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp))
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Text(
+                        text = cleanDots(highlight.title),
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurpleDark
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFF4ECF8))
+                        .clickable { onDismiss() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "✕",
+                        fontSize = 14.sp,
+                        color = MomoraPurplePrimary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            val displayText = if (highlight.detail.isNotBlank()) highlight.detail else highlight.subtitle
+            Text(
+                text = cleanDots(displayText),
+                fontSize = 14.sp,
+                lineHeight = 22.sp,
+                color = Color(0xFF2D1F38)
+            )
+
+            if (highlight.tip.isNotBlank()) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MomoraMintBadgeBg)
+                        .padding(14.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.Top) {
+                        Text(
+                            text = "💡",
+                            fontSize = 16.sp
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = "Care Tip",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF1E2C28)
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = cleanDots(highlight.tip),
+                                fontSize = 12.5.sp,
+                                lineHeight = 18.sp,
+                                color = Color(0xFF334440)
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0xFFF7F3FA))
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = "Educational information, not medical advice",
+                    fontSize = 11.5.sp,
+                    color = MomoraBodyMuted,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(46.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MomoraPurplePrimary)
+                    .clickable { onDismiss() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Close",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PregnancyTimelineBottomSheet(
+    currentWeek: Int,
+    onWeekSelected: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = Color.White,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 32.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = "Pregnancy Timeline",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurpleDark
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "Select a week to view development milestones (1 · 40)",
+                        fontSize = 12.sp,
+                        color = MomoraBodyMuted
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFF4ECF8))
+                        .clickable { onDismiss() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "✕",
+                        fontSize = 14.sp,
+                        color = MomoraPurplePrimary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 420.dp)
+            ) {
+                items((1..40).toList()) { week ->
+                    val isSelected = week == currentWeek
+                    val trimester = when (week) {
+                        in 1..12 -> "First Trimester"
+                        in 13..27 -> "Second Trimester"
+                        else -> "Third Trimester"
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (isSelected) Color(0xFFF4ECF8) else Color(0xFFFAF7FC))
+                            .border(
+                                1.dp,
+                                if (isSelected) MomoraPurplePrimary else Color(0xFFECE3F2),
+                                RoundedCornerShape(12.dp)
+                            )
+                            .clickable {
+                                onWeekSelected(week)
+                            }
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "Week $week",
+                                        fontSize = 15.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+                                        color = if (isSelected) MomoraPurplePrimary else MomoraPurpleDark
+                                    )
+                                    if (isSelected) {
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(50))
+                                                .background(MomoraPurplePrimary)
+                                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = "Current",
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color.White
+                                            )
+                                        }
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = trimester,
+                                    fontSize = 11.5.sp,
+                                    color = MomoraBodyMuted
+                                )
+                            }
+
+                            Text(
+                                text = "➔",
+                                fontSize = 14.sp,
+                                color = if (isSelected) MomoraPurplePrimary else MomoraBodyMuted
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -567,14 +896,14 @@ private fun HighlightRow(
 
             Column {
                 Text(
-                    text = highlight.title,
+                    text = cleanDots(highlight.title),
                     fontSize = 13.5.sp,
                     fontWeight = FontWeight.Bold,
                     color = MomoraPurpleText
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = highlight.subtitle,
+                    text = cleanDots(highlight.subtitle),
                     fontSize = 11.5.sp,
                     color = MomoraBodyMuted
                 )

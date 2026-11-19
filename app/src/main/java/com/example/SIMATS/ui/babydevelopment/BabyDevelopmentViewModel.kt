@@ -24,7 +24,10 @@ class BabyDevelopmentViewModel(
     fun onEvent(event: BabyDevelopmentUiEvent) {
         when (event) {
             is BabyDevelopmentUiEvent.OnWeekChanged -> {
-                _uiState.value = _uiState.value.copy(currentWeek = event.week)
+                _uiState.value = _uiState.value.copy(
+                    currentWeek = event.week,
+                    isTimelineOpen = false
+                )
                 loadData(event.week)
             }
             BabyDevelopmentUiEvent.OnPreviousWeekClicked -> {
@@ -47,20 +50,37 @@ class BabyDevelopmentViewModel(
             BabyDevelopmentUiEvent.OnRetryClicked -> {
                 loadData(_uiState.value.currentWeek)
             }
-            BabyDevelopmentUiEvent.OnTimelineClicked -> {}
+            BabyDevelopmentUiEvent.OnTimelineClicked -> {
+                _uiState.value = _uiState.value.copy(isTimelineOpen = true)
+            }
+            BabyDevelopmentUiEvent.OnDismissTimeline -> {
+                _uiState.value = _uiState.value.copy(isTimelineOpen = false)
+            }
             BabyDevelopmentUiEvent.OnBackClicked -> {}
             BabyDevelopmentUiEvent.OnNotificationClicked -> {}
-            is BabyDevelopmentUiEvent.OnHighlightClicked -> {}
+            is BabyDevelopmentUiEvent.OnHighlightClicked -> {
+                val highlight = _uiState.value.developmentData?.highlights?.find { it.id == event.highlightId }
+                _uiState.value = _uiState.value.copy(selectedHighlight = highlight)
+            }
+            BabyDevelopmentUiEvent.OnDismissHighlightDetail -> {
+                _uiState.value = _uiState.value.copy(selectedHighlight = null)
+            }
         }
     }
 
     private fun loadData(week: Int) {
-        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+        _uiState.value = _uiState.value.copy(
+            isLoading = true,
+            developmentData = null,
+            errorMessage = null,
+            selectedHighlight = null
+        )
         viewModelScope.launch {
             repository.getDevelopmentData(week).collect { result ->
                 result.onSuccess { data ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
+                        currentWeek = data.currentWeek.takeIf { it > 0 } ?: week,
                         developmentData = data,
                         errorMessage = null
                     )
