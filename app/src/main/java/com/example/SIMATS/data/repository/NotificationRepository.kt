@@ -10,6 +10,7 @@ import retrofit2.HttpException
 interface NotificationRepository {
     fun getNotifications(): Flow<Result<List<NotificationItem>>>
     fun markAllAsRead(): Flow<Result<Boolean>>
+    fun markAsRead(notificationId: Int): Flow<Result<Boolean>>
 }
 
 class NotificationRepositoryImpl : NotificationRepository {
@@ -35,7 +36,8 @@ class NotificationRepositoryImpl : NotificationRepository {
 
     override fun markAllAsRead(): Flow<Result<Boolean>> = flow {
         try {
-            val response = apiService.markAllNotificationsRead()
+            val userId = SessionManager.getUserId()
+            val response = apiService.markAllNotificationsRead(userId)
             if (response.success) {
                 emit(Result.success(true))
             } else {
@@ -43,6 +45,20 @@ class NotificationRepositoryImpl : NotificationRepository {
             }
         } catch (e: Exception) {
             emit(Result.failure(Exception(e.localizedMessage ?: "Network error marking notifications read")))
+        }
+    }
+
+    override fun markAsRead(notificationId: Int): Flow<Result<Boolean>> = flow {
+        try {
+            val userId = SessionManager.getUserId()
+            val response = apiService.markNotificationRead(userId, notificationId)
+            if (response.success) {
+                emit(Result.success(true))
+            } else {
+                emit(Result.failure(Exception(response.message ?: "Failed to mark notification read")))
+            }
+        } catch (e: Exception) {
+            emit(Result.failure(Exception(e.localizedMessage ?: "Network error marking notification read")))
         }
     }
 }

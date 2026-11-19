@@ -8,6 +8,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.SIMATS.data.local.SessionManager
+import com.example.SIMATS.data.model.NotificationType
 import com.example.SIMATS.data.model.UserAuthState
 import com.example.SIMATS.data.model.UserRole
 import com.example.SIMATS.ui.adddoctor.AddDoctorScreen
@@ -529,6 +530,28 @@ fun AppNavHost() {
                 viewModel = notificationsViewModel,
                 onNavigateBack = {
                     currentScreen = Screen.Home
+                },
+                onNotificationClick = { item ->
+                    when (item.type) {
+                        NotificationType.APPOINTMENT -> {
+                            currentScreen = Screen.AppointmentsCalendar
+                        }
+                        NotificationType.REMINDER -> {
+                            currentScreen = Screen.Medication
+                        }
+                        NotificationType.REPORT_REVIEW -> {
+                            if (item.title.contains("advice", ignoreCase = true) ||
+                                item.subtitle.contains("advice", ignoreCase = true)
+                            ) {
+                                currentScreen = Screen.PatientDoctorAdvice
+                            } else {
+                                currentScreen = Screen.MedicalReports
+                            }
+                        }
+                        NotificationType.WEEKLY_DISCOVERY -> {
+                            currentScreen = Screen.BabyDevelopment
+                        }
+                    }
                 },
                 onNavTabSelected = { index ->
                     when (index) {

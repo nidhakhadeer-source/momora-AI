@@ -26,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,12 +52,18 @@ import com.example.SIMATS.ui.theme.MomoraPurpleDark
 import com.example.SIMATS.ui.theme.MomoraPurplePrimary
 import com.example.SIMATS.ui.theme.MomoraPurpleText
 import com.example.SIMATS.ui.theme.MomoraScreenBackground
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 @Composable
 fun NotificationsScreen(
     viewModel: NotificationsViewModel,
     modifier: Modifier = Modifier,
     onNavigateBack: () -> Unit = {},
+    onNotificationClick: (NotificationItem) -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -66,8 +73,10 @@ fun NotificationsScreen(
         uiState = uiState,
         onFilterTabSelected = { index -> viewModel.onEvent(NotificationsUiEvent.OnFilterTabSelected(index)) },
         onMarkAllReadClick = { viewModel.onEvent(NotificationsUiEvent.OnMarkAllReadClicked) },
-        onNotificationItemClick = { id -> viewModel.onEvent(NotificationsUiEvent.OnNotificationItemClicked(id)) },
-        onPrivacySettingsClick = { viewModel.onEvent(NotificationsUiEvent.OnPrivacySettingsClicked) },
+        onNotificationItemClick = { item ->
+            viewModel.markNotificationAsReadById(item.id)
+            onNotificationClick(item)
+        },
         onRetryClick = { viewModel.onEvent(NotificationsUiEvent.OnRetryClicked) },
         onBackClick = {
             viewModel.onEvent(NotificationsUiEvent.OnBackClicked)
@@ -92,7 +101,8 @@ fun NotificationsScreenContent(
                 detailText = "09:10 · Willow Maternity Clinic · In person",
                 isNew = true,
                 isRead = false,
-                type = NotificationType.APPOINTMENT
+                type = NotificationType.APPOINTMENT,
+                createdAt = "2026-11-19 10:35:01"
             ),
             NotificationItem(
                 id = "2",
@@ -101,7 +111,8 @@ fun NotificationsScreenContent(
                 detailText = "08:30 · Reminder scheduled",
                 isNew = true,
                 isRead = false,
-                type = NotificationType.REMINDER
+                type = NotificationType.REMINDER,
+                createdAt = "2026-11-19 08:30:00"
             ),
             NotificationItem(
                 id = "3",
@@ -110,22 +121,24 @@ fun NotificationsScreenContent(
                 detailText = "08:25 · View care-team notes in Medical Reports",
                 isNew = true,
                 isRead = false,
-                type = NotificationType.REPORT_REVIEW
+                type = NotificationType.REPORT_REVIEW,
+                createdAt = "2026-11-19 08:25:00"
             ),
             NotificationItem(
                 id = "4",
                 title = "A new week to discover",
-                subtitle = "Yesterday · Explore today's week 24 development.",
+                subtitle = "Explore today's week 24 development.",
                 detailText = "",
                 isNew = false,
                 isRead = true,
-                type = NotificationType.WEEKLY_DISCOVERY
+                type = NotificationType.WEEKLY_DISCOVERY,
+                createdAt = "2026-11-18 13:42:38"
             )
         )
     ),
     onFilterTabSelected: (Int) -> Unit = {},
     onMarkAllReadClick: () -> Unit = {},
-    onNotificationItemClick: (String) -> Unit = {},
+    onNotificationItemClick: (NotificationItem) -> Unit = {},
     onPrivacySettingsClick: () -> Unit = {},
     onRetryClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
@@ -174,6 +187,16 @@ fun NotificationsScreenContent(
                     color = MomoraPurplePrimary,
                     modifier = Modifier.size(20.dp)
                 )
+                if (uiState.unreadCount > 0) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(top = 7.dp, end = 7.dp)
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFE53935))
+                    )
+                }
             }
         }
 
@@ -239,6 +262,15 @@ fun NotificationsScreenContent(
 
             Spacer(modifier = Modifier.height(18.dp))
 
+            val todayHeaderDate = remember {
+                try {
+                    val datePart = SimpleDateFormat("d MMM yyyy", Locale.getDefault()).format(Date())
+                    "Today · $datePart"
+                } catch (_: Exception) {
+                    "Today"
+                }
+            }
+
             // Section Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -246,18 +278,19 @@ fun NotificationsScreenContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Today · 27 Oct 2026",
+                    text = todayHeaderDate,
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     color = MomoraPurpleDark
                 )
 
+                val canMarkAllRead = uiState.unreadCount > 0 && !uiState.isMarkingAllRead
                 Text(
-                    text = "Mark all read",
+                    text = if (uiState.isMarkingAllRead) "Marking..." else "Mark all read",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
-                    color = MomoraPurplePrimary,
-                    modifier = Modifier.clickable { onMarkAllReadClick() }
+                    color = if (canMarkAllRead) MomoraPurplePrimary else MomoraBodyMuted,
+                    modifier = Modifier.clickable(enabled = canMarkAllRead) { onMarkAllReadClick() }
                 )
             }
 
@@ -265,7 +298,7 @@ fun NotificationsScreenContent(
 
             // Notifications Stream
             val filteredList = if (uiState.selectedFilterTab == 1) {
-                uiState.notifications.filter { !it.isRead }
+                uiState.notifications.filter { !it.isRead || it.isNew }
             } else {
                 uiState.notifications
             }
@@ -347,63 +380,11 @@ fun NotificationsScreenContent(
                     filteredList.forEach { item ->
                         NotificationCardItem(
                             item = item,
-                            onClick = { onNotificationItemClick(item.id) }
+                            onClick = { onNotificationItemClick(item) }
                         )
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Emergency Care Disclaimer Card
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFFF4ECF8))
-                    .padding(horizontal = 14.dp, vertical = 11.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(30.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFEBE0F2)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        ShieldIcon(
-                            color = MomoraPurplePrimary,
-                            modifier = Modifier.size(14.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(10.dp))
-
-                    Text(
-                        text = "For urgent symptoms, contact maternity care or local emergency services. Do not rely on app alerts for urgent help.",
-                        fontSize = 11.5.sp,
-                        lineHeight = 15.sp,
-                        color = MomoraPurplePrimary,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Privacy Settings Link
-            Text(
-                text = "Notification & lock-screen privacy settings ➔",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium,
-                color = MomoraPurplePrimary,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onPrivacySettingsClick() }
-            )
 
             Spacer(modifier = Modifier.height(16.dp))
         }
@@ -438,10 +419,7 @@ private fun NotificationCardItem(
         NotificationType.WEEKLY_DISCOVERY -> Color(0xFFEDE4F0)
     }
 
-    val tagColor = when (item.type) {
-        NotificationType.REPORT_REVIEW -> MomoraMintBadgeText
-        else -> MomoraPurplePrimary
-    }
+    val isUnread = !item.isRead || item.isNew
 
     Box(
         modifier = Modifier
@@ -459,7 +437,7 @@ private fun NotificationCardItem(
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
                 verticalAlignment = Alignment.Top,
@@ -482,13 +460,27 @@ private fun NotificationCardItem(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                Column {
-                    Text(
-                        text = item.title,
-                        fontSize = 13.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MomoraPurpleDark
-                    )
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = item.title,
+                            fontSize = 13.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurpleDark,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
+                        if (isUnread) {
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Box(
+                                modifier = Modifier
+                                    .size(7.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFE53935))
+                            )
+                        }
+                    }
 
                     Spacer(modifier = Modifier.height(2.dp))
 
@@ -499,11 +491,22 @@ private fun NotificationCardItem(
                     )
 
                     if (item.detailText.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(3.dp))
                         Text(
                             text = item.detailText,
                             fontSize = 11.sp,
                             color = MomoraBodyMuted
+                        )
+                    }
+
+                    val timeLabel = formatNotificationTime(item.createdAt)
+                    if (timeLabel != null) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = timeLabel,
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MomoraPurplePrimary.copy(alpha = 0.85f)
                         )
                     }
                 }
@@ -511,22 +514,111 @@ private fun NotificationCardItem(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            if (item.isNew) {
-                Text(
-                    text = "New",
-                    fontSize = 10.5.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = tagColor
-                )
-            } else {
-                Text(
-                    text = "›",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF8C7F92)
-                )
+            Text(
+                text = "›",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF8C7F92)
+            )
+        }
+    }
+}
+
+private fun parseNotificationDate(raw: String): Date? {
+    val trimmed = raw.trim()
+    if (trimmed.isEmpty()) return null
+
+    val candidatePatterns = listOf(
+        "yyyy-MM-dd HH:mm:ss",
+        "yyyy-MM-dd HH:mm",
+        "yyyy-MM-dd'T'HH:mm:ss.SSSXXX",
+        "yyyy-MM-dd'T'HH:mm:ssXXX",
+        "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+        "yyyy-MM-dd'T'HH:mm:ss'Z'",
+        "yyyy-MM-dd'T'HH:mm:ss.SSS",
+        "yyyy-MM-dd'T'HH:mm:ss",
+        "yyyy-MM-dd",
+        "yyyy/MM/dd HH:mm:ss",
+        "yyyy/MM/dd"
+    )
+
+    for (pattern in candidatePatterns) {
+        try {
+            val sdf = SimpleDateFormat(pattern, Locale.US).apply {
+                isLenient = false
+                if (pattern.endsWith("'Z'")) {
+                    timeZone = TimeZone.getTimeZone("UTC")
+                }
+            }
+            val parsed = sdf.parse(trimmed)
+            if (parsed != null) {
+                return parsed
+            }
+        } catch (_: Exception) {
+            // try next pattern
+        }
+    }
+
+    try {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            val instant = try {
+                java.time.Instant.parse(trimmed)
+            } catch (_: Exception) {
+                try {
+                    java.time.LocalDateTime.parse(trimmed)
+                        .atZone(java.time.ZoneId.systemDefault())
+                        .toInstant()
+                } catch (_: Exception) {
+                    null
+                }
+            }
+            if (instant != null) {
+                return Date.from(instant)
             }
         }
+    } catch (_: Throwable) {
+        // Safe fallback
+    }
+
+    return null
+}
+
+private fun formatNotificationTime(createdAt: String?): String? {
+    if (createdAt.isNullOrBlank()) return null
+    val date = parseNotificationDate(createdAt) ?: return null
+
+    return try {
+        val now = Calendar.getInstance()
+        val target = Calendar.getInstance().apply {
+            time = date
+            timeZone = TimeZone.getDefault()
+        }
+
+        val isSameYear = now.get(Calendar.YEAR) == target.get(Calendar.YEAR)
+        val isToday = isSameYear && now.get(Calendar.DAY_OF_YEAR) == target.get(Calendar.DAY_OF_YEAR)
+
+        val yesterday = Calendar.getInstance().apply { add(Calendar.DAY_OF_YEAR, -1) }
+        val isYesterday = yesterday.get(Calendar.YEAR) == target.get(Calendar.YEAR) &&
+                yesterday.get(Calendar.DAY_OF_YEAR) == target.get(Calendar.DAY_OF_YEAR)
+
+        val timeFormatter = SimpleDateFormat("hh:mm a", Locale.getDefault()).apply {
+            timeZone = TimeZone.getDefault()
+        }
+        val formattedTime = timeFormatter.format(date)
+
+        when {
+            isToday -> "Today · $formattedTime"
+            isYesterday -> "Yesterday · $formattedTime"
+            else -> {
+                val dateFormatter = SimpleDateFormat("d MMM yyyy", Locale.getDefault()).apply {
+                    timeZone = TimeZone.getDefault()
+                }
+                val formattedDate = dateFormatter.format(date)
+                "$formattedDate · $formattedTime"
+            }
+        }
+    } catch (_: Exception) {
+        null
     }
 }
 

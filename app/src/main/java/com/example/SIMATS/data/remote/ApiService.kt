@@ -221,8 +221,18 @@ interface ApiService {
         @Query("user_id") userId: Int? = null
     ): DataResponse<List<NotificationItem>>
 
+    @FormUrlEncoded
     @POST("notifications/notifications.php")
-    suspend fun markAllNotificationsRead(): BaseResponse
+    suspend fun markAllNotificationsRead(
+        @Field("user_id") userId: Int? = null
+    ): BaseResponse
+
+    @FormUrlEncoded
+    @POST("notifications/notification_mark_read.php")
+    suspend fun markNotificationRead(
+        @Field("user_id") userId: Int,
+        @Field("notification_id") notificationId: Int
+    ): BaseResponse
 
     // -------------------------------------------------------------------------
     // AI Chat
