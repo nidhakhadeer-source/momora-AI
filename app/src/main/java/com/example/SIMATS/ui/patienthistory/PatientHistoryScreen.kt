@@ -42,6 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import com.example.SIMATS.data.model.PatientMedicalHistoryData
 import com.example.SIMATS.data.model.PatientMedicationItem
 import com.example.SIMATS.data.model.PatientReportItem
@@ -68,6 +69,7 @@ fun PatientHistoryScreen(
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     PatientHistoryScreenContent(
         modifier = modifier,
@@ -75,6 +77,7 @@ fun PatientHistoryScreen(
         onTabSelected = { index -> viewModel.onEvent(PatientHistoryUiEvent.OnTabSelected(index)) },
         onMedicationClick = { medication -> viewModel.onEvent(PatientHistoryUiEvent.OnMedicationClicked(medication)) },
         onDismissMedicationSheet = { viewModel.onEvent(PatientHistoryUiEvent.OnDismissMedicationSheet) },
+        onReportClick = { report -> viewModel.onEvent(PatientHistoryUiEvent.OnReportClicked(report, context)) },
         onViewAllReportsClick = { viewModel.onEvent(PatientHistoryUiEvent.OnViewAllReportsClicked) },
         onOpenHealthMonitoringClick = {
             viewModel.onEvent(PatientHistoryUiEvent.OnOpenHealthMonitoringClicked)
@@ -129,6 +132,7 @@ fun PatientHistoryScreenContent(
     onTabSelected: (Int) -> Unit = {},
     onMedicationClick: (PatientMedicationItem) -> Unit = {},
     onDismissMedicationSheet: () -> Unit = {},
+    onReportClick: (PatientReportItem) -> Unit = {},
     onViewAllReportsClick: () -> Unit = {},
     onOpenHealthMonitoringClick: () -> Unit = {},
     onRetryClick: () -> Unit = {},
@@ -631,12 +635,14 @@ fun PatientHistoryScreenContent(
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
                             data?.reports?.forEach { report ->
+                                val isDownloadingThis = uiState.downloadingReportId == report.id
                                 Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(16.dp))
                                         .background(Color.White)
                                         .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                                        .clickable { onReportClick(report) }
                                         .padding(14.dp)
                                 ) {
                                     Row(
@@ -660,7 +666,7 @@ fun PatientHistoryScreenContent(
 
                                             Spacer(modifier = Modifier.width(12.dp))
 
-                                            Column {
+                                            Column(modifier = Modifier.weight(1f)) {
                                                 Text(
                                                     text = report.title.sanitizeDoctorText(),
                                                     fontSize = 13.5.sp,
@@ -676,18 +682,39 @@ fun PatientHistoryScreenContent(
                                             }
                                         }
 
-                                        if (!report.size.isNullOrBlank()) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .clip(RoundedCornerShape(6.dp))
-                                                    .background(Color(0xFFF4ECF8))
-                                                    .padding(horizontal = 8.dp, vertical = 3.dp)
-                                            ) {
+                                        Spacer(modifier = Modifier.width(8.dp))
+
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            if (isDownloadingThis) {
+                                                CircularProgressIndicator(
+                                                    color = MomoraPurplePrimary,
+                                                    modifier = Modifier.size(16.dp),
+                                                    strokeWidth = 2.dp
+                                                )
+                                            } else {
+                                                if (!report.size.isNullOrBlank()) {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .clip(RoundedCornerShape(6.dp))
+                                                            .background(Color(0xFFF4ECF8))
+                                                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = report.size.sanitizeDoctorText(),
+                                                            fontSize = 11.sp,
+                                                            fontWeight = FontWeight.Medium,
+                                                            color = MomoraPurplePrimary
+                                                        )
+                                                    }
+                                                }
                                                 Text(
-                                                    text = report.size.sanitizeDoctorText(),
-                                                    fontSize = 11.sp,
+                                                    text = "›",
+                                                    fontSize = 20.sp,
                                                     fontWeight = FontWeight.Medium,
-                                                    color = MomoraPurplePrimary
+                                                    color = Color(0xFF8C7F92)
                                                 )
                                             }
                                         }

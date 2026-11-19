@@ -31,6 +31,8 @@ import com.example.SIMATS.data.model.SymptomEntryData
 import com.example.SIMATS.data.model.WeightTrackerData
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import okhttp3.ResponseBody
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.Field
 import retrofit2.http.FieldMap
@@ -40,6 +42,8 @@ import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.Query
+import retrofit2.http.Streaming
+import retrofit2.http.Url
 
 data class ProfilePhotoUploadData(
     val user_id: Int? = null,
@@ -212,6 +216,27 @@ interface ApiService {
         @Field("fileName") fileName: String,
         @Field("category") category: String = "LAB_RESULTS"
     ): BaseResponse
+
+    @Multipart
+    @POST("reports/reports.php")
+    suspend fun uploadMedicalReport(
+        @Part file: MultipartBody.Part,
+        @Part("title") title: RequestBody,
+        @Part("category") category: RequestBody,
+        @Part("description") description: RequestBody? = null
+    ): BaseResponse
+
+    @Streaming
+    @GET("reports/download.php")
+    suspend fun downloadReport(
+        @Query("id") reportId: String
+    ): Response<ResponseBody>
+
+    @Streaming
+    @GET
+    suspend fun downloadReportFromUrl(
+        @Url fileUrl: String
+    ): Response<ResponseBody>
 
     // -------------------------------------------------------------------------
     // Notifications

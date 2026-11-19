@@ -12,5 +12,6 @@ data class PatientHistoryUiState(
     val isMedicationSheetOpen: Boolean = false,
     val selectedNavIndex: Int = 1, // Patients tab active (index 1)
     val isLoading: Boolean = false,
+    val downloadingReportId: String? = null,
     val errorMessage: String? = null
 )

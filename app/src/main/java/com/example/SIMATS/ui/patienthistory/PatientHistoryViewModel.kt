@@ -1,18 +1,25 @@
 package com.example.SIMATS.ui.patienthistory
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.SIMATS.data.model.PatientReportItem
+import com.example.SIMATS.data.repository.MedicalReportsRepository
+import com.example.SIMATS.data.repository.MedicalReportsRepositoryImpl
 import com.example.SIMATS.data.repository.PatientHistoryRepository
 import com.example.SIMATS.data.repository.PatientHistoryRepositoryImpl
 import com.example.SIMATS.navigation.SelectedPatientHolder
+import com.example.SIMATS.ui.medicalreports.ReportFileHelper
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.io.File
 
 class PatientHistoryViewModel(
     private val repository: PatientHistoryRepository = PatientHistoryRepositoryImpl(),
+    private val reportsRepository: MedicalReportsRepository = MedicalReportsRepositoryImpl(),
     patientId: String? = SelectedPatientHolder.selectedPatientId,
     patientName: String? = SelectedPatientHolder.selectedPatientName
 ) : ViewModel() {
@@ -56,6 +63,9 @@ class PatientHistoryViewModel(
             is PatientHistoryUiEvent.OnNavTabSelected -> {
                 _uiState.value = _uiState.value.copy(selectedNavIndex = event.index)
             }
+            is PatientHistoryUiEvent.OnReportClicked -> {
+                downloadAndOpenReport(event.report, event.context)
+            }
             PatientHistoryUiEvent.OnViewAllReportsClicked -> {
                 _uiState.value = _uiState.value.copy(selectedTab = 1)
             }
@@ -74,6 +84,57 @@ class PatientHistoryViewModel(
             }
             PatientHistoryUiEvent.OnBackClicked -> {}
             PatientHistoryUiEvent.OnNotificationClicked -> {}
+        }
+    }
+
+    fun downloadAndOpenReport(report: PatientReportItem, context: Context) {
+        if (_uiState.value.downloadingReportId == report.id) return
+
+        val safeTitle = report.title.ifBlank { "report_${report.id}" }
+            .replace(Regex("[^a-zA-Z0-9_-]"), "_")
+        val ext = when {
+            report.originalFilename?.lowercase()?.endsWith(".jpg") == true -> "jpg"
+            report.originalFilename?.lowercase()?.endsWith(".jpeg") == true -> "jpeg"
+            report.originalFilename?.lowercase()?.endsWith(".png") == true -> "png"
+            report.fileType?.equals("jpg", ignoreCase = true) == true || report.fileType?.equals("jpeg", ignoreCase = true) == true -> "jpg"
+            report.fileType?.equals("png", ignoreCase = true) == true -> "png"
+            else -> "pdf"
+        }
+        val mime = ReportFileHelper.resolveMimeType(
+            fileName = report.originalFilename ?: "report.$ext",
+            fileType = report.fileType,
+            mimeType = report.mimeType
+        )
+
+        val destDir = File(context.cacheDir, "reports")
+        destDir.mkdirs()
+        val destFile = File(destDir, "report_${report.id}_$safeTitle.$ext")
+
+        if (destFile.exists() && destFile.length() > 0) {
+            ReportFileHelper.openFile(context, destFile, mime)
+            return
+        }
+
+        _uiState.value = _uiState.value.copy(downloadingReportId = report.id)
+        viewModelScope.launch {
+            val flow = if (!report.downloadUrl.isNullOrBlank()) {
+                reportsRepository.downloadReportFromUrl(report.downloadUrl, destFile)
+            } else {
+                reportsRepository.downloadReportFile(report.id, destFile)
+            }
+            flow.collect { result ->
+                _uiState.value = _uiState.value.copy(downloadingReportId = null)
+                result.fold(
+                    onSuccess = { file ->
+                        ReportFileHelper.openFile(context, file, mime)
+                    },
+                    onFailure = { err ->
+                        _uiState.value = _uiState.value.copy(
+                            errorMessage = err.message ?: "Failed to open patient report"
+                        )
+                    }
+                )
+            }
         }
     }
 
@@ -120,11 +181,12 @@ class PatientHistoryViewModel(
 
     class Factory(
         private val repository: PatientHistoryRepository = PatientHistoryRepositoryImpl(),
+        private val reportsRepository: MedicalReportsRepository = MedicalReportsRepositoryImpl(),
         private val patientId: String? = null
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return PatientHistoryViewModel(repository, patientId) as T
+            return PatientHistoryViewModel(repository, reportsRepository, patientId) as T
         }
     }
 }

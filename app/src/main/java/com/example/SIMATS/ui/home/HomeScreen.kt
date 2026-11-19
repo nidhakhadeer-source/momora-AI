@@ -71,6 +71,7 @@ fun HomeScreen(
     onMedicationClick: () -> Unit = onViewAllDailyCareClick,
     onAppointmentClick: () -> Unit = {},
     onDoctorAdviceClick: () -> Unit = {},
+    onMedicalReportsClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -82,6 +83,7 @@ fun HomeScreen(
             viewModel.onEvent(HomeUiEvent.OnDoctorAdviceClicked)
             onDoctorAdviceClick()
         },
+        onMedicalReportsClick = onMedicalReportsClick,
         onNavTabSelected = { index ->
             viewModel.onEvent(HomeUiEvent.OnNavTabSelected(index))
             onNavTabSelected(index)
@@ -177,6 +179,7 @@ fun HomeScreenContent(
     onMedicationClick: () -> Unit = onViewAllDailyCareClick,
     onAppointmentClick: () -> Unit = {},
     onDoctorAdviceClick: () -> Unit = {},
+    onMedicalReportsClick: () -> Unit = {},
     onRetryClick: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -728,6 +731,73 @@ fun HomeScreenContent(
                     }
                 }
 
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Medical Reports Card (Shortcut to MedicalReportsScreen)
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                        .clip(RoundedCornerShape(16.dp))
+                        .clickable { onMedicalReportsClick() }
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            modifier = Modifier.weight(1f),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFEDE4F0)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                MedicalReportCardIcon(
+                                    color = MomoraPurplePrimary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Medical reports",
+                                    fontSize = 14.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MomoraPurpleDark
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "Upload, view and manage ultrasound and lab reports",
+                                    fontSize = 11.5.sp,
+                                    lineHeight = 16.sp,
+                                    color = MomoraBodyMuted
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Text(
+                            text = "›",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color(0xFF8C7F92)
+                        )
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(20.dp))
             }
         }
@@ -1253,6 +1323,26 @@ private fun DoctorAdviceCardIcon(color: Color, modifier: Modifier = Modifier) {
         drawLine(color = color, start = Offset(w * 0.32f, h * 0.42f), end = Offset(w * 0.68f, h * 0.42f), strokeWidth = stroke, cap = StrokeCap.Round)
         drawLine(color = color, start = Offset(w * 0.32f, h * 0.55f), end = Offset(w * 0.68f, h * 0.55f), strokeWidth = stroke, cap = StrokeCap.Round)
         drawLine(color = color, start = Offset(w * 0.32f, h * 0.68f), end = Offset(w * 0.52f, h * 0.68f), strokeWidth = stroke, cap = StrokeCap.Round)
+    }
+}
+
+@Composable
+private fun MedicalReportCardIcon(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val stroke = 1.8.dp.toPx()
+        val p = Path().apply {
+            moveTo(w * 0.22f, h * 0.16f)
+            lineTo(w * 0.58f, h * 0.16f)
+            lineTo(w * 0.78f, h * 0.36f)
+            lineTo(w * 0.78f, h * 0.84f)
+            lineTo(w * 0.22f, h * 0.84f)
+            close()
+        }
+        drawPath(p, color = color, style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        drawLine(color = color, start = Offset(w * 0.34f, h * 0.48f), end = Offset(w * 0.66f, h * 0.48f), strokeWidth = stroke, cap = StrokeCap.Round)
+        drawLine(color = color, start = Offset(w * 0.34f, h * 0.62f), end = Offset(w * 0.66f, h * 0.62f), strokeWidth = stroke, cap = StrokeCap.Round)
     }
 }
 

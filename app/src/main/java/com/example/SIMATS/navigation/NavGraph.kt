@@ -276,6 +276,7 @@ fun AppNavHost() {
                 onMedicationClick = { currentScreen = Screen.Medication },
                 onAppointmentClick = { currentScreen = Screen.AppointmentsCalendar },
                 onDoctorAdviceClick = { currentScreen = Screen.PatientDoctorAdvice },
+                onMedicalReportsClick = { currentScreen = Screen.MedicalReports },
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
