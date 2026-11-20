@@ -26,6 +26,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -63,6 +64,7 @@ import com.example.SIMATS.ui.theme.MomoraScreenBackground
 fun PatientHistoryScreen(
     viewModel: PatientHistoryViewModel,
     modifier: Modifier = Modifier,
+    selectedNavIndex: Int = 1,
     onNavigateBack: () -> Unit = {},
     onOpenHealthMonitoringClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
@@ -71,9 +73,17 @@ fun PatientHistoryScreen(
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
 
+    LaunchedEffect(Unit) {
+        if (SelectedPatientHolder.initialTab != 0) {
+            viewModel.onEvent(PatientHistoryUiEvent.OnTabSelected(SelectedPatientHolder.initialTab))
+            SelectedPatientHolder.initialTab = 0
+        }
+    }
+
     PatientHistoryScreenContent(
         modifier = modifier,
         uiState = uiState,
+        selectedNavIndex = selectedNavIndex,
         onTabSelected = { index -> viewModel.onEvent(PatientHistoryUiEvent.OnTabSelected(index)) },
         onMedicationClick = { medication -> viewModel.onEvent(PatientHistoryUiEvent.OnMedicationClicked(medication)) },
         onDismissMedicationSheet = { viewModel.onEvent(PatientHistoryUiEvent.OnDismissMedicationSheet) },
@@ -138,6 +148,7 @@ fun PatientHistoryScreenContent(
     onRetryClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
+    selectedNavIndex: Int = 1,
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -869,7 +880,7 @@ fun PatientHistoryScreenContent(
 
         // 3. Doctor Bottom Navigation Bar
         DoctorBottomNavBar(
-            selectedIndex = uiState.selectedNavIndex,
+            selectedIndex = selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
     }

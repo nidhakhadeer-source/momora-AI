@@ -61,6 +61,7 @@ import com.example.SIMATS.ui.theme.MomoraScreenBackground
 fun AppointmentsCalendarScreen(
     viewModel: AppointmentsCalendarViewModel,
     modifier: Modifier = Modifier,
+    selectedNavIndex: Int = 3,
     onNavigateBack: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
@@ -69,6 +70,7 @@ fun AppointmentsCalendarScreen(
     AppointmentsCalendarScreenContent(
         modifier = modifier,
         uiState = uiState,
+        selectedNavIndex = selectedNavIndex,
         onVisitTypeToggled = { inPerson -> viewModel.onEvent(AppointmentsCalendarUiEvent.OnVisitTypeToggled(inPerson)) },
         onDateSelected = { day -> viewModel.onEvent(AppointmentsCalendarUiEvent.OnDateSelected(day)) },
         onTimeSlotSelected = { slot -> viewModel.onEvent(AppointmentsCalendarUiEvent.OnTimeSlotSelected(slot)) },
@@ -121,6 +123,7 @@ fun AppointmentsCalendarScreenContent(
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onRetryClick: () -> Unit = {},
+    selectedNavIndex: Int = 3,
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -652,7 +655,7 @@ fun AppointmentsCalendarScreenContent(
 
         // 3. Bottom Dashboard Navigation Bar
         DashboardBottomNavBar(
-            selectedIndex = uiState.selectedNavIndex,
+            selectedIndex = selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
     }

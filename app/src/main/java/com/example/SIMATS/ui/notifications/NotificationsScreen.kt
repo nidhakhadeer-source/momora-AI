@@ -62,6 +62,7 @@ import java.util.TimeZone
 fun NotificationsScreen(
     viewModel: NotificationsViewModel,
     modifier: Modifier = Modifier,
+    selectedNavIndex: Int = 3,
     onNavigateBack: () -> Unit = {},
     onNotificationClick: (NotificationItem) -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
@@ -71,6 +72,7 @@ fun NotificationsScreen(
     NotificationsScreenContent(
         modifier = modifier,
         uiState = uiState,
+        selectedNavIndex = selectedNavIndex,
         onFilterTabSelected = { index -> viewModel.onEvent(NotificationsUiEvent.OnFilterTabSelected(index)) },
         onMarkAllReadClick = { viewModel.onEvent(NotificationsUiEvent.OnMarkAllReadClicked) },
         onNotificationItemClick = { item ->
@@ -142,6 +144,7 @@ fun NotificationsScreenContent(
     onPrivacySettingsClick: () -> Unit = {},
     onRetryClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
+    selectedNavIndex: Int = 3,
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -391,7 +394,7 @@ fun NotificationsScreenContent(
 
         // 3. Bottom Dashboard Navigation Bar
         DashboardBottomNavBar(
-            selectedIndex = uiState.selectedNavIndex,
+            selectedIndex = selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
     }

@@ -59,6 +59,7 @@ import com.example.SIMATS.ui.theme.MomoraScreenBackground
 fun AdminDashboardScreen(
     viewModel: AdminDashboardViewModel,
     modifier: Modifier = Modifier,
+    selectedNavIndex: Int = 0,
     onManageDoctorsClick: () -> Unit = {},
     onManagePatientsClick: () -> Unit = {},
     onAddDoctorClick: () -> Unit = {},
@@ -69,6 +70,7 @@ fun AdminDashboardScreen(
     AdminDashboardScreenContent(
         modifier = modifier,
         uiState = uiState,
+        selectedNavIndex = selectedNavIndex,
         onManageDoctorsClick = {
             viewModel.onEvent(AdminDashboardUiEvent.OnManageDoctorsClicked)
             onManageDoctorsClick()
@@ -111,6 +113,7 @@ fun AdminDashboardScreenContent(
     onAddDoctorClick: () -> Unit = {},
     onRetryClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
+    selectedNavIndex: Int = 0,
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -568,7 +571,7 @@ fun AdminDashboardScreenContent(
 
         // 3. Admin Bottom Navigation Bar (4 Admin Tabs)
         AdminBottomNavBar(
-            selectedIndex = uiState.selectedNavIndex,
+            selectedIndex = selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
     }

@@ -66,6 +66,7 @@ import com.example.SIMATS.ui.theme.MomoraScreenBackground
 fun MainScreen(
     viewModel: MainViewModel,
     modifier: Modifier = Modifier,
+    selectedNavIndex: Int = 0,
     onLogoutSuccess: () -> Unit = {},
     onViewAssignedPatientsClick: () -> Unit = {},
     onScheduleClick: () -> Unit = {},
@@ -86,6 +87,7 @@ fun MainScreen(
     MainScreenContent(
         modifier = modifier,
         uiState = uiState,
+        selectedNavIndex = selectedNavIndex,
         onNavTabSelected = { index ->
             viewModel.onEvent(MainUiEvent.OnNavTabSelected(index))
             onNavTabSelected(index)
@@ -152,6 +154,7 @@ fun MainScreenContent(
             )
         )
     ),
+    selectedNavIndex: Int = 0,
     onNavTabSelected: (Int) -> Unit = {},
     onReviewPatientClick: (String, String) -> Unit = { _, _ -> },
     onViewAssignedPatientsClick: () -> Unit = {},
@@ -352,30 +355,20 @@ fun MainScreenContent(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(18.dp))
+                    .clip(RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.primaryContainer)
                     .clickable { onViewAssignedPatientsClick() }
                     .padding(16.dp)
             ) {
-                Column {
-                    Text(
-                        text = "${data?.assignedPatientsCount ?: 18} assigned patients",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = "Pre-connected, consent-based care overview.",
-                        fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                    )
-                }
+                Text(
+                    text = "${data?.assignedPatientsCount ?: 18} assigned patients",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Visits & Reviews Summary Row
             Row(
@@ -447,40 +440,30 @@ fun MainScreenContent(
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // "Needs your review" Section
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Needs your review",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+            Text(
+                text = "Needs your review",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
 
-                Text(
-                    text = "View patients",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.clickable { onViewAssignedPatientsClick() }
-                )
-            }
+            Spacer(modifier = Modifier.height(12.dp))
 
-            Spacer(modifier = Modifier.height(10.dp))
+            // Grouped Review Items Card List
+            val groupedReviews = (data?.reviewItems.orEmpty())
+                .groupBy { it.patientName }
+                .entries
+                .toList()
 
-            // Review Items Card List
-            if (data?.reviewItems.isNullOrEmpty()) {
+            if (groupedReviews.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
                         .background(MaterialTheme.colorScheme.surface)
-                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
                         .padding(20.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -505,22 +488,52 @@ fun MainScreenContent(
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
                         .background(MaterialTheme.colorScheme.surface)
-                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
-                        .padding(horizontal = 14.dp, vertical = 6.dp)
+                        .padding(horizontal = 16.dp, vertical = 6.dp)
                 ) {
-                    data?.reviewItems?.forEachIndexed { index, item ->
-                        DoctorReviewRow(
-                            item = item,
-                            onClick = { onReviewPatientClick(item.id, item.patientName) }
+                    val displayedGroups = groupedReviews.take(3)
+                    displayedGroups.forEachIndexed { index, entry ->
+                        val patientName = entry.key
+                        val items = entry.value
+                        val firstItem = items.first()
+                        val patientId = firstItem.id
+                        val gestationalAge = firstItem.gestationalAge
+                        val count = items.size
+                        val countText = if (count == 1) "1 report to review" else "$count reports to review"
+
+                        DoctorPatientReviewRow(
+                            patientName = patientName,
+                            gestationalAge = gestationalAge,
+                            countText = countText,
+                            onReviewClick = {
+                                SelectedPatientHolder.initialTab = 1
+                                onReviewPatientClick(patientId, patientName)
+                            }
                         )
-                        if (index < (data.reviewItems.size - 1)) {
+                        if (index < (displayedGroups.size - 1)) {
                             Spacer(modifier = Modifier.height(4.dp))
                         }
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onViewAssignedPatientsClick() }
+                            .padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "All reviews",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // "Next appointment" Section
             Row(
@@ -544,7 +557,7 @@ fun MainScreenContent(
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Next Appointment Card
             val nextAppt = data?.nextAppointment
@@ -553,7 +566,6 @@ fun MainScreenContent(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
                     .background(MaterialTheme.colorScheme.surface)
-                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
                     .clickable { onNextAppointmentClick() }
                     .padding(14.dp)
             ) {
@@ -613,66 +625,29 @@ fun MainScreenContent(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Spacer(modifier = Modifier.height(18.dp))
-
-            // View assigned patients Primary Button
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(MaterialTheme.colorScheme.primary)
-                    .clickable { onViewAssignedPatientsClick() },
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "View assigned patients",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "👥",
-                        fontSize = 16.sp
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Clinical decisions remain with the treating care team.",
-                fontSize = 11.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-            }
-
             Spacer(modifier = Modifier.height(16.dp))
+            }
         }
 
         // 3. Doctor Bottom Navigation Bar (4 Doctor Tabs)
         DoctorBottomNavBar(
-            selectedIndex = uiState.selectedNavIndex,
+            selectedIndex = selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
     }
 }
 
 @Composable
-private fun DoctorReviewRow(
-    item: DoctorReviewItem,
-    onClick: () -> Unit
+private fun DoctorPatientReviewRow(
+    patientName: String,
+    gestationalAge: String,
+    countText: String,
+    onReviewClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() }
+            .clickable { onReviewClick() }
             .padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
@@ -695,14 +670,19 @@ private fun DoctorReviewRow(
 
             Column {
                 Text(
-                    text = item.patientName.sanitizeDoctorText(),
+                    text = patientName.sanitizeDoctorText(),
                     fontSize = 13.5.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(2.dp))
+                val subtitle = if (gestationalAge.isNotBlank()) {
+                    "${gestationalAge.sanitizeDoctorText()} · $countText"
+                } else {
+                    countText
+                }
                 Text(
-                    text = "${item.gestationalAge.sanitizeDoctorText()} · ${item.reportType.sanitizeDoctorText()}",
+                    text = subtitle,
                     fontSize = 11.5.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -713,6 +693,7 @@ private fun DoctorReviewRow(
             modifier = Modifier
                 .clip(RoundedCornerShape(50))
                 .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+                .clickable { onReviewClick() }
                 .padding(horizontal = 14.dp, vertical = 5.dp)
         ) {
             Text(

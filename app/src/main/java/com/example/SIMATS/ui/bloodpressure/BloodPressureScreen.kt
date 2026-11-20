@@ -61,6 +61,7 @@ import com.example.SIMATS.ui.theme.MomoraScreenBackground
 fun BloodPressureScreen(
     viewModel: BloodPressureViewModel,
     modifier: Modifier = Modifier,
+    selectedNavIndex: Int = 1,
     onNavigateBack: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
@@ -69,6 +70,7 @@ fun BloodPressureScreen(
     BloodPressureScreenContent(
         modifier = modifier,
         uiState = uiState,
+        selectedNavIndex = selectedNavIndex,
         onSystolicInputChanged = { sys -> viewModel.onEvent(BloodPressureUiEvent.OnSystolicInputChanged(sys)) },
         onDiastolicInputChanged = { dia -> viewModel.onEvent(BloodPressureUiEvent.OnDiastolicInputChanged(dia)) },
         onSaveReadingClick = { viewModel.onEvent(BloodPressureUiEvent.OnSaveReadingClicked) },
@@ -114,6 +116,7 @@ fun BloodPressureScreenContent(
     onRetryClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
+    selectedNavIndex: Int = 1,
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -451,7 +454,7 @@ fun BloodPressureScreenContent(
 
         // 3. Bottom Navigation Bar
         DashboardBottomNavBar(
-            selectedIndex = uiState.selectedNavIndex,
+            selectedIndex = selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
     }

@@ -59,6 +59,7 @@ import com.example.SIMATS.ui.theme.MomoraScreenBackground
 fun MedicationRemindersScreen(
     viewModel: MedicationRemindersViewModel,
     modifier: Modifier = Modifier,
+    selectedNavIndex: Int = 3,
     onNavigateBack: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
@@ -67,6 +68,7 @@ fun MedicationRemindersScreen(
     MedicationRemindersScreenContent(
         modifier = modifier,
         uiState = uiState,
+        selectedNavIndex = selectedNavIndex,
         onTabSelected = { index -> viewModel.onEvent(MedicationRemindersUiEvent.OnTabSelected(index)) },
         onScheduleDaySelected = { index -> viewModel.onEvent(MedicationRemindersUiEvent.OnScheduleDaySelected(index)) },
         onMarkAsTakenClick = { id -> viewModel.onEvent(MedicationRemindersUiEvent.OnMarkAsTakenClicked(id)) },
@@ -119,6 +121,7 @@ fun MedicationRemindersScreenContent(
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onRetryClick: () -> Unit = {},
+    selectedNavIndex: Int = 3,
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -585,7 +588,7 @@ fun MedicationRemindersScreenContent(
 
         // 3. Bottom Dashboard Navigation Bar
         DashboardBottomNavBar(
-            selectedIndex = uiState.selectedNavIndex,
+            selectedIndex = selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
     }

@@ -56,6 +56,7 @@ import com.example.SIMATS.ui.theme.MomoraScreenBackground
 fun AdminSettingsScreen(
     viewModel: AdminSettingsViewModel,
     modifier: Modifier = Modifier,
+    selectedNavIndex: Int = 3,
     onNavigateBack: () -> Unit = {},
     onLogoutSuccess: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
@@ -69,6 +70,7 @@ fun AdminSettingsScreen(
     AdminSettingsScreenContent(
         modifier = modifier,
         uiState = uiState,
+        selectedNavIndex = selectedNavIndex,
         onChangePasswordClick = { viewModel.onEvent(AdminSettingsUiEvent.OnChangePasswordClicked) },
         onMfaClick = { viewModel.onEvent(AdminSettingsUiEvent.OnMfaClicked) },
         onSessionTimeoutClick = { viewModel.onEvent(AdminSettingsUiEvent.OnSessionTimeoutClicked) },
@@ -112,6 +114,7 @@ fun AdminSettingsScreenContent(
     onRetryClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
+    selectedNavIndex: Int = 3,
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -466,7 +469,7 @@ fun AdminSettingsScreenContent(
 
         // 3. Admin Bottom Navigation Bar
         AdminBottomNavBar(
-            selectedIndex = uiState.selectedNavIndex,
+            selectedIndex = selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
     }

@@ -62,6 +62,7 @@ import com.example.SIMATS.ui.theme.MomoraScreenBackground
 fun DoctorNotificationsScreen(
     viewModel: NotificationsViewModel,
     modifier: Modifier = Modifier,
+    selectedNavIndex: Int = 0,
     onNavigateBack: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
@@ -70,6 +71,7 @@ fun DoctorNotificationsScreen(
     DoctorNotificationsScreenContent(
         modifier = modifier,
         uiState = uiState,
+        selectedNavIndex = selectedNavIndex,
         onFilterTabSelected = { index -> viewModel.onEvent(NotificationsUiEvent.OnFilterTabSelected(index)) },
         onMarkAllReadClick = { viewModel.onEvent(NotificationsUiEvent.OnMarkAllReadClicked) },
         onNotificationItemClick = { id -> viewModel.onEvent(NotificationsUiEvent.OnNotificationItemClicked(id)) },
@@ -83,6 +85,7 @@ fun DoctorNotificationsScreen(
 fun DoctorNotificationsScreenContent(
     modifier: Modifier = Modifier,
     uiState: NotificationsUiState = NotificationsUiState(),
+    selectedNavIndex: Int = 0,
     onFilterTabSelected: (Int) -> Unit = {},
     onMarkAllReadClick: () -> Unit = {},
     onNotificationItemClick: (String) -> Unit = {},
@@ -326,7 +329,7 @@ fun DoctorNotificationsScreenContent(
 
         // 3. Four Doctor Bottom Tabs
         DoctorBottomNavBar(
-            selectedIndex = -1,
+            selectedIndex = selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
     }

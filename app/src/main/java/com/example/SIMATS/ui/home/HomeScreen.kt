@@ -73,6 +73,7 @@ fun HomeScreen(
     onAppointmentClick: () -> Unit = {},
     onDoctorAdviceClick: () -> Unit = {},
     onMedicalReportsClick: () -> Unit = {},
+    selectedNavIndex: Int = 0,
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -80,6 +81,7 @@ fun HomeScreen(
     HomeScreenContent(
         modifier = modifier,
         uiState = uiState,
+        selectedNavIndex = selectedNavIndex,
         onDoctorAdviceClick = {
             viewModel.onEvent(HomeUiEvent.OnDoctorAdviceClicked)
             onDoctorAdviceClick()
@@ -181,6 +183,7 @@ fun HomeScreenContent(
     onAppointmentClick: () -> Unit = {},
     onDoctorAdviceClick: () -> Unit = {},
     onMedicalReportsClick: () -> Unit = {},
+    selectedNavIndex: Int = 0,
     onRetryClick: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -808,7 +811,7 @@ fun HomeScreenContent(
 
         // 3. Bottom Dashboard Navigation Bar
         DashboardBottomNavBar(
-            selectedIndex = uiState.selectedNavIndex,
+            selectedIndex = selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
     }

@@ -60,6 +60,7 @@ import com.example.SIMATS.ui.theme.MomoraScreenBackground
 fun AddDoctorScreen(
     viewModel: AddDoctorViewModel,
     modifier: Modifier = Modifier,
+    selectedNavIndex: Int = 1,
     onNavigateBack: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
@@ -68,6 +69,7 @@ fun AddDoctorScreen(
     AddDoctorScreenContent(
         modifier = modifier,
         uiState = uiState,
+        selectedNavIndex = selectedNavIndex,
         onNameChanged = { n -> viewModel.onEvent(AddDoctorUiEvent.OnNameChanged(n)) },
         onEmailChanged = { e -> viewModel.onEvent(AddDoctorUiEvent.OnEmailChanged(e)) },
         onSpecialtyChanged = { s -> viewModel.onEvent(AddDoctorUiEvent.OnSpecialtyChanged(s)) },
@@ -111,6 +113,7 @@ fun AddDoctorScreenContent(
     onRetryClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
+    selectedNavIndex: Int = 1,
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -583,7 +586,7 @@ fun AddDoctorScreenContent(
 
         // 3. Admin Bottom Navigation Bar
         AdminBottomNavBar(
-            selectedIndex = uiState.selectedNavIndex,
+            selectedIndex = selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
     }

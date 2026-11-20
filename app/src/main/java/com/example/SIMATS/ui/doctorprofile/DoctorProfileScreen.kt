@@ -75,6 +75,7 @@ import java.net.URL
 fun DoctorProfileScreen(
     viewModel: DoctorProfileViewModel,
     modifier: Modifier = Modifier,
+    selectedNavIndex: Int = 0,
     onNavigateBack: () -> Unit = {},
     onLogoutSuccess: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
@@ -90,6 +91,7 @@ fun DoctorProfileScreen(
     DoctorProfileScreenContent(
         modifier = modifier,
         uiState = uiState,
+        selectedNavIndex = selectedNavIndex,
         onBackClick = onNavigateBack,
         onToggleEditClick = { viewModel.onEvent(DoctorProfileUiEvent.OnToggleEditMode) },
         onCancelEditClick = { viewModel.onEvent(DoctorProfileUiEvent.OnCancelEditClicked) },
@@ -156,6 +158,7 @@ fun DoctorProfileScreenContent(
     onQualificationChanged: (String) -> Unit = {},
     onExperienceYearsChanged: (String) -> Unit = {},
     onPhotoUrlChanged: (String) -> Unit = {},
+    selectedNavIndex: Int = 0,
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -598,7 +601,7 @@ fun DoctorProfileScreenContent(
 
         // 3. Bottom Navigation Bar (4 Doctor Tabs)
         DoctorBottomNavBar(
-            selectedIndex = uiState.selectedNavIndex,
+            selectedIndex = selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
     }

@@ -71,6 +71,7 @@ private fun cleanDots(text: String): String {
 fun NutritionPlanScreen(
     viewModel: NutritionPlanViewModel,
     modifier: Modifier = Modifier,
+    selectedNavIndex: Int = 3,
     onNavigateBack: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
@@ -79,6 +80,7 @@ fun NutritionPlanScreen(
     NutritionPlanScreenContent(
         modifier = modifier,
         uiState = uiState,
+        selectedNavIndex = selectedNavIndex,
         onRetryClick = { viewModel.onEvent(NutritionPlanUiEvent.OnRetryClicked) },
         onFeaturedMealClick = { viewModel.onEvent(NutritionPlanUiEvent.OnFeaturedMealClicked) },
         onPriorityClick = { id -> viewModel.onEvent(NutritionPlanUiEvent.OnPriorityClicked(id)) },
@@ -109,6 +111,7 @@ fun NutritionPlanScreenContent(
     onDismissMealSheet: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
+    selectedNavIndex: Int = 3,
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -649,7 +652,7 @@ fun NutritionPlanScreenContent(
 
         // 3. Bottom Dashboard Navigation Bar
         DashboardBottomNavBar(
-            selectedIndex = uiState.selectedNavIndex,
+            selectedIndex = selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
     }

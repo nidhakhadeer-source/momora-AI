@@ -61,6 +61,7 @@ import com.example.SIMATS.ui.theme.MomoraScreenBackground
 fun SymptomLoggerScreen(
     viewModel: SymptomLoggerViewModel,
     modifier: Modifier = Modifier,
+    selectedNavIndex: Int = 1,
     onNavigateBack: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
@@ -69,6 +70,7 @@ fun SymptomLoggerScreen(
     SymptomLoggerScreenContent(
         modifier = modifier,
         uiState = uiState,
+        selectedNavIndex = selectedNavIndex,
         onRetryClick = { viewModel.onEvent(SymptomLoggerUiEvent.OnRetryClicked) },
         onSymptomSelected = { symptom -> viewModel.onEvent(SymptomLoggerUiEvent.OnSymptomSelected(symptom)) },
         onSeveritySelected = { severity -> viewModel.onEvent(SymptomLoggerUiEvent.OnSeveritySelected(severity)) },
@@ -101,6 +103,7 @@ fun SymptomLoggerScreenContent(
     onSaveSymptomClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
+    selectedNavIndex: Int = 1,
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -524,7 +527,7 @@ fun SymptomLoggerScreenContent(
 
         // 3. Bottom Dashboard Navigation Bar
         DashboardBottomNavBar(
-            selectedIndex = uiState.selectedNavIndex,
+            selectedIndex = selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
     }

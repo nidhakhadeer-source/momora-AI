@@ -10,7 +10,7 @@ data class SymptomLoggerUiState(
     val startedText: String = "26 Oct, 13:00",
     val durationText: String = "About 20 min",
     val isDropdownExpanded: Boolean = false,
-    val selectedNavIndex: Int = 2,
+    val selectedNavIndex: Int = 1,
     val isLoading: Boolean = false,
     val isSavedSuccess: Boolean = false,
     val errorMessage: String? = null

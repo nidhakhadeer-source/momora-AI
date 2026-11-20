@@ -75,6 +75,7 @@ fun DueDateScreen(
     onNextVisitClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onBabyDevelopmentClick: () -> Unit = {},
+    selectedNavIndex: Int = 1,
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -82,6 +83,7 @@ fun DueDateScreen(
     DueDateScreenContent(
         modifier = modifier,
         uiState = uiState,
+        selectedNavIndex = selectedNavIndex,
         onDueDateChanged = { dueDate -> viewModel.onEvent(DueDateUiEvent.OnDueDateChanged(dueDate)) },
         onLmpChanged = { lmp -> viewModel.onEvent(DueDateUiEvent.OnLmpChanged(lmp)) },
         onTrimesterTabSelected = { tri -> viewModel.onEvent(DueDateUiEvent.OnTrimesterTabSelected(tri)) },
@@ -136,6 +138,7 @@ fun DueDateScreenContent(
     onCancelAppointmentClick: () -> Unit = {},
     onBabyDevelopmentClick: () -> Unit = {},
     onRetryClick: () -> Unit = {},
+    selectedNavIndex: Int = 1,
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -1037,7 +1040,7 @@ fun DueDateScreenContent(
 
         // 3. Bottom Dashboard Navigation Bar
         DashboardBottomNavBar(
-            selectedIndex = uiState.selectedNavIndex,
+            selectedIndex = selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
     }

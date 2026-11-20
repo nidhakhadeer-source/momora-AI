@@ -60,6 +60,7 @@ import com.example.SIMATS.ui.theme.MomoraScreenBackground
 fun AiChatScreen(
     viewModel: AiChatViewModel,
     modifier: Modifier = Modifier,
+    selectedNavIndex: Int = 2,
     onNavigateBack: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
@@ -68,6 +69,7 @@ fun AiChatScreen(
     AiChatScreenContent(
         modifier = modifier,
         uiState = uiState,
+        selectedNavIndex = selectedNavIndex,
         onRetryClick = { viewModel.onEvent(AiChatUiEvent.OnRetryClicked) },
         onInputQueryChanged = { q -> viewModel.onEvent(AiChatUiEvent.OnInputQueryChanged(q)) },
         onSendMessageClick = { viewModel.onEvent(AiChatUiEvent.OnSendMessageClicked) },
@@ -115,6 +117,7 @@ fun AiChatScreenContent(
     onSuggestionClick: (String) -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
+    selectedNavIndex: Int = 2,
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -466,7 +469,7 @@ fun AiChatScreenContent(
 
         // 3. Bottom Dashboard Navigation Bar
         DashboardBottomNavBar(
-            selectedIndex = uiState.selectedNavIndex,
+            selectedIndex = selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
     }

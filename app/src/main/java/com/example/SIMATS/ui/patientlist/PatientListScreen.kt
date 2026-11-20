@@ -62,6 +62,7 @@ import com.example.SIMATS.ui.theme.MomoraScreenBackground
 fun PatientListScreen(
     viewModel: PatientListViewModel,
     modifier: Modifier = Modifier,
+    selectedNavIndex: Int = 1,
     onNavigateBack: () -> Unit = {},
     onPatientClick: (String, String) -> Unit = { _, _ -> },
     onNotificationClick: () -> Unit = {},
@@ -72,6 +73,7 @@ fun PatientListScreen(
     PatientListScreenContent(
         modifier = modifier,
         uiState = uiState,
+        selectedNavIndex = selectedNavIndex,
         onSearchQueryChanged = { q -> viewModel.onEvent(PatientListUiEvent.OnSearchQueryChanged(q)) },
         onFilterTabSelected = { index -> viewModel.onEvent(PatientListUiEvent.OnFilterTabSelected(index)) },
         onPatientClick = { id, name ->
@@ -152,6 +154,7 @@ fun PatientListScreenContent(
     onRetryClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
+    selectedNavIndex: Int = 1,
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -527,7 +530,7 @@ fun PatientListScreenContent(
 
         // 3. Doctor Bottom Navigation Bar (4 Doctor Tabs)
         DoctorBottomNavBar(
-            selectedIndex = uiState.selectedNavIndex,
+            selectedIndex = selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
     }

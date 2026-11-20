@@ -119,6 +119,32 @@ private val AdminScreens: Set<Screen> = setOf(
 )
 
 /**
+ * Computes the bottom navigation tab highlight index strictly from the active screen.
+ */
+fun getSelectedNavIndexForScreen(screen: Screen): Int = when (screen) {
+    // Doctor
+    Screen.DoctorDashboard, Screen.DoctorProfile, Screen.DoctorNotifications -> 0
+    Screen.AssignedPatients, Screen.PatientHistory, Screen.PatientHealthMonitoring -> 1
+    Screen.DoctorSchedule, Screen.DoctorAvailability -> 2
+    Screen.DoctorAdvice -> 3
+
+    // Patient
+    Screen.Home -> 0
+    Screen.DueDate, Screen.Symptom, Screen.HealthReport, Screen.WeightTracker, Screen.BloodPressure, Screen.BabyDevelopment -> 1
+    Screen.AiChat -> 2
+    Screen.AppointmentsCalendar, Screen.Nutrition, Screen.Medication, Screen.MedicalReports, Screen.Notifications, Screen.PatientDoctorAdvice -> 3
+    Screen.Profile -> 4
+
+    // Admin
+    Screen.AdminDashboard -> 0
+    Screen.ManageDoctors, Screen.AddDoctor -> 1
+    Screen.ManagePatients -> 2
+    Screen.AdminSettings -> 3
+
+    else -> 0
+}
+
+/**
  * Route guard:
  * If user role is DOCTOR, never route to patient screens;
  * if user role is PATIENT, never route to doctor screens.
@@ -279,6 +305,7 @@ fun AppNavHost() {
             }
             HomeScreen(
                 viewModel = homeViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onPregnancyDetailsClick = { currentScreen = Screen.DueDate },
                 onBloodPressureClick = { currentScreen = Screen.BloodPressure },
                 onWeightClick = { currentScreen = Screen.WeightTracker },
@@ -306,6 +333,7 @@ fun AppNavHost() {
             val profileViewModel: ProfileSetupViewModel = viewModel()
             ProfileSetupScreen(
                 viewModel = profileViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.Home
                 },
@@ -327,6 +355,7 @@ fun AppNavHost() {
             val dueDateViewModel: DueDateViewModel = viewModel()
             DueDateScreen(
                 viewModel = dueDateViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.Home
                 },
@@ -357,6 +386,7 @@ fun AppNavHost() {
             val healthReportViewModel: HealthReportViewModel = viewModel()
             HealthReportScreen(
                 viewModel = healthReportViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.Home
                 },
@@ -378,6 +408,7 @@ fun AppNavHost() {
             }
             WeightTrackerScreen(
                 viewModel = weightViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.Home
                 },
@@ -399,6 +430,7 @@ fun AppNavHost() {
             }
             BloodPressureScreen(
                 viewModel = bpViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.Home
                 },
@@ -417,6 +449,7 @@ fun AppNavHost() {
             val babyViewModel: BabyDevelopmentViewModel = viewModel()
             BabyDevelopmentScreen(
                 viewModel = babyViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.Home
                 },
@@ -435,6 +468,7 @@ fun AppNavHost() {
             val aiViewModel: AiChatViewModel = viewModel()
             AiChatScreen(
                 viewModel = aiViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.Home
                 },
@@ -453,6 +487,7 @@ fun AppNavHost() {
             val symptomViewModel: SymptomLoggerViewModel = viewModel()
             SymptomLoggerScreen(
                 viewModel = symptomViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.Home
                 },
@@ -471,6 +506,7 @@ fun AppNavHost() {
             val nutritionViewModel: NutritionPlanViewModel = viewModel()
             NutritionPlanScreen(
                 viewModel = nutritionViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.Home
                 },
@@ -489,6 +525,7 @@ fun AppNavHost() {
             val medicationViewModel: MedicationRemindersViewModel = viewModel()
             MedicationRemindersScreen(
                 viewModel = medicationViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.Home
                 },
@@ -507,6 +544,7 @@ fun AppNavHost() {
             val calendarViewModel: AppointmentsCalendarViewModel = viewModel()
             AppointmentsCalendarScreen(
                 viewModel = calendarViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.Home
                 },
@@ -525,6 +563,7 @@ fun AppNavHost() {
             val reportsViewModel: MedicalReportsViewModel = viewModel()
             MedicalReportsScreen(
                 viewModel = reportsViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.Home
                 },
@@ -543,6 +582,7 @@ fun AppNavHost() {
             val notificationsViewModel: NotificationsViewModel = viewModel()
             NotificationsScreen(
                 viewModel = notificationsViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.Home
                 },
@@ -586,6 +626,7 @@ fun AppNavHost() {
                 val patientAdviceViewModel: PatientDoctorAdviceViewModel = viewModel()
                 PatientDoctorAdviceScreen(
                     viewModel = patientAdviceViewModel,
+                    selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                     onNavigateBack = {
                         currentScreen = Screen.Home
                     },
@@ -608,6 +649,7 @@ fun AppNavHost() {
             val notificationsViewModel: NotificationsViewModel = viewModel()
             DoctorNotificationsScreen(
                 viewModel = notificationsViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.DoctorDashboard
                 },
@@ -625,6 +667,7 @@ fun AppNavHost() {
             val doctorViewModel: MainViewModel = viewModel()
             MainScreen(
                 viewModel = doctorViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onLogoutSuccess = {
                     SelectedPatientHolder.clear()
                     selectedPatientId = null
@@ -651,6 +694,7 @@ fun AppNavHost() {
                     selectedPatientName = patientName
                     SelectedPatientHolder.selectedPatientId = patientId
                     SelectedPatientHolder.selectedPatientName = patientName
+                    SelectedPatientHolder.initialTab = 1
                     currentScreen = Screen.PatientHistory
                 },
                 onNavTabSelected = { index ->
@@ -667,6 +711,7 @@ fun AppNavHost() {
             val patientListViewModel: PatientListViewModel = viewModel()
             PatientListScreen(
                 viewModel = patientListViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.DoctorDashboard
                 },
@@ -703,6 +748,7 @@ fun AppNavHost() {
             }
             PatientHistoryScreen(
                 viewModel = patientHistoryViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.AssignedPatients
                 },
@@ -735,6 +781,7 @@ fun AppNavHost() {
             }
             PatientHealthMonitoringScreen(
                 viewModel = healthMonitoringViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.PatientHistory
                 },
@@ -767,6 +814,7 @@ fun AppNavHost() {
             }
             DoctorAdviceScreen(
                 viewModel = adviceViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.DoctorDashboard
                 },
@@ -787,6 +835,7 @@ fun AppNavHost() {
             val doctorScheduleViewModel: DoctorScheduleViewModel = viewModel()
             DoctorScheduleScreen(
                 viewModel = doctorScheduleViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.DoctorDashboard
                 },
@@ -832,6 +881,7 @@ fun AppNavHost() {
             val doctorProfileViewModel: DoctorProfileViewModel = viewModel()
             DoctorProfileScreen(
                 viewModel = doctorProfileViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.DoctorDashboard
                 },
@@ -854,6 +904,7 @@ fun AppNavHost() {
             val adminViewModel: AdminDashboardViewModel = viewModel()
             AdminDashboardScreen(
                 viewModel = adminViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onManageDoctorsClick = {
                     currentScreen = Screen.ManageDoctors
                 },
@@ -877,6 +928,7 @@ fun AppNavHost() {
             val addDoctorViewModel: AddDoctorViewModel = viewModel()
             AddDoctorScreen(
                 viewModel = addDoctorViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.ManageDoctors
                 },
@@ -894,6 +946,7 @@ fun AppNavHost() {
             val manageDoctorsViewModel: ManageDoctorsViewModel = viewModel()
             ManageDoctorsScreen(
                 viewModel = manageDoctorsViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.AdminDashboard
                 },
@@ -914,6 +967,7 @@ fun AppNavHost() {
             val managePatientsViewModel: ManagePatientsViewModel = viewModel()
             ManagePatientsScreen(
                 viewModel = managePatientsViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.AdminDashboard
                 },
@@ -931,6 +985,7 @@ fun AppNavHost() {
             val adminSettingsViewModel: AdminSettingsViewModel = viewModel()
             AdminSettingsScreen(
                 viewModel = adminSettingsViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.AdminDashboard
                 },

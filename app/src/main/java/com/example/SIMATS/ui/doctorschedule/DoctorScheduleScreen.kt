@@ -69,6 +69,7 @@ import java.util.Locale
 fun DoctorScheduleScreen(
     viewModel: DoctorScheduleViewModel,
     modifier: Modifier = Modifier,
+    selectedNavIndex: Int = 2,
     onNavigateBack: () -> Unit = {},
     onViewRecordClick: () -> Unit = {},
     onPatientClick: (String, String) -> Unit = { _, _ -> onViewRecordClick() },
@@ -207,7 +208,8 @@ fun DoctorScheduleScreen(
         onNavTabSelected = { index ->
             viewModel.onEvent(DoctorScheduleUiEvent.OnNavTabSelected(index))
             onNavTabSelected(index)
-        }
+        },
+        selectedNavIndex = selectedNavIndex
     )
 }
 
@@ -250,6 +252,7 @@ fun DoctorScheduleScreenContent(
             visitsSummaryNote = "Today, 27 Oct · 6 visits; 2 completed, 4 upcoming. Next: Nora Williams at 11:30."
         )
     ),
+    selectedNavIndex: Int = 2,
     onDateTabSelected: (Int) -> Unit = {},
     onRescheduleClick: () -> Unit = {},
     onPatientClick: (String, String) -> Unit = { _, _ -> },
@@ -862,7 +865,7 @@ fun DoctorScheduleScreenContent(
 
         // 3. Doctor Bottom Navigation Bar
         DoctorBottomNavBar(
-            selectedIndex = uiState.selectedNavIndex,
+            selectedIndex = selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
     }

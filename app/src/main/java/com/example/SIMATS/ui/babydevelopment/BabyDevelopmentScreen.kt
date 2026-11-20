@@ -66,6 +66,7 @@ private fun cleanDots(text: String): String {
 fun BabyDevelopmentScreen(
     viewModel: BabyDevelopmentViewModel,
     modifier: Modifier = Modifier,
+    selectedNavIndex: Int = 1,
     onNavigateBack: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
@@ -74,6 +75,7 @@ fun BabyDevelopmentScreen(
     BabyDevelopmentScreenContent(
         modifier = modifier,
         uiState = uiState,
+        selectedNavIndex = selectedNavIndex,
         onRetryClick = { viewModel.onEvent(BabyDevelopmentUiEvent.OnRetryClicked) },
         onPreviousWeekClick = { viewModel.onEvent(BabyDevelopmentUiEvent.OnPreviousWeekClicked) },
         onNextWeekClick = { viewModel.onEvent(BabyDevelopmentUiEvent.OnNextWeekClicked) },
@@ -108,6 +110,7 @@ fun BabyDevelopmentScreenContent(
     onDismissHighlightDetail: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
+    selectedNavIndex: Int = 1,
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -549,7 +552,7 @@ fun BabyDevelopmentScreenContent(
 
         // 3. Bottom Dashboard Navigation Bar
         DashboardBottomNavBar(
-            selectedIndex = uiState.selectedNavIndex,
+            selectedIndex = selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
     }

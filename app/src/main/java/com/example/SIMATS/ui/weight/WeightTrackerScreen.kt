@@ -60,6 +60,7 @@ import com.example.SIMATS.ui.theme.MomoraScreenBackground
 fun WeightTrackerScreen(
     viewModel: WeightTrackerViewModel,
     modifier: Modifier = Modifier,
+    selectedNavIndex: Int = 1,
     onNavigateBack: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
@@ -68,6 +69,7 @@ fun WeightTrackerScreen(
     WeightTrackerScreenContent(
         modifier = modifier,
         uiState = uiState,
+        selectedNavIndex = selectedNavIndex,
         onTimeRangeSelected = { index -> viewModel.onEvent(WeightTrackerUiEvent.OnTimeRangeSelected(index)) },
         onWeightInputChanged = { w -> viewModel.onEvent(WeightTrackerUiEvent.OnWeightInputChanged(w)) },
         onDateInputChanged = { d -> viewModel.onEvent(WeightTrackerUiEvent.OnDateInputChanged(d)) },
@@ -112,6 +114,7 @@ fun WeightTrackerScreenContent(
     onRetryClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
+    selectedNavIndex: Int = 1,
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -430,7 +433,7 @@ fun WeightTrackerScreenContent(
 
         // 3. Bottom Dashboard Navigation Bar
         DashboardBottomNavBar(
-            selectedIndex = uiState.selectedNavIndex,
+            selectedIndex = selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
     }

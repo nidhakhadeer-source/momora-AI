@@ -60,6 +60,7 @@ import com.example.SIMATS.ui.theme.MomoraScreenBackground
 fun HealthReportScreen(
     viewModel: HealthReportViewModel,
     modifier: Modifier = Modifier,
+    selectedNavIndex: Int = 1,
     onNavigateBack: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
@@ -68,6 +69,7 @@ fun HealthReportScreen(
     HealthReportScreenContent(
         modifier = modifier,
         uiState = uiState,
+        selectedNavIndex = selectedNavIndex,
         onAddReadingClick = { viewModel.onEvent(HealthReportUiEvent.OnAddReadingClicked) },
         onWeightTrackerClick = { viewModel.onEvent(HealthReportUiEvent.OnWeightTrackerClicked) },
         onBloodPressureTrackerClick = { viewModel.onEvent(HealthReportUiEvent.OnBloodPressureTrackerClicked) },
@@ -109,6 +111,7 @@ fun HealthReportScreenContent(
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onRetryClick: () -> Unit = {},
+    selectedNavIndex: Int = 1,
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -433,7 +436,7 @@ fun HealthReportScreenContent(
 
         // 3. Bottom Dashboard Navigation Bar
         DashboardBottomNavBar(
-            selectedIndex = uiState.selectedNavIndex,
+            selectedIndex = selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
     }

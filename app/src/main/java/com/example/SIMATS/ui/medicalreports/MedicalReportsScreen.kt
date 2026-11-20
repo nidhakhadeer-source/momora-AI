@@ -69,6 +69,7 @@ import com.example.SIMATS.ui.theme.MomoraScreenBackground
 fun MedicalReportsScreen(
     viewModel: MedicalReportsViewModel,
     modifier: Modifier = Modifier,
+    selectedNavIndex: Int = 3,
     onNavigateBack: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
@@ -117,7 +118,8 @@ fun MedicalReportsScreen(
         onNavTabSelected = { index ->
             viewModel.onEvent(MedicalReportsUiEvent.OnNavTabSelected(index))
             onNavTabSelected(index)
-        }
+        },
+        selectedNavIndex = selectedNavIndex
     )
 }
 
@@ -142,6 +144,7 @@ fun MedicalReportsScreenContent(
     onRetryClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
+    selectedNavIndex: Int = 3,
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -582,7 +585,7 @@ fun MedicalReportsScreenContent(
 
         // 3. Bottom Dashboard Navigation Bar
         DashboardBottomNavBar(
-            selectedIndex = uiState.selectedNavIndex,
+            selectedIndex = selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
     }

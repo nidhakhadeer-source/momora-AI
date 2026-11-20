@@ -59,6 +59,7 @@ import java.util.Locale
 fun PatientDoctorAdviceScreen(
     viewModel: PatientDoctorAdviceViewModel,
     modifier: Modifier = Modifier,
+    selectedNavIndex: Int = 3,
     onNavigateBack: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
@@ -76,6 +77,7 @@ fun PatientDoctorAdviceScreen(
     PatientDoctorAdviceScreenContent(
         modifier = modifier,
         uiState = uiState,
+        selectedNavIndex = selectedNavIndex,
         onBackClick = onNavigateBack,
         onNotificationClick = onNotificationClick,
         onRetryClick = { viewModel.onEvent(PatientDoctorAdviceUiEvent.OnRetryClicked) },
@@ -87,6 +89,7 @@ fun PatientDoctorAdviceScreen(
 fun PatientDoctorAdviceScreenContent(
     modifier: Modifier = Modifier,
     uiState: PatientDoctorAdviceUiState = PatientDoctorAdviceUiState(),
+    selectedNavIndex: Int = 3,
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onRetryClick: () -> Unit = {},
@@ -313,7 +316,7 @@ fun PatientDoctorAdviceScreenContent(
 
         // 3. Bottom Navigation Bar
         PatientBottomNavBar(
-            selectedIndex = 3,
+            selectedIndex = selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
     }

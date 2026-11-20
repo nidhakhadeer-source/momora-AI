@@ -63,6 +63,7 @@ import com.example.SIMATS.ui.theme.MomoraScreenBackground
 fun DoctorAdviceScreen(
     viewModel: DoctorAdviceViewModel,
     modifier: Modifier = Modifier,
+    selectedNavIndex: Int = 3,
     onNavigateBack: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
@@ -72,6 +73,7 @@ fun DoctorAdviceScreen(
     DoctorAdviceScreenContent(
         modifier = modifier,
         uiState = uiState,
+        selectedNavIndex = selectedNavIndex,
         onSubjectChanged = { s -> viewModel.onEvent(DoctorAdviceUiEvent.OnSubjectChanged(s)) },
         onAdviceTextChanged = { t -> viewModel.onEvent(DoctorAdviceUiEvent.OnAdviceTextChanged(t)) },
         onSaveCopyToggled = { c -> viewModel.onEvent(DoctorAdviceUiEvent.OnSaveCopyToggled(c)) },
@@ -120,6 +122,7 @@ fun DoctorAdviceScreenContent(
     onRetryClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
+    selectedNavIndex: Int = 3,
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
@@ -554,7 +557,7 @@ fun DoctorAdviceScreenContent(
 
         // 3. Doctor Bottom Navigation Bar (4 Doctor Tabs)
         DoctorBottomNavBar(
-            selectedIndex = uiState.selectedNavIndex,
+            selectedIndex = selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
     }

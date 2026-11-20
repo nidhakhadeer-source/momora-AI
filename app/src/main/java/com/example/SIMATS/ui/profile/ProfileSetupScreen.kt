@@ -91,6 +91,7 @@ import java.util.Locale
 fun ProfileSetupScreen(
     viewModel: ProfileSetupViewModel,
     modifier: Modifier = Modifier,
+    selectedNavIndex: Int = 4,
     onNavigateBack: () -> Unit = {},
     onLogoutSuccess: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
@@ -145,7 +146,8 @@ fun ProfileSetupScreen(
         onNavTabSelected = { index ->
             viewModel.onEvent(ProfileSetupUiEvent.OnNavTabSelected(index))
             onNavTabSelected(index)
-        }
+        },
+        selectedNavIndex = selectedNavIndex
     )
 }
 
@@ -186,6 +188,7 @@ fun ProfileSetupScreenContent(
     onRetryClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
+    selectedNavIndex: Int = 4,
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val context = LocalContext.current
@@ -684,7 +687,7 @@ fun ProfileSetupScreenContent(
 
         // 3. Bottom Dashboard Navigation Bar
         DashboardBottomNavBar(
-            selectedIndex = uiState.selectedNavIndex,
+            selectedIndex = selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
 
