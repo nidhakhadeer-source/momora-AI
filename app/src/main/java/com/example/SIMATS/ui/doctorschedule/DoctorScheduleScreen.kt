@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -26,6 +27,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -34,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -51,6 +54,7 @@ import com.example.SIMATS.ui.components.formatErrorMessage
 import com.example.SIMATS.data.model.DoctorCompactAppointment
 import com.example.SIMATS.data.model.DoctorMainAppointment
 import com.example.SIMATS.data.model.DoctorScheduleData
+import com.example.SIMATS.data.repository.NotificationStateManager
 import com.example.SIMATS.navigation.SelectedPatientHolder
 import com.example.SIMATS.ui.components.formatDoctorTime
 import com.example.SIMATS.ui.components.sanitizeDoctorText
@@ -279,35 +283,49 @@ fun DoctorScheduleScreenContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 12.dp),
+                .padding(horizontal = 20.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
                     .size(40.dp)
+                    .shadow(elevation = 1.dp, shape = CircleShape)
+                    .clip(CircleShape)
+                    .background(Color(0xFFF7F2FA))
                     .clickable { onBackClick() },
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = "←",
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MomoraPurpleText
+                BackArrowIcon(
+                    color = Color(0xFF5A3D63),
+                    modifier = Modifier.size(18.dp)
                 )
             }
 
+            val unreadCount by NotificationStateManager.unreadCount.collectAsState()
             Box(
                 modifier = Modifier
                     .size(40.dp)
+                    .shadow(elevation = 1.dp, shape = CircleShape)
                     .clip(CircleShape)
+                    .background(Color(0xFFFAF0F3))
                     .clickable { onNotificationClick() },
                 contentAlignment = Alignment.Center
             ) {
                 BellIcon(
-                    color = MomoraPurplePrimary,
-                    modifier = Modifier.size(20.dp)
+                    color = Color(0xFF6E4F76),
+                    modifier = Modifier.size(19.dp)
                 )
+                if (unreadCount > 0) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(top = 8.dp, end = 8.dp)
+                            .size(7.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFE53935))
+                    )
+                }
             }
         }
 
@@ -316,7 +334,7 @@ fun DoctorScheduleScreenContent(
             modifier = Modifier
                 .weight(1f)
                 .verticalScroll(scrollState)
-                .padding(horizontal = 24.dp),
+                .padding(horizontal = 20.dp),
             horizontalAlignment = Alignment.Start
         ) {
             // Full-screen Loading state
@@ -328,7 +346,7 @@ fun DoctorScheduleScreenContent(
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        CircularProgressIndicator(color = MomoraPurplePrimary)
+                        CircularProgressIndicator(color = Color(0xFF6E4F76))
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "Loading schedule...",
@@ -359,7 +377,7 @@ fun DoctorScheduleScreenContent(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(50))
-                                .background(MomoraPurplePrimary)
+                                .background(Color(0xFF6E4F76))
                                 .clickable { onRetryClick() }
                                 .padding(horizontal = 20.dp, vertical = 8.dp),
                             contentAlignment = Alignment.Center
@@ -376,50 +394,107 @@ fun DoctorScheduleScreenContent(
             } else {
                 Text(
                     text = "Your appointment book",
-                    fontSize = 26.sp,
+                    fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MomoraPurpleDark
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
 
-                Text(
-                    text = "${(data?.doctorName?.takeIf { it.isNotBlank() } ?: "Dr Amelia Chen").sanitizeDoctorText()} · Clinic local time",
-                    fontSize = 13.sp,
-                    color = MomoraBodyMuted
-                )
+                val rawDoc = data?.doctorName?.takeIf { it.isNotBlank() } ?: "Dr Amelia Chen"
+                val formattedDoc = if (rawDoc.startsWith("Dr", ignoreCase = true)) rawDoc else "Dr $rawDoc"
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = formattedDoc.sanitizeDoctorText(),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "•",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "Clinic local time",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Date Tabs
+                // Date Tabs (Horizontally Scrollable Strip)
                 val tabs = data?.dateTabs?.takeIf { it.isNotEmpty() } ?: listOf("27 Oct", "28 Oct", "29 Oct")
-                Box(
+                val scrollStateDates = rememberScrollState()
+
+                LaunchedEffect(uiState.selectedDateTabIndex) {
+                    if (tabs.isNotEmpty() && uiState.selectedDateTabIndex in tabs.indices) {
+                        val targetScroll = (uiState.selectedDateTabIndex * 62 - 100).coerceAtLeast(0)
+                        scrollStateDates.animateScrollTo(targetScroll)
+                    }
+                }
+
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color(0xFFF4ECF8))
-                        .padding(4.dp)
+                        .horizontalScroll(scrollStateDates)
+                        .padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        tabs.forEachIndexed { index, label ->
-                            val isSelected = uiState.selectedDateTabIndex == index
-                            Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(38.dp)
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(if (isSelected) Color.White else Color.Transparent)
-                                    .clickable { onDateTabSelected(index) },
-                                contentAlignment = Alignment.Center
+                    tabs.forEachIndexed { index, label ->
+                        val isSelected = uiState.selectedDateTabIndex == index
+                        val (dayOfWeek, dayNum, monthName) = formatTabComponents(label, uiState.selectedDate ?: data?.selectedDate)
+
+                        Box(
+                            modifier = Modifier
+                                .width(54.dp)
+                                .height(68.dp)
+                                .shadow(
+                                    elevation = if (isSelected) 3.dp else 1.dp,
+                                    shape = RoundedCornerShape(16.dp)
+                                )
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(if (isSelected) Color(0xFF6E4F76) else Color.White)
+                                .border(
+                                    1.dp,
+                                    if (isSelected) Color(0xFF5A3D63) else Color(0xFFEADBEE),
+                                    RoundedCornerShape(16.dp)
+                                )
+                                .clickable { onDateTabSelected(index) }
+                                .padding(vertical = 6.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
                             ) {
+                                if (dayOfWeek.isNotBlank()) {
+                                    Text(
+                                        text = dayOfWeek,
+                                        fontSize = 9.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isSelected) Color(0xFFE8D4F0) else Color(0xFF8E8394),
+                                        letterSpacing = 0.5.sp
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                }
                                 Text(
-                                    text = label,
-                                    fontSize = 13.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (isSelected) MomoraPurpleDark else MomoraBodyMuted
+                                    text = dayNum,
+                                    fontSize = 17.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) Color.White else Color(0xFF3E2D44)
+                                )
+                                Spacer(modifier = Modifier.height(1.dp))
+                                Text(
+                                    text = monthName,
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = if (isSelected) Color(0xFFF1E7F5) else Color(0xFF8E8394)
                                 )
                             }
                         }
@@ -510,29 +585,32 @@ fun DoctorScheduleScreenContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = (data?.dateText?.takeIf { it.isNotBlank() } ?: "Thursday, 29 Oct 2026").sanitizeDoctorText(),
-                        fontSize = 15.sp,
+                        text = (data?.dateText?.takeIf { it.isNotBlank() } ?: "Friday, 20 Nov 2026").sanitizeDoctorText(),
+                        fontSize = 15.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MomoraPurpleDark
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
+                            .shadow(elevation = 1.dp, shape = RoundedCornerShape(10.dp))
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color.White)
+                            .border(1.dp, Color(0xFFEADBEE), RoundedCornerShape(10.dp))
                             .clickable { onCalendarClick() }
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                            .padding(horizontal = 10.dp, vertical = 6.dp)
                     ) {
                         CalendarNavIcon(
-                            color = MomoraPurplePrimary,
+                            color = Color(0xFF6E4F76),
                             modifier = Modifier.size(14.dp)
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "Calendar",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MomoraPurplePrimary
+                            color = Color(0xFF6E4F76)
                         )
                     }
                 }
@@ -548,9 +626,10 @@ fun DoctorScheduleScreenContent(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(18.dp))
+                            .shadow(elevation = 1.dp, shape = RoundedCornerShape(20.dp))
+                            .clip(RoundedCornerShape(20.dp))
                             .background(Color.White)
-                            .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(18.dp))
+                            .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(20.dp))
                             .padding(24.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -562,7 +641,7 @@ fun DoctorScheduleScreenContent(
                                     .background(Color(0xFFF4ECF8)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                CalendarNavIcon(color = MomoraPurplePrimary, modifier = Modifier.size(24.dp))
+                                CalendarNavIcon(color = Color(0xFF6E4F76), modifier = Modifier.size(24.dp))
                             }
 
                             Spacer(modifier = Modifier.height(12.dp))
@@ -571,7 +650,7 @@ fun DoctorScheduleScreenContent(
                                 text = "No appointments scheduled",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MomoraPurpleDark
+                                color = MaterialTheme.colorScheme.onSurface
                             )
 
                             Spacer(modifier = Modifier.height(4.dp))
@@ -579,7 +658,7 @@ fun DoctorScheduleScreenContent(
                             Text(
                                 text = "There are no visits booked for ${(data?.dateText ?: "this date").sanitizeDoctorText()}.",
                                 fontSize = 12.5.sp,
-                                color = MomoraBodyMuted,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center
                             )
 
@@ -588,56 +667,142 @@ fun DoctorScheduleScreenContent(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(50))
-                                    .background(Color(0xFFF4ECF8))
+                                    .background(Color(0xFFF1E7F5))
                                     .clickable { onCalendarClick() }
-                                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                                    .padding(horizontal = 22.dp, vertical = 9.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
                                     text = "Pick another date",
-                                    fontSize = 13.sp,
+                                    fontSize = 12.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = MomoraPurplePrimary
+                                    color = Color(0xFF6E4F76)
                                 )
                             }
                         }
                     }
 
-                    // Optional Next Appointment preview card
+                    // Next Upcoming Consultation preview card
                     val nextAppt = data?.nextAppointment
                     if (nextAppt != null && nextAppt.patientName != "No appointments" && nextAppt.patientName.isNotBlank()) {
                         Spacer(modifier = Modifier.height(14.dp))
+
+                        val cleanSubtitle = nextAppt.patientSubtitle
+                            .replace("Patient Patient", "Patient")
+                            .replace("Patient P-", "P-")
+                            .trim()
+
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(14.dp))
-                                .background(Color(0xFFF4ECF8))
-                                .padding(12.dp)
+                                .shadow(elevation = 2.dp, shape = RoundedCornerShape(18.dp))
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(Color.White)
+                                .border(1.dp, Color(0xFFEADBEE), RoundedCornerShape(18.dp))
+                                .clickable {
+                                    val nextPatientId = nextAppt.id?.takeIf { it.isNotBlank() }
+                                        ?: SelectedPatientHolder.selectedPatientId
+                                        ?: "5"
+                                    SelectedPatientHolder.selectedPatientId = nextPatientId
+                                    SelectedPatientHolder.selectedPatientName = nextAppt.patientName
+                                    onPatientClick(nextPatientId, nextAppt.patientName)
+                                }
+                                .padding(16.dp)
                         ) {
                             Column {
-                                Text(
-                                    text = "Next Upcoming Consultation",
-                                    fontSize = 11.5.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MomoraPurplePrimary
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Column {
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(Color(0xFFF1E7F5))
+                                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                        ) {
+                                            ClockIcon(color = Color(0xFF6E4F76), modifier = Modifier.size(11.dp))
+                                            Text(
+                                                text = "Next Upcoming Consultation",
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFF6E4F76)
+                                            )
+                                        }
+                                    }
+
+                                    if (nextAppt.timeRange.isNotBlank()) {
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(Color(0xFFE2F4EB))
+                                                .padding(horizontal = 9.dp, vertical = 4.dp)
+                                        ) {
+                                            Text(
+                                                text = nextAppt.timeRange.formatDoctorTime(),
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFF3D7B59)
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.weight(1f),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(42.dp)
+                                                .clip(CircleShape)
+                                                .background(Color(0xFFFAF0F3))
+                                                .border(1.dp, Color(0xFFF5D8E4), CircleShape),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            UserNavIcon(color = Color(0xFF6E4F76), modifier = Modifier.size(19.dp))
+                                        }
+
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = nextAppt.patientName.sanitizeDoctorText(),
+                                                fontSize = 15.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Spacer(modifier = Modifier.height(3.dp))
+                                            Text(
+                                                text = cleanSubtitle.sanitizeDoctorText(),
+                                                fontSize = 11.5.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+
+                                    Box(
+                                        modifier = Modifier
+                                            .size(32.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFFF7F2FA)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
                                         Text(
-                                            text = nextAppt.patientName.sanitizeDoctorText(),
-                                            fontSize = 14.sp,
+                                            text = "›",
+                                            fontSize = 18.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = MomoraPurpleDark
-                                        )
-                                        Text(
-                                            text = "${nextAppt.timeRange.formatDoctorTime()} · ${nextAppt.patientSubtitle.sanitizeDoctorText()}",
-                                            fontSize = 11.5.sp,
-                                            color = MomoraBodyMuted
+                                            color = Color(0xFF6E4F76)
                                         )
                                     }
                                 }
@@ -829,14 +994,162 @@ fun DoctorScheduleScreenContent(
                     }
                 }
 
-                // Visits Summary Caption
-                Text(
-                    text = (data?.visitsSummaryNote?.takeIf { it.isNotBlank() }
-                        ?: "Visits schedule for clinic local time.").sanitizeDoctorText(),
-                    fontSize = 11.5.sp,
-                    lineHeight = 15.sp,
-                    color = MomoraBodyMuted
-                )
+                // Visits Summary Section (3 Stats Cards: Visits, Completed, Upcoming)
+                val totalVisits = data?.totalVisitsCount ?: 0
+                val completedVisits = data?.completedVisitsCount ?: 0
+                val upcomingVisits = data?.upcomingVisitsCount ?: 0
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    // 1. Total Visits
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .shadow(elevation = 1.dp, shape = RoundedCornerShape(16.dp))
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color(0xFFF4ECF8))
+                            .border(1.dp, Color(0xFFEADBEE), RoundedCornerShape(16.dp))
+                            .padding(horizontal = 10.dp, vertical = 12.dp)
+                    ) {
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "VISITS",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 0.5.sp,
+                                    color = Color(0xFF6E4F76)
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .size(22.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.White),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CalendarNavIcon(color = Color(0xFF6E4F76), modifier = Modifier.size(11.dp))
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "$totalVisits",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF3E2D44)
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = if (totalVisits == 1) "1 booked" else "$totalVisits booked",
+                                fontSize = 10.5.sp,
+                                color = Color(0xFF7A6882)
+                            )
+                        }
+                    }
+
+                    // 2. Completed Visits
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .shadow(elevation = 1.dp, shape = RoundedCornerShape(16.dp))
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color(0xFFEBF7F0))
+                            .border(1.dp, Color(0xFFC7EBD7), RoundedCornerShape(16.dp))
+                            .padding(horizontal = 10.dp, vertical = 12.dp)
+                    ) {
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "DONE",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 0.5.sp,
+                                    color = Color(0xFF26593D)
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .size(22.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.White),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CheckmarkIcon(color = Color(0xFF26593D), modifier = Modifier.size(11.dp))
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "$completedVisits",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF1E4630)
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = if (completedVisits == 1) "1 finished" else "$completedVisits finished",
+                                fontSize = 10.5.sp,
+                                color = Color(0xFF4B8062)
+                            )
+                        }
+                    }
+
+                    // 3. Upcoming Visits
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .shadow(elevation = 1.dp, shape = RoundedCornerShape(16.dp))
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color(0xFFFAF0F3))
+                            .border(1.dp, Color(0xFFF5D8E4), RoundedCornerShape(16.dp))
+                            .padding(horizontal = 10.dp, vertical = 12.dp)
+                    ) {
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "UPCOMING",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 0.5.sp,
+                                    color = Color(0xFF8A3358)
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .size(22.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.White),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    ClockIcon(color = Color(0xFF8A3358), modifier = Modifier.size(11.dp))
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "$upcomingVisits",
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF5A1E37)
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = if (upcomingVisits == 1) "1 pending" else "$upcomingVisits pending",
+                                fontSize = 10.5.sp,
+                                color = Color(0xFF944B68)
+                            )
+                        }
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(14.dp))
 
@@ -845,18 +1158,25 @@ fun DoctorScheduleScreenContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp)
+                        .shadow(elevation = 1.dp, shape = RoundedCornerShape(50))
                         .clip(RoundedCornerShape(50))
                         .background(Color.White)
-                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(50))
+                        .border(1.dp, Color(0xFFEADBEE), RoundedCornerShape(50))
                         .clickable { onManageAvailabilityClick() },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "Manage clinic availability",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MomoraPurplePrimary
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        CalendarNavIcon(color = Color(0xFF6E4F76), modifier = Modifier.size(16.dp))
+                        Text(
+                            text = "Manage clinic availability",
+                            fontSize = 13.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF6E4F76)
+                        )
+                    }
                 }
             }
 
@@ -952,11 +1272,17 @@ private fun DoctorBottomNavBar(
     selectedIndex: Int,
     onTabSelected: (Int) -> Unit
 ) {
+    val navSurface = MaterialTheme.colorScheme.surface
+    val navBorder = Color(0xFFEFE8F2)
+    val indicatorColor = Color(0xFFDFD5E3)
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
-            .border(1.dp, Color(0xFFF0E8F4), RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+            .shadow(elevation = 8.dp, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+            .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+            .background(navSurface)
+            .border(1.dp, navBorder, RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
             .padding(top = 8.dp, bottom = 4.dp)
     ) {
         Row(
@@ -968,29 +1294,29 @@ private fun DoctorBottomNavBar(
                 label = "Home",
                 isSelected = selectedIndex == 0,
                 onClick = { onTabSelected(0) },
-                icon = { HomeNavIcon(color = if (selectedIndex == 0) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { HomeNavIcon(color = if (selectedIndex == 0) Color(0xFF6E4F76) else Color(0xFF8E8394), modifier = Modifier.size(22.dp)) }
             )
             NavTabItem(
                 label = "Patients",
                 isSelected = selectedIndex == 1,
                 onClick = { onTabSelected(1) },
-                icon = { PeopleNavIcon(color = if (selectedIndex == 1) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { PeopleNavIcon(color = if (selectedIndex == 1) Color(0xFF6E4F76) else Color(0xFF8E8394), modifier = Modifier.size(22.dp)) }
             )
             NavTabItem(
                 label = "Schedule",
                 isSelected = selectedIndex == 2,
                 onClick = { onTabSelected(2) },
-                icon = { CalendarNavIcon(color = if (selectedIndex == 2) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { CalendarNavIcon(color = if (selectedIndex == 2) Color(0xFF6E4F76) else Color(0xFF8E8394), modifier = Modifier.size(22.dp)) }
             )
             NavTabItem(
                 label = "Advice",
                 isSelected = selectedIndex == 3,
                 onClick = { onTabSelected(3) },
-                icon = { ChatNavIcon(color = if (selectedIndex == 3) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { ChatNavIcon(color = if (selectedIndex == 3) Color(0xFF6E4F76) else Color(0xFF8E8394), modifier = Modifier.size(22.dp)) }
             )
         }
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         Box(
             modifier = Modifier
@@ -998,7 +1324,7 @@ private fun DoctorBottomNavBar(
                 .width(134.dp)
                 .height(4.dp)
                 .clip(RoundedCornerShape(50))
-                .background(Color(0xFF333333))
+                .background(indicatorColor)
         )
     }
 }
@@ -1010,17 +1336,21 @@ private fun NavTabItem(
     onClick: () -> Unit,
     icon: @Composable () -> Unit
 ) {
+    val activeBg = Color(0xFFF1E7F5)
+    val activeColor = Color(0xFF5A3D63)
+    val inactiveColor = Color(0xFF8E8394)
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .clickable { onClick() }
-            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .padding(horizontal = 4.dp, vertical = 2.dp)
     ) {
         Box(
             modifier = Modifier
-                .clip(CircleShape)
-                .background(if (isSelected) Color(0xFFF4ECF8) else Color.Transparent)
-                .padding(horizontal = 14.dp, vertical = 4.dp),
+                .clip(RoundedCornerShape(16.dp))
+                .background(if (isSelected) activeBg else Color.Transparent)
+                .padding(horizontal = 14.dp, vertical = 5.dp),
             contentAlignment = Alignment.Center
         ) {
             icon()
@@ -1030,9 +1360,9 @@ private fun NavTabItem(
 
         Text(
             text = label,
-            fontSize = 10.5.sp,
+            fontSize = 11.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-            color = if (isSelected) MomoraPurplePrimary else MomoraBodyMuted
+            color = if (isSelected) activeColor else inactiveColor
         )
     }
 }
@@ -1178,6 +1508,75 @@ private fun UserNavIcon(color: Color, modifier: Modifier = Modifier) {
         }
         drawPath(bodyArc, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round))
     }
+}
+
+@Composable
+private fun BackArrowIcon(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val strokeWidth = 2.dp.toPx()
+
+        val arrowPath = Path().apply {
+            moveTo(w * 0.65f, h * 0.20f)
+            lineTo(w * 0.35f, h * 0.50f)
+            lineTo(w * 0.65f, h * 0.80f)
+        }
+        drawPath(path = arrowPath, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round))
+    }
+}
+
+@Composable
+private fun ClockIcon(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val strokeWidth = 1.6.dp.toPx()
+
+        drawCircle(color = color, radius = w * 0.42f, center = Offset(w * 0.5f, h * 0.5f), style = Stroke(width = strokeWidth))
+        drawLine(color = color, start = Offset(w * 0.5f, h * 0.5f), end = Offset(w * 0.5f, h * 0.26f), strokeWidth = strokeWidth, cap = StrokeCap.Round)
+        drawLine(color = color, start = Offset(w * 0.5f, h * 0.5f), end = Offset(w * 0.72f, h * 0.5f), strokeWidth = strokeWidth, cap = StrokeCap.Round)
+    }
+}
+
+@Composable
+private fun CheckmarkIcon(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val strokeWidth = 1.8.dp.toPx()
+
+        val checkPath = Path().apply {
+            moveTo(w * 0.20f, h * 0.52f)
+            lineTo(w * 0.42f, h * 0.74f)
+            lineTo(w * 0.82f, h * 0.28f)
+        }
+        drawPath(path = checkPath, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round))
+    }
+}
+
+private fun formatTabComponents(label: String, selectedDate: String?): Triple<String, String, String> {
+    val clean = label.trim()
+    val parts = clean.split(" ")
+    val dayNum = parts.getOrNull(0) ?: ""
+    val monthName = parts.getOrNull(1) ?: ""
+
+    val year = if (!selectedDate.isNullOrBlank() && selectedDate.length >= 4) {
+        selectedDate.substring(0, 4)
+    } else {
+        Calendar.getInstance().get(Calendar.YEAR).toString()
+    }
+
+    val dayOfWeek = try {
+        val sdf = SimpleDateFormat("d MMM yyyy", Locale.ENGLISH)
+        val d = sdf.parse("$dayNum $monthName $year")
+        if (d != null) {
+            SimpleDateFormat("EEE", Locale.ENGLISH).format(d).uppercase(Locale.ENGLISH)
+        } else ""
+    } catch (_: Exception) {
+        ""
+    }
+    return Triple(dayOfWeek, dayNum, monthName)
 }
 
 @Preview(showBackground = true, widthDp = 360, heightDp = 760)
