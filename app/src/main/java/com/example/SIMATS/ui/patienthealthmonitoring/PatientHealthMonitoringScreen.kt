@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -442,68 +443,106 @@ fun PatientHealthMonitoringScreenContent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Blood pressure · ${uiState.selectedDays} days",
-                            fontSize = 14.sp,
+                            text = "Blood pressure trend",
+                            fontSize = 14.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MomoraPurpleDark
+                            color = MomoraPurpleDark,
+                            modifier = Modifier.weight(1f, fill = false),
+                            maxLines = 1
                         )
 
-                        // 7 / 14 / 30 day selector chips
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        // 7d / 14d / 30d selector tabs (unified segmented pill design)
+                        Row(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color(0xFFF6F0F8))
+                                .padding(3.dp),
+                            horizontalArrangement = Arrangement.spacedBy(2.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             listOf(7, 14, 30).forEach { days ->
                                 val isSelected = uiState.selectedDays == days
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(8.dp))
-                                        .background(if (isSelected) MomoraPurplePrimary else Color(0xFFF4ECF8))
+                                        .background(if (isSelected) MomoraPurplePrimary else Color.Transparent)
                                         .clickable { onDaysSelected(days) }
-                                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                                        .padding(horizontal = 9.dp, vertical = 4.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
                                         text = "${days}d",
-                                        fontSize = 11.sp,
+                                        fontSize = 11.5.sp,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (isSelected) Color.White else MomoraPurpleDark
+                                        color = if (isSelected) Color.White else MomoraPurpleDark,
+                                        maxLines = 1,
+                                        softWrap = false
                                     )
                                 }
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .clip(CircleShape)
-                                    .background(MomoraPurplePrimary)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "Systolic · mmHg",
-                                fontSize = 11.sp,
-                                color = MomoraPurplePrimary
-                            )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .clip(CircleShape)
+                                        .background(MomoraPurplePrimary)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                val sysVal = data?.latestSystolic ?: 116
+                                Text(
+                                    text = "Systolic ($sysVal mmHg)",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MomoraPurplePrimary
+                                )
+                            }
+
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .clip(CircleShape)
+                                        .background(MomoraMintBadgeText)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                val diaVal = data?.latestDiastolic ?: 79
+                                Text(
+                                    text = "Diastolic ($diaVal mmHg)",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MomoraMintBadgeText
+                                )
+                            }
                         }
 
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(8.dp)
-                                    .clip(CircleShape)
-                                    .background(MomoraMintBadgeText)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(Color(0xFFF0FDF4))
+                                .border(0.5.dp, Color(0xFFBBF7D0), RoundedCornerShape(6.dp))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
                             Text(
-                                text = "Diastolic",
-                                fontSize = 11.sp,
-                                color = MomoraMintBadgeText
+                                text = "Target <120/<80",
+                                fontSize = 9.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF166534)
                             )
                         }
                     }
@@ -531,9 +570,9 @@ fun PatientHealthMonitoringScreenContent(
                         HealthMonitoringChart(
                             systolicTrends = sysTrends,
                             diastolicTrends = diaTrends,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(130.dp)
+                            latestTime = data?.bpReadingTime,
+                            selectedDays = uiState.selectedDays,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 }
@@ -633,55 +672,6 @@ fun PatientHealthMonitoringScreenContent(
                             )
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    val rawVitals = data?.additionalVitalsText?.takeIf { it.isNotBlank() }
-                        ?: "Home vitals and symptoms recorded by patient."
-                    Text(
-                        text = rawVitals.sanitizeDoctorText(),
-                        fontSize = 11.5.sp,
-                        lineHeight = 15.sp,
-                        color = Color(0xFF4A3F50)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Clinical Interpretation Disclaimer Card
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFFF4ECF8))
-                    .padding(horizontal = 14.dp, vertical = 11.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(30.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFEBE0F2)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        ShieldIcon(
-                            color = MomoraPurplePrimary,
-                            modifier = Modifier.size(14.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(10.dp))
-
-                    Text(
-                        text = "Home readings are self-reported. Interpret trends with clinical assessment and the patient's care plan.",
-                        fontSize = 11.5.sp,
-                        lineHeight = 15.sp,
-                        color = MomoraPurplePrimary,
-                        modifier = Modifier.weight(1f)
-                    )
                 }
             }
 
@@ -742,76 +732,201 @@ fun PatientHealthMonitoringScreenContent(
 }
 
 /**
- * Native Canvas Chart for Blood Pressure Trends.
+ * Native Canvas Chart for Blood Pressure Trends with real medical mmHg scale.
  */
 @Composable
 private fun HealthMonitoringChart(
     systolicTrends: List<Float>,
     diastolicTrends: List<Float>,
+    latestTime: String? = null,
+    selectedDays: Int = 7,
     modifier: Modifier = Modifier
 ) {
-    Canvas(modifier = modifier) {
-        val w = size.width
-        val h = size.height
-        val gridColor = Color(0xFFEFE8F4)
-        val strokeWidth = 2.dp.toPx()
+    val allValues = systolicTrends + diastolicTrends
+    val maxReading = allValues.maxOrNull() ?: 120f
 
-        val allValues = systolicTrends + diastolicTrends
-        val yMin = ((allValues.minOrNull() ?: 60f) - 10f).coerceAtMost(60f)
-        val yMax = ((allValues.maxOrNull() ?: 120f) + 10f).coerceAtLeast(130f)
+    // Medical BP scale (mmHg)
+    val ySteps = if (maxReading > 140f) {
+        listOf(160, 130, 100, 70)
+    } else {
+        listOf(140, 120, 100, 80, 60)
+    }
+    val yMax = ySteps.first().toFloat()
+    val yMin = ySteps.last().toFloat()
 
-        // Y-axis grid lines
-        val ySteps = listOf(120, 100, 80, 60)
-        ySteps.forEachIndexed { i, _ ->
-            val yPos = (h / (ySteps.size - 1)) * i
-            drawLine(
-                color = gridColor,
-                start = Offset(0f, yPos),
-                end = Offset(w, yPos),
-                strokeWidth = 1.dp.toPx()
-            )
+    Column(modifier = modifier) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(130.dp)
+        ) {
+            // Y-axis numerical labels (mmHg)
+            Column(
+                modifier = Modifier
+                    .width(26.dp)
+                    .fillMaxHeight(),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.End
+            ) {
+                ySteps.forEach { step ->
+                    Text(
+                        text = "$step",
+                        fontSize = 9.5.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color(0xFF9E8E9F)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(6.dp))
+
+            // Canvas drawing grid, lines, data points, and highlight
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            ) {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    val w = size.width
+                    val h = size.height
+                    val gridColor = Color(0xFFF1E9F5)
+                    val strokeWidth = 2.5.dp.toPx()
+
+                    // Draw horizontal grid lines matching the ySteps labels exactly
+                    ySteps.forEachIndexed { i, _ ->
+                        val yPos = if (ySteps.size > 1) (h / (ySteps.size - 1)) * i else 0f
+                        drawLine(
+                            color = gridColor,
+                            start = Offset(0f, yPos),
+                            end = Offset(w, yPos),
+                            strokeWidth = 1.dp.toPx()
+                        )
+                    }
+
+                    // Draw reference target guide line for normal Systolic (<120) and Diastolic (<80)
+                    if (yMax >= 120f && yMin <= 120f) {
+                        val norm120 = ((120f - yMin) / (yMax - yMin)).coerceIn(0f, 1f)
+                        val y120 = h - (norm120 * h)
+                        drawLine(
+                            color = Color(0x336E4F76),
+                            start = Offset(0f, y120),
+                            end = Offset(w, y120),
+                            strokeWidth = 1.dp.toPx()
+                        )
+                    }
+                    if (yMax >= 80f && yMin <= 80f) {
+                        val norm80 = ((80f - yMin) / (yMax - yMin)).coerceIn(0f, 1f)
+                        val y80 = h - (norm80 * h)
+                        drawLine(
+                            color = Color(0x333D7B59),
+                            start = Offset(0f, y80),
+                            end = Offset(w, y80),
+                            strokeWidth = 1.dp.toPx()
+                        )
+                    }
+
+                    val count = systolicTrends.size
+                    if (count == 1) {
+                        val normYSys = ((systolicTrends[0] - yMin) / (yMax - yMin)).coerceIn(0f, 1f)
+                        val ySys = h - (normYSys * h)
+                        drawCircle(color = Color(0xFF6E4F76), radius = 5.dp.toPx(), center = Offset(w / 2f, ySys))
+                        drawCircle(color = Color.White, radius = 2.5.dp.toPx(), center = Offset(w / 2f, ySys))
+
+                        if (diastolicTrends.isNotEmpty()) {
+                            val normYDia = ((diastolicTrends[0] - yMin) / (yMax - yMin)).coerceIn(0f, 1f)
+                            val yDia = h - (normYDia * h)
+                            drawCircle(color = Color(0xFF3D7B59), radius = 5.dp.toPx(), center = Offset(w / 2f, yDia))
+                            drawCircle(color = Color.White, radius = 2.5.dp.toPx(), center = Offset(w / 2f, yDia))
+                        }
+                    } else if (count > 1) {
+                        val stepX = w / (count - 1)
+
+                        // 1. Draw Systolic Line (Purple)
+                        val sysPath = Path()
+                        val sysPoints = mutableListOf<Offset>()
+                        systolicTrends.forEachIndexed { index, sysVal ->
+                            val x = index * stepX
+                            val normY = ((sysVal - yMin) / (yMax - yMin)).coerceIn(0f, 1f)
+                            val y = h - (normY * h)
+                            val pt = Offset(x, y)
+                            sysPoints.add(pt)
+                            if (index == 0) sysPath.moveTo(x, y) else sysPath.lineTo(x, y)
+                        }
+                        drawPath(
+                            path = sysPath,
+                            color = Color(0xFF6E4F76),
+                            style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round)
+                        )
+
+                        // Draw Systolic data points
+                        sysPoints.forEachIndexed { index, pt ->
+                            val isLatest = index == sysPoints.lastIndex
+                            if (isLatest) {
+                                drawCircle(color = Color(0xFF6E4F76), radius = 5.dp.toPx(), center = pt)
+                                drawCircle(color = Color.White, radius = 2.5.dp.toPx(), center = pt)
+                            } else {
+                                drawCircle(color = Color(0xFF6E4F76), radius = 3.dp.toPx(), center = pt)
+                            }
+                        }
+
+                        // 2. Draw Diastolic Line (Mint Green)
+                        val diaPath = Path()
+                        val diaPoints = mutableListOf<Offset>()
+                        diastolicTrends.forEachIndexed { index, diaVal ->
+                            val x = index * stepX
+                            val normY = ((diaVal - yMin) / (yMax - yMin)).coerceIn(0f, 1f)
+                            val y = h - (normY * h)
+                            val pt = Offset(x, y)
+                            diaPoints.add(pt)
+                            if (index == 0) diaPath.moveTo(x, y) else diaPath.lineTo(x, y)
+                        }
+                        drawPath(
+                            path = diaPath,
+                            color = Color(0xFF3D7B59),
+                            style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round)
+                        )
+
+                        // Draw Diastolic data points
+                        diaPoints.forEachIndexed { index, pt ->
+                            val isLatest = index == diaPoints.lastIndex
+                            if (isLatest) {
+                                drawCircle(color = Color(0xFF3D7B59), radius = 5.dp.toPx(), center = pt)
+                                drawCircle(color = Color.White, radius = 2.5.dp.toPx(), center = pt)
+                            } else {
+                                drawCircle(color = Color(0xFF3D7B59), radius = 3.dp.toPx(), center = pt)
+                            }
+                        }
+                    }
+                }
+            }
         }
 
-        val count = systolicTrends.size
-        if (count == 1) {
-            val normYSys = ((systolicTrends[0] - yMin) / (yMax - yMin)).coerceIn(0f, 1f)
-            val ySys = h - (normYSys * h)
-            drawCircle(color = Color(0xFF6E4F76), radius = 5.dp.toPx(), center = Offset(w / 2f, ySys))
+        Spacer(modifier = Modifier.height(6.dp))
 
-            if (diastolicTrends.isNotEmpty()) {
-                val normYDia = ((diastolicTrends[0] - yMin) / (yMax - yMin)).coerceIn(0f, 1f)
-                val yDia = h - (normYDia * h)
-                drawCircle(color = Color(0xFF3D7B59), radius = 5.dp.toPx(), center = Offset(w / 2f, yDia))
-            }
-        } else if (count > 1) {
-            val stepX = w / (count - 1)
-
-            // Draw Systolic Line (Purple)
-            val sysPath = Path()
-            systolicTrends.forEachIndexed { index, sysVal ->
-                val x = index * stepX
-                val normY = ((sysVal - yMin) / (yMax - yMin)).coerceIn(0f, 1f)
-                val y = h - (normY * h)
-                if (index == 0) sysPath.moveTo(x, y) else sysPath.lineTo(x, y)
-            }
-            drawPath(
-                path = sysPath,
-                color = Color(0xFF6E4F76),
-                style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        // X-axis timeline indicators
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 32.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Day 1",
+                fontSize = 10.sp,
+                color = MomoraBodyMuted
             )
-
-            // Draw Diastolic Line (Mint Green)
-            val diaPath = Path()
-            diastolicTrends.forEachIndexed { index, diaVal ->
-                val x = index * stepX
-                val normY = ((diaVal - yMin) / (yMax - yMin)).coerceIn(0f, 1f)
-                val y = h - (normY * h)
-                if (index == 0) diaPath.moveTo(x, y) else diaPath.lineTo(x, y)
-            }
-            drawPath(
-                path = diaPath,
-                color = Color(0xFF3D7B59),
-                style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round)
+            Text(
+                text = "${systolicTrends.size} readings in ${selectedDays}d",
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Medium,
+                color = MomoraPurpleDark
+            )
+            Text(
+                text = if (!latestTime.isNullOrBlank()) "Latest · ${latestTime.formatDoctorTime()}" else "Latest",
+                fontSize = 10.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MomoraPurpleDark
             )
         }
     }
