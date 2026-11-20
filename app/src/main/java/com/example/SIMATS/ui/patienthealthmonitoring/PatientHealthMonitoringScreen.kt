@@ -443,8 +443,8 @@ fun PatientHealthMonitoringScreenContent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Blood pressure trend",
-                            fontSize = 14.5.sp,
+                            text = "Blood pressure",
+                            fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = MomoraPurpleDark,
                             modifier = Modifier.weight(1f, fill = false),
@@ -485,64 +485,46 @@ fun PatientHealthMonitoringScreenContent(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(14.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(8.dp)
-                                        .clip(CircleShape)
-                                        .background(MomoraPurplePrimary)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                val sysVal = data?.latestSystolic ?: 116
-                                Text(
-                                    text = "Systolic ($sysVal mmHg)",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MomoraPurplePrimary
-                                )
-                            }
-
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(8.dp)
-                                        .clip(CircleShape)
-                                        .background(MomoraMintBadgeText)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                val diaVal = data?.latestDiastolic ?: 79
-                                Text(
-                                    text = "Diastolic ($diaVal mmHg)",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MomoraMintBadgeText
-                                )
-                            }
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(MomoraPurplePrimary)
+                            )
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(
+                                text = "Systolic · mmHg",
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MomoraPurplePrimary,
+                                maxLines = 1,
+                                softWrap = false
+                            )
                         }
 
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(6.dp))
-                                .background(Color(0xFFF0FDF4))
-                                .border(0.5.dp, Color(0xFFBBF7D0), RoundedCornerShape(6.dp))
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(MomoraMintBadgeText)
+                            )
+                            Spacer(modifier = Modifier.width(5.dp))
                             Text(
-                                text = "Target <120/<80",
-                                fontSize = 9.5.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF166534)
+                                text = "Diastolic · mmHg",
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MomoraMintBadgeText,
+                                maxLines = 1,
+                                softWrap = false
                             )
                         }
                     }

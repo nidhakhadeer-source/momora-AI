@@ -250,15 +250,7 @@ fun DoctorAdviceScreenContent(
                     color = MomoraPurpleDark
                 )
 
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = "${data?.doctorName ?: "Dr Amelia Chen"} · Private advice · Draft, not sent",
-                fontSize = 12.5.sp,
-                color = MomoraBodyMuted
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Patient Summary Card
             Box(
@@ -511,44 +503,6 @@ fun DoctorAdviceScreenContent(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Non-Continuous Messaging Warning Banner
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFFF4ECF8))
-                    .padding(horizontal = 14.dp, vertical = 11.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(28.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFEBE0F2)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        ShieldIcon(
-                            color = MomoraPurplePrimary,
-                            modifier = Modifier.size(13.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(10.dp))
-
-                    Text(
-                        text = "Messaging is not monitored continuously. Do not use it for urgent or emergency care.",
-                        fontSize = 11.5.sp,
-                        lineHeight = 15.sp,
-                        color = MomoraPurplePrimary,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
             }
             }
 
