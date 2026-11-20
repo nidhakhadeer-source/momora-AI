@@ -1,27 +1,38 @@
 package com.example.SIMATS.ui.doctorprofile
 
+import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.DoctorProfileData
 import com.example.SIMATS.data.repository.DoctorProfileRepository
 import com.example.SIMATS.data.repository.DoctorProfileRepositoryImpl
+import com.example.SIMATS.data.repository.ProfileRepository
+import com.example.SIMATS.data.repository.ProfileRepositoryImpl
 import com.example.SIMATS.navigation.SelectedPatientHolder
 import com.example.SIMATS.ui.components.sanitizeDoctorText
+import com.example.SIMATS.ui.theme.ThemeManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class DoctorProfileViewModel(
-    private val repository: DoctorProfileRepository = DoctorProfileRepositoryImpl()
+    private val repository: DoctorProfileRepository = DoctorProfileRepositoryImpl(),
+    private val profileRepository: ProfileRepository = ProfileRepositoryImpl()
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(DoctorProfileUiState())
+    private val _uiState = MutableStateFlow(DoctorProfileUiState(appTheme = ThemeManager.getTheme()))
     val uiState: StateFlow<DoctorProfileUiState> = _uiState.asStateFlow()
 
     init {
         loadProfile()
+        viewModelScope.launch {
+            ThemeManager.themeFlow.collect { theme ->
+                _uiState.value = _uiState.value.copy(appTheme = theme)
+            }
+        }
     }
 
     fun onEvent(event: DoctorProfileUiEvent) {
@@ -56,6 +67,13 @@ class DoctorProfileViewModel(
             is DoctorProfileUiEvent.OnPhotoUrlChanged -> {
                 _uiState.value = _uiState.value.copy(photoUrl = event.value)
             }
+            is DoctorProfileUiEvent.OnPhotoSelected -> {
+                uploadPhoto(event.uri, event.context)
+            }
+            is DoctorProfileUiEvent.OnThemeSelected -> {
+                ThemeManager.setTheme(event.theme)
+                _uiState.value = _uiState.value.copy(appTheme = event.theme)
+            }
             DoctorProfileUiEvent.OnToggleEditMode -> {
                 _uiState.value = _uiState.value.copy(isEditing = !_uiState.value.isEditing)
             }
@@ -87,7 +105,11 @@ class DoctorProfileViewModel(
     }
 
     fun loadProfile() {
-        _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+        _uiState.value = _uiState.value.copy(
+            isLoading = true,
+            errorMessage = null,
+            appTheme = ThemeManager.getTheme()
+        )
         viewModelScope.launch {
             repository.getDoctorProfile().collect { result ->
                 result.fold(
@@ -95,7 +117,8 @@ class DoctorProfileViewModel(
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             errorMessage = null,
-                            profileData = profile
+                            profileData = profile,
+                            appTheme = ThemeManager.getTheme()
                         )
                         populateFromProfile(profile)
                     },
@@ -103,6 +126,54 @@ class DoctorProfileViewModel(
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             errorMessage = error.localizedMessage ?: "Failed to load doctor profile"
+                        )
+                    }
+                )
+            }
+        }
+    }
+
+    private fun uploadPhoto(uri: Uri, context: Context) {
+        _uiState.value = _uiState.value.copy(
+            localPhotoUri = uri,
+            isUploadingPhoto = true,
+            errorMessage = null,
+            successMessage = null
+        )
+        viewModelScope.launch {
+            profileRepository.uploadProfilePhoto(context, uri).collect { result ->
+                result.fold(
+                    onSuccess = { url ->
+                        _uiState.value = _uiState.value.copy(
+                            isUploadingPhoto = false,
+                            photoUrl = url,
+                            successMessage = "Profile photo updated successfully"
+                        )
+                        // Also persist updated photoUrl into doctor profile
+                        val cur = _uiState.value
+                        val updated = DoctorProfileData(
+                            fullName = cur.fullName,
+                            email = cur.email,
+                            specialty = cur.specialty.ifBlank { "Obstetrics" },
+                            licenseId = cur.licenseId,
+                            clinic = cur.clinic.ifBlank { "Willow Maternity Clinic" },
+                            gender = cur.gender.ifBlank { null },
+                            phone = cur.phone.ifBlank { null },
+                            address = cur.address.ifBlank { null },
+                            qualification = cur.qualification.ifBlank { null },
+                            experienceYears = cur.experienceYears.toIntOrNull(),
+                            photoUrl = url
+                        )
+                        repository.updateDoctorProfile(updated).collect { saveResult ->
+                            saveResult.onSuccess { saved ->
+                                _uiState.value = _uiState.value.copy(profileData = saved)
+                            }
+                        }
+                    },
+                    onFailure = { err ->
+                        _uiState.value = _uiState.value.copy(
+                            isUploadingPhoto = false,
+                            errorMessage = err.message ?: "Failed to upload photo"
                         )
                     }
                 )
@@ -169,4 +240,3 @@ class DoctorProfileViewModel(
         }
     }
 }
-

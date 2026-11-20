@@ -1,5 +1,8 @@
 package com.example.SIMATS.ui.doctorprofile
 
+import android.content.Context
+import android.net.Uri
+
 sealed interface DoctorProfileUiEvent {
     data class OnFullNameChanged(val value: String) : DoctorProfileUiEvent
     data class OnSpecialtyChanged(val value: String) : DoctorProfileUiEvent
@@ -11,6 +14,8 @@ sealed interface DoctorProfileUiEvent {
     data class OnQualificationChanged(val value: String) : DoctorProfileUiEvent
     data class OnExperienceYearsChanged(val value: String) : DoctorProfileUiEvent
     data class OnPhotoUrlChanged(val value: String) : DoctorProfileUiEvent
+    data class OnPhotoSelected(val uri: Uri, val context: Context) : DoctorProfileUiEvent
+    data class OnThemeSelected(val theme: String) : DoctorProfileUiEvent
     data object OnToggleEditMode : DoctorProfileUiEvent
     data object OnSaveClicked : DoctorProfileUiEvent
     data object OnCancelEditClicked : DoctorProfileUiEvent
@@ -19,4 +24,3 @@ sealed interface DoctorProfileUiEvent {
     data object DismissMessages : DoctorProfileUiEvent
     data class OnNavTabSelected(val index: Int) : DoctorProfileUiEvent
 }
-

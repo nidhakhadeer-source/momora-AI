@@ -1,5 +1,6 @@
 package com.example.SIMATS.ui.doctorprofile
 
+import android.net.Uri
 import com.example.SIMATS.data.model.DoctorProfileData
 
 data class DoctorProfileUiState(
@@ -15,6 +16,9 @@ data class DoctorProfileUiState(
     val qualification: String = "",
     val experienceYears: String = "",
     val photoUrl: String? = null,
+    val localPhotoUri: Uri? = null,
+    val isUploadingPhoto: Boolean = false,
+    val appTheme: String = "SYSTEM",
     val isEditing: Boolean = false,
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
@@ -24,4 +28,3 @@ data class DoctorProfileUiState(
     val successMessage: String? = null,
     val selectedNavIndex: Int = 0
 )
-

@@ -1,6 +1,10 @@
 package com.example.SIMATS.ui.doctorprofile
 
 import android.graphics.BitmapFactory
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -36,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -66,6 +71,7 @@ import com.example.SIMATS.ui.theme.MomoraPurpleDark
 import com.example.SIMATS.ui.theme.MomoraPurplePrimary
 import com.example.SIMATS.ui.theme.MomoraPurpleText
 import com.example.SIMATS.ui.theme.MomoraScreenBackground
+import com.example.SIMATS.ui.theme.ThemeManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
@@ -81,10 +87,19 @@ fun DoctorProfileScreen(
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     LaunchedEffect(uiState.isLoggedOut) {
         if (uiState.isLoggedOut) {
             onLogoutSuccess()
+        }
+    }
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            viewModel.onEvent(DoctorProfileUiEvent.OnPhotoSelected(uri, context))
         }
     }
 
@@ -98,6 +113,14 @@ fun DoctorProfileScreen(
         onSaveClick = { viewModel.onEvent(DoctorProfileUiEvent.OnSaveClicked) },
         onRetryClick = { viewModel.onEvent(DoctorProfileUiEvent.OnRetryClicked) },
         onLogoutClick = { viewModel.onEvent(DoctorProfileUiEvent.OnLogoutClicked) },
+        onPhotoClick = {
+            photoPickerLauncher.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            )
+        },
+        onThemeSelected = { theme ->
+            viewModel.onEvent(DoctorProfileUiEvent.OnThemeSelected(theme))
+        },
         onFullNameChanged = { viewModel.onEvent(DoctorProfileUiEvent.OnFullNameChanged(it)) },
         onSpecialtyChanged = { viewModel.onEvent(DoctorProfileUiEvent.OnSpecialtyChanged(it)) },
         onLicenseIdChanged = { viewModel.onEvent(DoctorProfileUiEvent.OnLicenseIdChanged(it)) },
@@ -148,6 +171,8 @@ fun DoctorProfileScreenContent(
     onSaveClick: () -> Unit = {},
     onRetryClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {},
+    onPhotoClick: () -> Unit = {},
+    onThemeSelected: (String) -> Unit = {},
     onFullNameChanged: (String) -> Unit = {},
     onSpecialtyChanged: (String) -> Unit = {},
     onLicenseIdChanged: (String) -> Unit = {},
@@ -337,7 +362,10 @@ fun DoctorProfileScreenContent(
                     email = uiState.email,
                     specialty = uiState.specialty,
                     clinic = uiState.clinic,
-                    photoUrl = uiState.photoUrl
+                    photoUrl = uiState.photoUrl,
+                    localUri = uiState.localPhotoUri,
+                    isUploading = uiState.isUploadingPhoto,
+                    onPhotoClick = onPhotoClick
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -551,10 +579,24 @@ fun DoctorProfileScreenContent(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
-                // Account / Log Out Section
-                Column(
+                // Appearance Section
+                Text(
+                    text = "Appearance",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MomoraPurpleDark
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Choose your preferred app theme",
+                    fontSize = 12.sp,
+                    color = MomoraBodyMuted
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
@@ -562,37 +604,74 @@ fun DoctorProfileScreenContent(
                         .border(1.dp, Color(0xFFF0E8F4), RoundedCornerShape(16.dp))
                         .padding(16.dp)
                 ) {
-                    Text(
-                        text = "Account Session",
-                        fontSize = 13.5.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MomoraPurpleDark
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Signed in as ${uiState.email}",
-                        fontSize = 11.5.sp,
-                        color = MomoraBodyMuted
-                    )
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(46.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFFFFF0F0))
-                            .border(1.dp, Color(0xFFFFD2D2), RoundedCornerShape(12.dp))
-                            .clickable { onLogoutClick() },
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Column {
                         Text(
-                            text = "Log out from Doctor Portal",
+                            text = "App Theme",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFFD32F2F)
+                            color = MomoraPurpleDark
                         )
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            val themes = listOf(
+                                "SYSTEM" to "System default",
+                                "LIGHT" to "Light",
+                                "DARK" to "Dark"
+                            )
+                            themes.forEach { (key, label) ->
+                                val isSelected = uiState.appTheme == key
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(
+                                            if (isSelected) MomoraPurplePrimary else Color(0xFFF6F0F8)
+                                        )
+                                        .border(
+                                            width = if (isSelected) 1.5.dp else 1.dp,
+                                            color = if (isSelected) MomoraPurplePrimary else Color(0xFFEFE8F4),
+                                            shape = RoundedCornerShape(12.dp)
+                                        )
+                                        .clickable { onThemeSelected(key) }
+                                        .padding(vertical = 12.dp, horizontal = 4.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = label,
+                                        fontSize = 12.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) Color.White else MomoraPurpleDark,
+                                        textAlign = TextAlign.Center,
+                                        maxLines = 1
+                                    )
+                                }
+                            }
+                        }
                     }
+                }
+
+                Spacer(modifier = Modifier.height(18.dp))
+
+                // Log out Button
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFFFF0F0))
+                        .border(1.dp, Color(0xFFFFD2D2), RoundedCornerShape(12.dp))
+                        .clickable { onLogoutClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Log out from Doctor Portal",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFD32F2F)
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -613,18 +692,31 @@ private fun DoctorProfileHeader(
     email: String,
     specialty: String,
     clinic: String,
-    photoUrl: String?
+    photoUrl: String?,
+    localUri: Uri? = null,
+    isUploading: Boolean = false,
+    onPhotoClick: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     val initials = remember(fullName) {
         val words = fullName.trim().split(Regex("\\s+")).filter { it.isNotBlank() }
         val raw = words.take(2).map { it.first().uppercaseChar() }.joinToString("")
         raw.ifBlank { "DR" }
     }
 
-    var imageBitmap by remember(photoUrl) { mutableStateOf<ImageBitmap?>(null) }
+    var imageBitmap by remember(photoUrl, localUri) { mutableStateOf<ImageBitmap?>(null) }
 
-    LaunchedEffect(photoUrl) {
-        if (!photoUrl.isNullOrBlank()) {
+    LaunchedEffect(photoUrl, localUri) {
+        if (localUri != null) {
+            withContext(Dispatchers.IO) {
+                try {
+                    context.contentResolver.openInputStream(localUri)?.use { stream ->
+                        val bmp = BitmapFactory.decodeStream(stream)
+                        imageBitmap = bmp?.asImageBitmap()
+                    }
+                } catch (_: Exception) {}
+            }
+        } else if (!photoUrl.isNullOrBlank()) {
             withContext(Dispatchers.IO) {
                 try {
                     val conn = URL(photoUrl).openConnection() as HttpURLConnection
@@ -661,35 +753,77 @@ private fun DoctorProfileHeader(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            // Avatar Circle
+            // Avatar Circle with Camera Overlay Badge
             Box(
                 modifier = Modifier
-                    .size(72.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFFEDE4F0))
-                    .border(2.dp, MomoraPurplePrimary.copy(alpha = 0.3f), CircleShape),
+                    .size(76.dp)
+                    .clickable { onPhotoClick() },
                 contentAlignment = Alignment.Center
             ) {
-                if (imageBitmap != null) {
-                    Image(
-                        bitmap = imageBitmap!!,
-                        contentDescription = "Doctor Photo",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
+                Box(
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFEDE4F0))
+                        .border(2.dp, MomoraPurplePrimary.copy(alpha = 0.35f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (imageBitmap != null) {
+                        Image(
+                            bitmap = imageBitmap!!,
+                            contentDescription = "Doctor Photo",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Text(
+                            text = initials,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurplePrimary
+                        )
+                    }
+
+                    if (isUploading) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.Black.copy(alpha = 0.35f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(22.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        }
+                    }
+                }
+
+                // Camera overlay badge
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .align(Alignment.BottomEnd)
+                        .clip(CircleShape)
+                        .background(MomoraPurplePrimary)
+                        .border(1.5.dp, Color.White, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
                     Text(
-                        text = initials,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MomoraPurplePrimary
+                        text = "📷",
+                        fontSize = 11.sp
                     )
                 }
             }
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable { onPhotoClick() }
+            ) {
                 Text(
                     text = fullName.sanitizeDoctorText().ifBlank { "Dr Amelia Chen" },
                     fontSize = 18.sp,
@@ -698,7 +832,7 @@ private fun DoctorProfileHeader(
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = specialty.sanitizeDoctorText().ifBlank { "Obstetrics" },
+                    text = specialty.sanitizeDoctorText().ifBlank { "Obstetrics & Gynecology" },
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
                     color = MomoraPurplePrimary
@@ -710,17 +844,26 @@ private fun DoctorProfileHeader(
                     color = MomoraBodyMuted
                 )
                 Spacer(modifier = Modifier.height(6.dp))
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(50))
-                        .background(MomoraMintBadgeBg)
-                        .padding(horizontal = 8.dp, vertical = 2.dp)
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(MomoraMintBadgeBg)
+                            .padding(horizontal = 8.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = "Verified Clinician",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraMintBadgeText
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Verified Clinician",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MomoraMintBadgeText
+                        text = if (isUploading) "Uploading..." else "Tap to change",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MomoraPurplePrimary
                     )
                 }
             }
