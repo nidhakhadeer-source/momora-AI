@@ -6,6 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.repository.DoctorRepository
 import com.example.SIMATS.data.repository.DoctorRepositoryImpl
+import com.example.SIMATS.data.repository.NotificationRepository
+import com.example.SIMATS.data.repository.NotificationRepositoryImpl
+import com.example.SIMATS.data.repository.NotificationStateManager
 import com.example.SIMATS.navigation.SelectedPatientHolder
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,7 +16,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class MainViewModel(
-    private val repository: DoctorRepository = DoctorRepositoryImpl()
+    private val repository: DoctorRepository = DoctorRepositoryImpl(),
+    private val notificationRepository: NotificationRepository = NotificationRepositoryImpl()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MainUiState())
@@ -21,6 +25,31 @@ class MainViewModel(
 
     init {
         loadDashboard()
+        refreshNotifications()
+        viewModelScope.launch {
+            NotificationStateManager.unreadCount.collect { count ->
+                _uiState.value = _uiState.value.copy(unreadNotificationCount = count)
+            }
+        }
+    }
+
+    fun refreshNotifications() {
+        viewModelScope.launch {
+            notificationRepository.getNotifications().collect { result ->
+                result.fold(
+                    onSuccess = { list ->
+                        val unread = list.count { !it.isRead || it.isNew }
+                        NotificationStateManager.setUnreadCount(unread)
+                        _uiState.value = _uiState.value.copy(unreadNotificationCount = unread)
+                    },
+                    onFailure = {
+                        _uiState.value = _uiState.value.copy(
+                            unreadNotificationCount = NotificationStateManager.unreadCount.value
+                        )
+                    }
+                )
+            }
+        }
     }
 
     fun onEvent(event: MainUiEvent) {

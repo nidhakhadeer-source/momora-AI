@@ -4,8 +4,24 @@ import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.NotificationItem
 import com.example.SIMATS.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException
+
+object NotificationStateManager {
+    private val _unreadCount = MutableStateFlow(0)
+    val unreadCount: StateFlow<Int> = _unreadCount.asStateFlow()
+
+    fun setUnreadCount(count: Int) {
+        _unreadCount.value = count
+    }
+
+    fun markAllRead() {
+        _unreadCount.value = 0
+    }
+}
 
 interface NotificationRepository {
     fun getNotifications(): Flow<Result<List<NotificationItem>>>

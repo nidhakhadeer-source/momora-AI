@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.SIMATS.data.repository.NotificationRepository
 import com.example.SIMATS.data.repository.NotificationRepositoryImpl
+import com.example.SIMATS.data.repository.NotificationStateManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -51,6 +52,7 @@ class NotificationsViewModel(
                 if (it.id == id) it.copy(isRead = true, isNew = false) else it
             }
             val unread = updated.count { !it.isRead || it.isNew }
+            NotificationStateManager.setUnreadCount(unread)
             _uiState.value = _uiState.value.copy(
                 notifications = updated,
                 unreadCount = unread
@@ -71,6 +73,7 @@ class NotificationsViewModel(
                 result.fold(
                     onSuccess = { list ->
                         val unread = list.count { !it.isRead || it.isNew }
+                        NotificationStateManager.setUnreadCount(unread)
                         _uiState.value = _uiState.value.copy(
                             notifications = list,
                             unreadCount = unread,
@@ -98,6 +101,7 @@ class NotificationsViewModel(
         val updated = previousNotifications.map {
             it.copy(isRead = true, isNew = false)
         }
+        NotificationStateManager.markAllRead()
         _uiState.value = _uiState.value.copy(
             isMarkingAllRead = true,
             notifications = updated,

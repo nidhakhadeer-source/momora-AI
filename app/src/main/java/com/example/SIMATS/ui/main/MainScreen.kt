@@ -31,8 +31,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -40,6 +42,7 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -82,6 +85,10 @@ fun MainScreen(
         if (uiState.isLoggedOut) {
             onLogoutSuccess()
         }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.refreshNotifications()
     }
 
     MainScreenContent(
@@ -180,70 +187,117 @@ fun MainScreenContent(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 12.dp),
+                .padding(horizontal = 20.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                TopBarHeartIcon(
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(18.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .shadow(elevation = 2.dp, shape = CircleShape)
+                        .clip(CircleShape)
+                        .background(Color(0xFFF1E7F5)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    TopBarHeartIcon(
+                        color = Color(0xFF6E4F76),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Column {
+                    Text(
+                        text = "MOMORA CARE",
+                        fontSize = 10.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp,
+                        color = Color(0xFF6E4F76)
+                    )
+                    Text(
+                        text = "Doctor Portal",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+                // Notification bell icon with soft pastel circular background & unread dot
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(38.dp)
+                        .shadow(elevation = 1.dp, shape = CircleShape)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
+                        .background(Color(0xFFFAF0F3))
+                        .clickable { onNotificationClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    BellIcon(
+                        color = Color(0xFF6E4F76),
+                        modifier = Modifier.size(18.dp)
+                    )
+                    if (uiState.unreadNotificationCount > 0) {
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(top = 8.dp, end = 8.dp)
+                                .size(7.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFE53935))
+                        )
+                    }
+                }
+
+                // Redesigned Logout button: modern soft rose pill with logout icon
+                Row(
+                    modifier = Modifier
+                        .height(36.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(Color(0xFFFFF1F3))
+                        .border(1.dp, Color(0xFFFFDCE2), RoundedCornerShape(18.dp))
+                        .clickable { onLogoutClick() }
+                        .padding(horizontal = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    LogoutIcon(
+                        color = Color(0xFFD32F2F),
+                        modifier = Modifier.size(13.dp)
+                    )
+                    Text(
+                        text = "Log out",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFFD32F2F)
+                    )
+                }
+
+                // Profile Avatar: attractive circular gradient avatar with initials
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .shadow(elevation = 2.dp, shape = CircleShape)
+                        .clip(CircleShape)
+                        .background(
+                            Brush.linearGradient(
+                                colors = listOf(Color(0xFF6E4F76), Color(0xFF5A3D63))
+                            )
+                        )
                         .clickable { onProfileClick() },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "Dr",
-                        fontSize = 13.sp,
+                        fontSize = 13.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .height(36.dp)
-                        .clip(RoundedCornerShape(18.dp))
-                        .background(Color(0xFFFFF0F0))
-                        .border(1.dp, Color(0xFFFFD2D2), RoundedCornerShape(18.dp))
-                        .clickable { onLogoutClick() }
-                        .padding(horizontal = 12.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "Log out",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFD32F2F)
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .clickable { onNotificationClick() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    BellIcon(
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
+                        color = Color.White
                     )
                 }
             }
@@ -334,298 +388,575 @@ fun MainScreenContent(
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                 }
+                // Welcome Section
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0xFFF1E7F5))
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = (data?.clinicName ?: "Willow Maternity Clinic").sanitizeDoctorText(),
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF6E4F76)
+                        )
+                    }
+                    Text(
+                        text = "•",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = (data?.dateText ?: "Tuesday, 27 Oct 2026").sanitizeDoctorText(),
+                        fontSize = 11.5.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Text(
                     text = "Good morning, ${(data?.doctorName ?: "Dr Chen").sanitizeDoctorText()}",
-                    fontSize = 24.sp,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
-            Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                text = "${(data?.dateText ?: "Tuesday, 27 Oct 2026").sanitizeDoctorText()} · ${(data?.clinicName ?: "Willow Maternity Clinic").sanitizeDoctorText()}",
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Assigned Patients Banner Card
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.primaryContainer)
-                    .clickable { onViewAssignedPatientsClick() }
-                    .padding(16.dp)
-            ) {
-                Text(
-                    text = "${data?.assignedPatientsCount ?: 18} assigned patients",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Visits & Reviews Summary Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // Visits Today Card
+                // Assigned Patients Banner Card (Beautiful Lavender Card)
                 Box(
                     modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .clickable { onScheduleClick() }
-                        .padding(14.dp)
-                ) {
-                    Column {
-                        Text(
-                            text = "Visits today",
-                            fontSize = 11.5.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.primary
+                        .fillMaxWidth()
+                        .shadow(elevation = 2.dp, shape = RoundedCornerShape(20.dp))
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(
+                            Brush.horizontalGradient(
+                                colors = listOf(Color(0xFFF2EAF7), Color(0xFFE9DCF0))
+                            )
                         )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "${data?.visitsTodayCount ?: 6}",
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "${data?.upcomingVisitsCount ?: 4} upcoming · ${data?.completedVisitsCount ?: 2} completed",
-                            fontSize = 10.5.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                // To Review Card
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .border(1.dp, Color(0xFFE2D2EB), RoundedCornerShape(20.dp))
                         .clickable { onViewAssignedPatientsClick() }
-                        .padding(14.dp)
+                        .padding(18.dp)
                 ) {
-                    Column {
-                        Text(
-                            text = "To review",
-                            fontSize = 11.5.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "${data?.toReviewCount ?: 2}",
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = "routine report updates",
-                            fontSize = 10.5.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // "Needs your review" Section
-            Text(
-                text = "Needs your review",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Grouped Review Items Card List
-            val groupedReviews = (data?.reviewItems.orEmpty())
-                .groupBy { it.patientName }
-                .entries
-                .toList()
-
-            if (groupedReviews.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.surface)
-                        .padding(20.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "No items to review",
-                            fontSize = 13.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "New lab and ultrasound reports requiring your review will appear here.",
-                            fontSize = 11.5.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            } else {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.surface)
-                        .padding(horizontal = 16.dp, vertical = 6.dp)
-                ) {
-                    val displayedGroups = groupedReviews.take(3)
-                    displayedGroups.forEachIndexed { index, entry ->
-                        val patientName = entry.key
-                        val items = entry.value
-                        val firstItem = items.first()
-                        val patientId = firstItem.id
-                        val gestationalAge = firstItem.gestationalAge
-                        val count = items.size
-                        val countText = if (count == 1) "1 report to review" else "$count reports to review"
-
-                        DoctorPatientReviewRow(
-                            patientName = patientName,
-                            gestationalAge = gestationalAge,
-                            countText = countText,
-                            onReviewClick = {
-                                SelectedPatientHolder.initialTab = 1
-                                onReviewPatientClick(patientId, patientName)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(46.dp)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(Color.White)
+                                    .border(1.dp, Color(0xFFDFCFE8), RoundedCornerShape(14.dp)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                MedicalPersonIcon(
+                                    color = Color(0xFF6E4F76),
+                                    modifier = Modifier.size(24.dp)
+                                )
                             }
-                        )
-                        if (index < (displayedGroups.size - 1)) {
+
+                            Column {
+                                Text(
+                                    text = "ASSIGNED PATIENTS",
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = 0.8.sp,
+                                    color = Color(0xFF6E4F76)
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Row(verticalAlignment = Alignment.Bottom) {
+                                    Text(
+                                        text = "${data?.assignedPatientsCount ?: 18}",
+                                        fontSize = 26.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF3B2544)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "expectant mothers",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = Color(0xFF5A3D63),
+                                        modifier = Modifier.padding(bottom = 3.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(Color.White)
+                                .border(1.dp, Color(0xFFDFCFE8), RoundedCornerShape(50))
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    text = "View",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF6E4F76)
+                                )
+                                Text(
+                                    text = "›",
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF6E4F76)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Visits & Reviews Summary Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    // Visits Today Card (Pastel Lavender)
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .shadow(elevation = 1.5.dp, shape = RoundedCornerShape(20.dp))
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(Color(0xFFF8F3FB), Color(0xFFF1E8F6))
+                                )
+                            )
+                            .border(1.dp, Color(0xFFEADCEE), RoundedCornerShape(20.dp))
+                            .clickable { onScheduleClick() }
+                            .padding(16.dp)
+                    ) {
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Visits today",
+                                    fontSize = 12.5.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF5A3D63)
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.White),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CalendarClockIcon(
+                                        color = Color(0xFF6E4F76),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Text(
+                                text = "${data?.visitsTodayCount ?: 6}",
+                                fontSize = 28.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF382340)
+                            )
+
                             Spacer(modifier = Modifier.height(4.dp))
+
+                            Text(
+                                text = "${data?.upcomingVisitsCount ?: 4} upcoming · ${data?.completedVisitsCount ?: 2} done",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFF7D7584)
+                            )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(6.dp))
-
+                    // To Review Card (Pastel Pink)
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .weight(1f)
+                            .shadow(elevation = 1.5.dp, shape = RoundedCornerShape(20.dp))
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(Color(0xFFFCF2F5), Color(0xFFF8E7ED))
+                                )
+                            )
+                            .border(1.dp, Color(0xFFF3DDE5), RoundedCornerShape(20.dp))
                             .clickable { onViewAssignedPatientsClick() }
-                            .padding(vertical = 8.dp),
-                        contentAlignment = Alignment.Center
+                            .padding(16.dp)
                     ) {
-                        Text(
-                            text = "All reviews",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "To review",
+                                    fontSize = 12.5.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF703D51)
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.White),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    ClipboardCheckIcon(
+                                        color = Color(0xFF944B68),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Text(
+                                text = "${data?.toReviewCount ?: 2}",
+                                fontSize = 28.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF4C2233)
+                            )
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            Text(
+                                text = "lab & ultrasound updates",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFF8C717C)
+                            )
+                        }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
-            // "Next appointment" Section
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Next appointment",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                // Grouped Review Items
+                val groupedReviews = (data?.reviewItems.orEmpty())
+                    .groupBy { it.patientName }
+                    .entries
+                    .toList()
 
-                Text(
-                    text = "Schedule",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.clickable { onScheduleClick() }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Next Appointment Card
-            val nextAppt = data?.nextAppointment
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.surface)
-                    .clickable { onNextAppointmentClick() }
-                    .padding(14.dp)
-            ) {
+                // "Needs your review" Section Header
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.weight(1f)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surfaceVariant),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            VideoIcon(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                        Text(
+                            text = "Needs your review",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        if (groupedReviews.isNotEmpty()) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(50))
+                                    .background(Color(0xFFFAF0F3))
+                                    .padding(horizontal = 8.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = "${groupedReviews.size} pending",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF944B68)
+                                )
+                            }
                         }
+                    }
 
-                        Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = "All reviews",
+                        fontSize = 12.5.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF6E4F76),
+                        modifier = Modifier.clickable { onViewAssignedPatientsClick() }
+                    )
+                }
 
-                        Column {
+                Spacer(modifier = Modifier.height(10.dp))
+
+                if (groupedReviews.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .shadow(elevation = 1.dp, shape = RoundedCornerShape(20.dp))
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(Color.White)
+                            .border(1.dp, Color(0xFFEFE8F2), RoundedCornerShape(20.dp))
+                            .padding(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFF1E7F5)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                ClipboardCheckIcon(
+                                    color = Color(0xFF6E4F76),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = (nextAppt?.patientName ?: "Nora Williams").sanitizeDoctorText(),
+                                text = "All reports reviewed",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
-                            Spacer(modifier = Modifier.height(2.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "${(nextAppt?.timeText ?: "Today, 11:30").sanitizeDoctorText()} · ${(nextAppt?.visitType ?: "Routine antenatal").sanitizeDoctorText()} · ${(nextAppt?.mode ?: "Video").sanitizeDoctorText()}",
+                                text = "New lab and ultrasound reports requiring your review will appear here.",
+                                fontSize = 12.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .shadow(elevation = 1.5.dp, shape = RoundedCornerShape(20.dp))
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(Color.White)
+                            .border(1.dp, Color(0xFFEFE8F2), RoundedCornerShape(20.dp))
+                            .padding(horizontal = 16.dp, vertical = 6.dp)
+                    ) {
+                        Column {
+                            val displayedGroups = groupedReviews.take(3)
+                            displayedGroups.forEachIndexed { index, entry ->
+                                val patientName = entry.key
+                                val items = entry.value
+                                val firstItem = items.first()
+                                val patientId = firstItem.id
+                                val gestationalAge = firstItem.gestationalAge
+                                val count = items.size
+                                val countText = if (count == 1) "1 report to review" else "$count reports to review"
+
+                                DoctorPatientReviewRow(
+                                    patientName = patientName,
+                                    gestationalAge = gestationalAge,
+                                    countText = countText,
+                                    onReviewClick = {
+                                        SelectedPatientHolder.initialTab = 1
+                                        onReviewPatientClick(patientId, patientName)
+                                    }
+                                )
+
+                                if (index < (displayedGroups.size - 1)) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(1.dp)
+                                            .background(Color(0xFFF7F3F9))
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(18.dp))
+
+                // "Next appointment" Section
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Next appointment",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Text(
+                        text = "Schedule ›",
+                        fontSize = 12.5.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF6E4F76),
+                        modifier = Modifier.clickable { onScheduleClick() }
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Next Appointment Card
+                val nextAppt = data?.nextAppointment
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(elevation = 2.dp, shape = RoundedCornerShape(20.dp))
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color.White)
+                        .border(1.dp, Color(0xFFEADBEE), RoundedCornerShape(20.dp))
+                        .clickable { onNextAppointmentClick() }
+                        .padding(16.dp)
+                ) {
+                    Column {
+                        // Tag row: Consultation type and mode
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0xFFF1E7F5))
+                                    .padding(horizontal = 10.dp, vertical = 3.dp)
+                            ) {
+                                Text(
+                                    text = (nextAppt?.visitType ?: "Routine antenatal").sanitizeDoctorText(),
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF6E4F76)
+                                )
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0xFFE2F4EB))
+                                    .padding(horizontal = 10.dp, vertical = 3.dp)
+                            ) {
+                                Text(
+                                    text = (nextAppt?.mode ?: "Video").sanitizeDoctorText(),
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF3D7B59)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Patient details and time row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(44.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFFFAF0F3))
+                                        .border(1.dp, Color(0xFFF5D8E4), CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    ConsultationIcon(
+                                        mode = nextAppt?.mode ?: "Video",
+                                        color = Color(0xFF6E4F76),
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+
+                                Column {
+                                    Text(
+                                        text = (nextAppt?.patientName ?: "Nora Williams").sanitizeDoctorText(),
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.height(3.dp))
+                                    Text(
+                                        text = (nextAppt?.timeText ?: "Today, 11:30").sanitizeDoctorText(),
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Color(0xFF6E4F76)
+                                    )
+                                }
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFF7F2FA)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "›",
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF6E4F76)
+                                )
+                            }
+                        }
+
+                        val patientForNote = SelectedPatientHolder.selectedPatientName?.takeIf { it.isNotBlank() } ?: "Patient"
+                        val rawFutureNote = nextAppt?.futureNote?.takeIf { it.isNotBlank() } ?: "$patientForNote's next visit · Scheduled"
+
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .background(Color(0xFFF5EEF7))
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            CalendarClockIcon(
+                                color = Color(0xFF9C93A3),
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Text(
+                                text = rawFutureNote.sanitizeDoctorText(),
                                 fontSize = 11.5.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
-
-                    Text(
-                        text = "›",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
                 }
-            }
 
-            Spacer(modifier = Modifier.height(6.dp))
-
-            val patientForNote = SelectedPatientHolder.selectedPatientName?.takeIf { it.isNotBlank() } ?: "Patient"
-            val rawFutureNote = nextAppt?.futureNote?.takeIf { it.isNotBlank() } ?: "$patientForNote's next visit · Scheduled"
-            Text(
-                text = rawFutureNote.sanitizeDoctorText(),
-                fontSize = 11.5.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
             }
         }
 
@@ -648,59 +979,74 @@ private fun DoctorPatientReviewRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onReviewClick() }
-            .padding(vertical = 10.dp),
+            .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0xFFF1E7F5))
+                    .border(1.dp, Color(0xFFE4D5EC), RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                DocumentIcon(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                DocumentIcon(color = Color(0xFF6E4F76), modifier = Modifier.size(18.dp))
             }
-
-            Spacer(modifier = Modifier.width(12.dp))
 
             Column {
                 Text(
                     text = patientName.sanitizeDoctorText(),
-                    fontSize = 13.5.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(modifier = Modifier.height(2.dp))
-                val subtitle = if (gestationalAge.isNotBlank()) {
-                    "${gestationalAge.sanitizeDoctorText()} · $countText"
-                } else {
-                    countText
+                Spacer(modifier = Modifier.height(3.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    if (gestationalAge.isNotBlank()) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(Color(0xFFFAF0F3))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = gestationalAge.sanitizeDoctorText(),
+                                fontSize = 10.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF944B68)
+                            )
+                        }
+                    }
+                    Text(
+                        text = countText,
+                        fontSize = 11.5.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
-                Text(
-                    text = subtitle,
-                    fontSize = 11.5.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
             }
         }
 
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(50))
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+                .background(Color(0xFF6E4F76))
                 .clickable { onReviewClick() }
-                .padding(horizontal = 14.dp, vertical = 5.dp)
+                .padding(horizontal = 16.dp, vertical = 7.dp)
         ) {
             Text(
                 text = "Review",
-                fontSize = 11.sp,
+                fontSize = 11.5.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                color = Color.White
             )
         }
     }
@@ -715,16 +1061,16 @@ private fun DoctorBottomNavBar(
     onTabSelected: (Int) -> Unit
 ) {
     val navSurface = MaterialTheme.colorScheme.surface
-    val navBorder = MaterialTheme.colorScheme.outlineVariant
-    val indicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
-    val primaryColor = MaterialTheme.colorScheme.primary
-    val mutedColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val navBorder = Color(0xFFEFE8F2)
+    val indicatorColor = Color(0xFFDFD5E3)
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .shadow(elevation = 8.dp, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
+            .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
             .background(navSurface)
-            .border(1.dp, navBorder, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+            .border(1.dp, navBorder, RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
             .padding(top = 8.dp, bottom = 4.dp)
     ) {
         Row(
@@ -736,29 +1082,29 @@ private fun DoctorBottomNavBar(
                 label = "Home",
                 isSelected = selectedIndex == 0,
                 onClick = { onTabSelected(0) },
-                icon = { HomeNavIcon(color = if (selectedIndex == 0) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) }
+                icon = { HomeNavIcon(color = if (selectedIndex == 0) Color(0xFF6E4F76) else Color(0xFF8E8394), modifier = Modifier.size(22.dp)) }
             )
             NavTabItem(
                 label = "Patients",
                 isSelected = selectedIndex == 1,
                 onClick = { onTabSelected(1) },
-                icon = { PeopleNavIcon(color = if (selectedIndex == 1) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) }
+                icon = { PeopleNavIcon(color = if (selectedIndex == 1) Color(0xFF6E4F76) else Color(0xFF8E8394), modifier = Modifier.size(22.dp)) }
             )
             NavTabItem(
                 label = "Schedule",
                 isSelected = selectedIndex == 2,
                 onClick = { onTabSelected(2) },
-                icon = { CalendarNavIcon(color = if (selectedIndex == 2) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) }
+                icon = { CalendarNavIcon(color = if (selectedIndex == 2) Color(0xFF6E4F76) else Color(0xFF8E8394), modifier = Modifier.size(22.dp)) }
             )
             NavTabItem(
                 label = "Advice",
                 isSelected = selectedIndex == 3,
                 onClick = { onTabSelected(3) },
-                icon = { ChatNavIcon(color = if (selectedIndex == 3) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) }
+                icon = { ChatNavIcon(color = if (selectedIndex == 3) Color(0xFF6E4F76) else Color(0xFF8E8394), modifier = Modifier.size(22.dp)) }
             )
         }
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         Box(
             modifier = Modifier
@@ -778,21 +1124,21 @@ private fun NavTabItem(
     onClick: () -> Unit,
     icon: @Composable () -> Unit
 ) {
-    val activeBg = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-    val activeColor = MaterialTheme.colorScheme.primary
-    val inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val activeBg = Color(0xFFF1E7F5)
+    val activeColor = Color(0xFF5A3D63)
+    val inactiveColor = Color(0xFF8E8394)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
             .clickable { onClick() }
-            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .padding(horizontal = 4.dp, vertical = 2.dp)
     ) {
         Box(
             modifier = Modifier
-                .clip(CircleShape)
+                .clip(RoundedCornerShape(16.dp))
                 .background(if (isSelected) activeBg else Color.Transparent)
-                .padding(horizontal = 14.dp, vertical = 4.dp),
+                .padding(horizontal = 14.dp, vertical = 5.dp),
             contentAlignment = Alignment.Center
         ) {
             icon()
@@ -802,7 +1148,7 @@ private fun NavTabItem(
 
         Text(
             text = label,
-            fontSize = 10.5.sp,
+            fontSize = 11.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
             color = if (isSelected) activeColor else inactiveColor
         )
@@ -821,16 +1167,32 @@ private fun DocumentIcon(color: Color, modifier: Modifier = Modifier) {
 
         val docPath = Path().apply {
             moveTo(w * 0.25f, h * 0.18f)
-            lineTo(w * 0.60f, h * 0.18f)
-            lineTo(w * 0.75f, h * 0.33f)
+            lineTo(w * 0.58f, h * 0.18f)
+            lineTo(w * 0.75f, h * 0.35f)
             lineTo(w * 0.75f, h * 0.82f)
             lineTo(w * 0.25f, h * 0.82f)
             close()
         }
         drawPath(docPath, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round))
 
-        drawLine(color = color, start = Offset(w * 0.38f, h * 0.45f), end = Offset(w * 0.62f, h * 0.45f), strokeWidth = strokeWidth)
-        drawLine(color = color, start = Offset(w * 0.38f, h * 0.60f), end = Offset(w * 0.62f, h * 0.60f), strokeWidth = strokeWidth)
+        val fold = Path().apply {
+            moveTo(w * 0.58f, h * 0.18f)
+            lineTo(w * 0.58f, h * 0.35f)
+            lineTo(w * 0.75f, h * 0.35f)
+        }
+        drawPath(fold, color = color, style = Stroke(width = strokeWidth * 0.8f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+
+        drawLine(color = color, start = Offset(w * 0.36f, h * 0.50f), end = Offset(w * 0.64f, h * 0.50f), strokeWidth = strokeWidth, cap = StrokeCap.Round)
+        drawLine(color = color, start = Offset(w * 0.36f, h * 0.64f), end = Offset(w * 0.56f, h * 0.64f), strokeWidth = strokeWidth, cap = StrokeCap.Round)
+    }
+}
+
+@Composable
+private fun ConsultationIcon(mode: String, color: Color, modifier: Modifier = Modifier) {
+    if (mode.contains("Video", ignoreCase = true)) {
+        VideoIcon(color = color, modifier = modifier)
+    } else {
+        ClinicVisitIcon(color = color, modifier = modifier)
     }
 }
 
@@ -844,18 +1206,46 @@ private fun VideoIcon(color: Color, modifier: Modifier = Modifier) {
         drawRect(
             color = color,
             topLeft = Offset(w * 0.15f, h * 0.28f),
-            size = Size(w * 0.50f, h * 0.44f),
+            size = Size(w * 0.48f, h * 0.44f),
             style = Stroke(width = strokeWidth)
         )
 
         val trianglePath = Path().apply {
-            moveTo(w * 0.65f, h * 0.40f)
+            moveTo(w * 0.63f, h * 0.40f)
             lineTo(w * 0.85f, h * 0.28f)
             lineTo(w * 0.85f, h * 0.72f)
-            lineTo(w * 0.65f, h * 0.60f)
+            lineTo(w * 0.63f, h * 0.60f)
             close()
         }
         drawPath(trianglePath, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round))
+    }
+}
+
+@Composable
+private fun ClinicVisitIcon(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val strokeWidth = 1.8.dp.toPx()
+
+        val bldg = Path().apply {
+            moveTo(w * 0.22f, h * 0.82f)
+            lineTo(w * 0.22f, h * 0.26f)
+            lineTo(w * 0.78f, h * 0.26f)
+            lineTo(w * 0.78f, h * 0.82f)
+            close()
+        }
+        drawPath(bldg, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round))
+
+        val crossLen = w * 0.12f
+        val cx = w * 0.50f
+        val cy = h * 0.46f
+        drawLine(color = color, start = Offset(cx - crossLen, cy), end = Offset(cx + crossLen, cy), strokeWidth = strokeWidth * 1.1f, cap = StrokeCap.Round)
+        drawLine(color = color, start = Offset(cx, cy - crossLen), end = Offset(cx, cy + crossLen), strokeWidth = strokeWidth * 1.1f, cap = StrokeCap.Round)
+
+        drawLine(color = color, start = Offset(w * 0.42f, h * 0.82f), end = Offset(w * 0.42f, h * 0.68f), strokeWidth = strokeWidth)
+        drawLine(color = color, start = Offset(w * 0.42f, h * 0.68f), end = Offset(w * 0.58f, h * 0.68f), strokeWidth = strokeWidth)
+        drawLine(color = color, start = Offset(w * 0.58f, h * 0.68f), end = Offset(w * 0.58f, h * 0.82f), strokeWidth = strokeWidth)
     }
 }
 
@@ -867,15 +1257,132 @@ private fun BellIcon(color: Color, modifier: Modifier = Modifier) {
         val strokeWidth = 1.8.dp.toPx()
 
         val bellPath = Path().apply {
-            moveTo(w * 0.25f, h * 0.65f)
-            lineTo(w * 0.75f, h * 0.65f)
-            cubicTo(w * 0.70f, h * 0.40f, w * 0.65f, h * 0.25f, w * 0.50f, h * 0.25f)
-            cubicTo(w * 0.35f, h * 0.25f, w * 0.30f, h * 0.40f, w * 0.25f, h * 0.65f)
+            moveTo(w * 0.22f, h * 0.66f)
+            lineTo(w * 0.78f, h * 0.66f)
+            cubicTo(w * 0.74f, h * 0.42f, w * 0.68f, h * 0.26f, w * 0.50f, h * 0.26f)
+            cubicTo(w * 0.32f, h * 0.26f, w * 0.26f, h * 0.42f, w * 0.22f, h * 0.66f)
             close()
         }
         drawPath(bellPath, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round))
 
-        drawCircle(color = color, radius = strokeWidth * 1.2f, center = Offset(w * 0.50f, h * 0.78f))
+        drawCircle(color = color, radius = w * 0.07f, center = Offset(w * 0.50f, h * 0.20f), style = Stroke(width = strokeWidth * 0.9f))
+        drawCircle(color = color, radius = w * 0.08f, center = Offset(w * 0.50f, h * 0.78f))
+    }
+}
+
+@Composable
+private fun LogoutIcon(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val strokeWidth = 1.8.dp.toPx()
+
+        val doorPath = Path().apply {
+            moveTo(w * 0.55f, h * 0.20f)
+            lineTo(w * 0.22f, h * 0.20f)
+            lineTo(w * 0.22f, h * 0.80f)
+            lineTo(w * 0.55f, h * 0.80f)
+        }
+        drawPath(doorPath, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round))
+
+        drawLine(color = color, start = Offset(w * 0.40f, h * 0.50f), end = Offset(w * 0.82f, h * 0.50f), strokeWidth = strokeWidth, cap = StrokeCap.Round)
+
+        val arrowHead = Path().apply {
+            moveTo(w * 0.68f, h * 0.35f)
+            lineTo(w * 0.84f, h * 0.50f)
+            lineTo(w * 0.68f, h * 0.65f)
+        }
+        drawPath(arrowHead, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round))
+    }
+}
+
+@Composable
+private fun MedicalPersonIcon(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val strokeWidth = 2.dp.toPx()
+
+        drawCircle(
+            color = color,
+            radius = w * 0.17f,
+            center = Offset(w * 0.42f, h * 0.30f),
+            style = Stroke(width = strokeWidth)
+        )
+
+        val bodyPath = Path().apply {
+            moveTo(w * 0.15f, h * 0.80f)
+            cubicTo(w * 0.18f, h * 0.58f, w * 0.66f, h * 0.58f, w * 0.69f, h * 0.80f)
+        }
+        drawPath(bodyPath, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round))
+
+        val plusX = w * 0.78f
+        val plusY = h * 0.34f
+        val plusLen = w * 0.13f
+        drawLine(color = color, start = Offset(plusX - plusLen, plusY), end = Offset(plusX + plusLen, plusY), strokeWidth = strokeWidth * 1.1f, cap = StrokeCap.Round)
+        drawLine(color = color, start = Offset(plusX, plusY - plusLen), end = Offset(plusX, plusY + plusLen), strokeWidth = strokeWidth * 1.1f, cap = StrokeCap.Round)
+    }
+}
+
+@Composable
+private fun CalendarClockIcon(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val strokeWidth = 1.8.dp.toPx()
+
+        val calPath = Path().apply {
+            moveTo(w * 0.20f, h * 0.25f)
+            lineTo(w * 0.80f, h * 0.25f)
+            lineTo(w * 0.80f, h * 0.82f)
+            lineTo(w * 0.20f, h * 0.82f)
+            close()
+        }
+        drawPath(calPath, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round))
+
+        drawLine(color = color, start = Offset(w * 0.20f, h * 0.42f), end = Offset(w * 0.80f, h * 0.42f), strokeWidth = strokeWidth)
+
+        drawLine(color = color, start = Offset(w * 0.36f, h * 0.16f), end = Offset(w * 0.36f, h * 0.25f), strokeWidth = strokeWidth, cap = StrokeCap.Round)
+        drawLine(color = color, start = Offset(w * 0.64f, h * 0.16f), end = Offset(w * 0.64f, h * 0.25f), strokeWidth = strokeWidth, cap = StrokeCap.Round)
+
+        drawCircle(color = color, radius = w * 0.04f, center = Offset(w * 0.38f, h * 0.58f))
+        drawCircle(color = color, radius = w * 0.04f, center = Offset(w * 0.62f, h * 0.58f))
+        drawCircle(color = color, radius = w * 0.04f, center = Offset(w * 0.38f, h * 0.72f))
+    }
+}
+
+@Composable
+private fun ClipboardCheckIcon(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val strokeWidth = 1.8.dp.toPx()
+
+        val board = Path().apply {
+            moveTo(w * 0.22f, h * 0.25f)
+            lineTo(w * 0.35f, h * 0.25f)
+            moveTo(w * 0.65f, h * 0.25f)
+            lineTo(w * 0.78f, h * 0.25f)
+            lineTo(w * 0.78f, h * 0.84f)
+            lineTo(w * 0.22f, h * 0.84f)
+            close()
+        }
+        drawPath(board, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round))
+
+        val clip = Path().apply {
+            moveTo(w * 0.35f, h * 0.25f)
+            lineTo(w * 0.35f, h * 0.18f)
+            lineTo(w * 0.65f, h * 0.18f)
+            lineTo(w * 0.65f, h * 0.25f)
+        }
+        drawPath(clip, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round))
+
+        val check = Path().apply {
+            moveTo(w * 0.36f, h * 0.55f)
+            lineTo(w * 0.48f, h * 0.67f)
+            lineTo(w * 0.66f, h * 0.45f)
+        }
+        drawPath(check, color = color, style = Stroke(width = strokeWidth * 1.1f, cap = StrokeCap.Round, join = StrokeJoin.Round))
     }
 }
 
@@ -887,14 +1394,22 @@ private fun HomeNavIcon(color: Color, modifier: Modifier = Modifier) {
         val strokeWidth = 1.8.dp.toPx()
 
         val housePath = Path().apply {
-            moveTo(w * 0.20f, h * 0.80f)
-            lineTo(w * 0.20f, h * 0.45f)
+            moveTo(w * 0.20f, h * 0.82f)
+            lineTo(w * 0.20f, h * 0.46f)
             lineTo(w * 0.50f, h * 0.20f)
-            lineTo(w * 0.80f, h * 0.45f)
-            lineTo(w * 0.80f, h * 0.80f)
+            lineTo(w * 0.80f, h * 0.46f)
+            lineTo(w * 0.80f, h * 0.82f)
             close()
         }
         drawPath(housePath, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round))
+
+        val doorPath = Path().apply {
+            moveTo(w * 0.40f, h * 0.82f)
+            lineTo(w * 0.40f, h * 0.56f)
+            cubicTo(w * 0.40f, h * 0.52f, w * 0.60f, h * 0.52f, w * 0.60f, h * 0.56f)
+            lineTo(w * 0.60f, h * 0.82f)
+        }
+        drawPath(doorPath, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round))
     }
 }
 
@@ -905,12 +1420,19 @@ private fun PeopleNavIcon(color: Color, modifier: Modifier = Modifier) {
         val h = size.height
         val strokeWidth = 1.8.dp.toPx()
 
-        drawCircle(color = color, radius = w * 0.18f, center = Offset(w * 0.50f, h * 0.32f), style = Stroke(width = strokeWidth))
+        drawCircle(color = color, radius = w * 0.16f, center = Offset(w * 0.40f, h * 0.32f), style = Stroke(width = strokeWidth))
         val bodyPath = Path().apply {
-            moveTo(w * 0.20f, h * 0.80f)
-            cubicTo(w * 0.30f, h * 0.58f, w * 0.70f, h * 0.58f, w * 0.80f, h * 0.80f)
+            moveTo(w * 0.14f, h * 0.82f)
+            cubicTo(w * 0.20f, h * 0.58f, w * 0.60f, h * 0.58f, w * 0.66f, h * 0.82f)
         }
         drawPath(bodyPath, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round))
+
+        drawCircle(color = color, radius = w * 0.11f, center = Offset(w * 0.72f, h * 0.42f), style = Stroke(width = strokeWidth * 0.9f))
+        val childBody = Path().apply {
+            moveTo(w * 0.64f, h * 0.82f)
+            cubicTo(w * 0.66f, h * 0.66f, w * 0.84f, h * 0.66f, w * 0.88f, h * 0.82f)
+        }
+        drawPath(childBody, color = color, style = Stroke(width = strokeWidth * 0.9f, cap = StrokeCap.Round))
     }
 }
 
@@ -921,8 +1443,25 @@ private fun CalendarNavIcon(color: Color, modifier: Modifier = Modifier) {
         val h = size.height
         val strokeWidth = 1.8.dp.toPx()
 
-        drawRect(color = color, style = Stroke(width = strokeWidth))
-        drawLine(color = color, start = Offset(0f, h * 0.35f), end = Offset(w, h * 0.35f), strokeWidth = strokeWidth)
+        val calPath = Path().apply {
+            moveTo(w * 0.20f, h * 0.28f)
+            lineTo(w * 0.80f, h * 0.28f)
+            lineTo(w * 0.80f, h * 0.82f)
+            lineTo(w * 0.20f, h * 0.82f)
+            close()
+        }
+        drawPath(calPath, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round))
+
+        drawLine(color = color, start = Offset(w * 0.20f, h * 0.44f), end = Offset(w * 0.80f, h * 0.44f), strokeWidth = strokeWidth)
+
+        drawLine(color = color, start = Offset(w * 0.35f, h * 0.18f), end = Offset(w * 0.35f, h * 0.28f), strokeWidth = strokeWidth, cap = StrokeCap.Round)
+        drawLine(color = color, start = Offset(w * 0.65f, h * 0.18f), end = Offset(w * 0.65f, h * 0.28f), strokeWidth = strokeWidth, cap = StrokeCap.Round)
+
+        drawCircle(color = color, radius = w * 0.035f, center = Offset(w * 0.38f, h * 0.58f))
+        drawCircle(color = color, radius = w * 0.035f, center = Offset(w * 0.50f, h * 0.58f))
+        drawCircle(color = color, radius = w * 0.035f, center = Offset(w * 0.62f, h * 0.58f))
+        drawCircle(color = color, radius = w * 0.035f, center = Offset(w * 0.38f, h * 0.70f))
+        drawCircle(color = color, radius = w * 0.035f, center = Offset(w * 0.50f, h * 0.70f))
     }
 }
 
@@ -934,16 +1473,22 @@ private fun ChatNavIcon(color: Color, modifier: Modifier = Modifier) {
         val strokeWidth = 1.8.dp.toPx()
 
         val chatPath = Path().apply {
-            moveTo(w * 0.18f, h * 0.25f)
-            lineTo(w * 0.82f, h * 0.25f)
-            lineTo(w * 0.82f, h * 0.65f)
-            lineTo(w * 0.45f, h * 0.65f)
-            lineTo(w * 0.25f, h * 0.82f)
-            lineTo(w * 0.25f, h * 0.65f)
-            lineTo(w * 0.18f, h * 0.65f)
+            moveTo(w * 0.20f, h * 0.25f)
+            lineTo(w * 0.80f, h * 0.25f)
+            cubicTo(w * 0.84f, h * 0.25f, w * 0.84f, h * 0.29f, w * 0.84f, h * 0.29f)
+            lineTo(w * 0.84f, h * 0.63f)
+            lineTo(w * 0.46f, h * 0.63f)
+            lineTo(w * 0.28f, h * 0.80f)
+            lineTo(w * 0.28f, h * 0.63f)
+            lineTo(w * 0.16f, h * 0.63f)
+            lineTo(w * 0.16f, h * 0.29f)
             close()
         }
         drawPath(chatPath, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round))
+
+        drawCircle(color = color, radius = w * 0.035f, center = Offset(w * 0.36f, h * 0.44f))
+        drawCircle(color = color, radius = w * 0.035f, center = Offset(w * 0.50f, h * 0.44f))
+        drawCircle(color = color, radius = w * 0.035f, center = Offset(w * 0.64f, h * 0.44f))
     }
 }
 
@@ -961,8 +1506,17 @@ private fun TopBarHeartIcon(color: Color, modifier: Modifier = Modifier) {
             cubicTo(w * 0.55f, h * 0.14f, w * 0.75f, h * 0.10f, w * 0.85f, h * 0.24f)
             cubicTo(w * 0.95f, h * 0.42f, w * 0.80f, h * 0.62f, w * 0.50f, h * 0.82f)
         }
-
         drawPath(heartPath, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round))
+
+        val pulsePath = Path().apply {
+            moveTo(w * 0.28f, h * 0.50f)
+            lineTo(w * 0.42f, h * 0.50f)
+            lineTo(w * 0.48f, h * 0.38f)
+            lineTo(w * 0.54f, h * 0.62f)
+            lineTo(w * 0.60f, h * 0.50f)
+            lineTo(w * 0.72f, h * 0.50f)
+        }
+        drawPath(pulsePath, color = color, style = Stroke(width = strokeWidth * 0.9f, cap = StrokeCap.Round, join = StrokeJoin.Round))
     }
 }
 
