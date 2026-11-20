@@ -30,6 +30,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -185,7 +186,7 @@ fun DueDateScreenContent(
     if (uiState.isAppointmentDetailOpen) {
         ModalBottomSheet(
             onDismissRequest = onDismissAppointmentDetail,
-            containerColor = Color.White,
+            containerColor = MaterialTheme.colorScheme.surface,
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
         ) {
             Column(
@@ -209,17 +210,17 @@ fun DueDateScreenContent(
                             modifier = Modifier
                                 .size(38.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFFEDE4F0)),
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
                             contentAlignment = Alignment.Center
                         ) {
-                            CalendarIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp))
+                            CalendarIcon(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
                             text = "Next Antenatal Visit",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MomoraPurpleDark
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
 
@@ -227,14 +228,14 @@ fun DueDateScreenContent(
                         modifier = Modifier
                             .size(32.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFFF4ECF8))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
                             .clickable { onDismissAppointmentDetail() },
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = "✕",
                             fontSize = 14.sp,
-                            color = MomoraPurplePrimary,
+                            color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -264,8 +265,8 @@ fun DueDateScreenContent(
                 // Detail card
                 Card(
                     shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFAF7FC)),
-                    border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(Color(0xFFF0E8F4))),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                    border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.outlineVariant)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
@@ -286,14 +287,14 @@ fun DueDateScreenContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFF4ECF8))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                         .padding(12.dp)
                 ) {
                     Text(
                         text = "Please bring your pregnancy health booklet, recent ultrasound scans, and blood pressure logs. Drink water beforehand if scheduled for a scan.",
                         fontSize = 11.5.sp,
                         lineHeight = 16.sp,
-                        color = MomoraPurplePrimary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -305,7 +306,7 @@ fun DueDateScreenContent(
                         .fillMaxWidth()
                         .height(46.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(MomoraPurplePrimary)
+                        .background(MaterialTheme.colorScheme.primary)
                         .clickable { onNavigateToAppointments() },
                     contentAlignment = Alignment.Center
                 ) {
@@ -313,7 +314,7 @@ fun DueDateScreenContent(
                         text = "Reschedule Visit in Calendar",
                         fontSize = 14.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
 
@@ -326,7 +327,7 @@ fun DueDateScreenContent(
                             .fillMaxWidth()
                             .height(42.dp)
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color.White)
+                            .background(MaterialTheme.colorScheme.surface)
                             .border(1.dp, Color(0xFFFFCDD2), RoundedCornerShape(12.dp))
                             .clickable { onCancelAppointmentClick() },
                         contentAlignment = Alignment.Center
@@ -348,7 +349,7 @@ fun DueDateScreenContent(
                         .fillMaxWidth()
                         .height(42.dp)
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFF7F2FA))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                         .clickable { onDismissAppointmentDetail() },
                     contentAlignment = Alignment.Center
                 ) {
@@ -356,7 +357,7 @@ fun DueDateScreenContent(
                         text = "Close",
                         fontSize = 13.5.sp,
                         fontWeight = FontWeight.Medium,
-                        color = MomoraPurpleText
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -366,7 +367,7 @@ fun DueDateScreenContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MomoraScreenBackground)
+            .background(MaterialTheme.colorScheme.background)
             .statusBarsPadding()
             .navigationBarsPadding(),
         verticalArrangement = Arrangement.SpaceBetween
@@ -389,7 +390,7 @@ fun DueDateScreenContent(
                     text = "←",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Medium,
-                    color = MomoraPurpleText
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
 
@@ -401,7 +402,7 @@ fun DueDateScreenContent(
                 contentAlignment = Alignment.Center
             ) {
                 BellIcon(
-                    color = MomoraPurplePrimary,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -506,7 +507,7 @@ fun DueDateScreenContent(
                     text = "Your pregnancy",
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MomoraPurpleDark
+                    color = MaterialTheme.colorScheme.onBackground
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -514,7 +515,7 @@ fun DueDateScreenContent(
                 Text(
                     text = "A beautiful journey, one week at a time.",
                     fontSize = 13.sp,
-                    color = MomoraBodyMuted
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -522,9 +523,11 @@ fun DueDateScreenContent(
                 // Trimester & Gestational Hero Card
                 Card(
                     shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(containerColor = MomoraPinkCircleBg),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(18.dp))
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(
@@ -536,21 +539,21 @@ fun DueDateScreenContent(
                                 text = uiState.currentTrimesterText,
                                 fontSize = 10.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MomoraPurplePrimary,
+                                color = MaterialTheme.colorScheme.primary,
                                 letterSpacing = 0.5.sp
                             )
 
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(50))
-                                    .background(Color.White.copy(alpha = 0.8f))
+                                    .background(MaterialTheme.colorScheme.surface)
                                     .padding(horizontal = 8.dp, vertical = 3.dp)
                             ) {
                                 Text(
                                     text = "${uiState.remainingDaysCount} days remaining",
                                     fontSize = 10.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = MomoraPurplePrimary
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }
@@ -561,7 +564,7 @@ fun DueDateScreenContent(
                             text = uiState.gestationalAgeText,
                             fontSize = 24.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MomoraPurpleDark
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
                         Spacer(modifier = Modifier.height(4.dp))
@@ -569,7 +572,7 @@ fun DueDateScreenContent(
                         Text(
                             text = uiState.countdownText,
                             fontSize = 12.sp,
-                            color = MomoraBodyMuted
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
@@ -584,13 +587,13 @@ fun DueDateScreenContent(
                                     text = "Week ${uiState.gestationalWeeks} of 40",
                                     fontSize = 10.5.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = MomoraPurpleDark
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
                                     text = "${(uiState.progressFraction * 100).toInt()}%",
                                     fontSize = 10.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = MomoraPurplePrimary
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                             }
                             Spacer(modifier = Modifier.height(4.dp))
@@ -600,8 +603,8 @@ fun DueDateScreenContent(
                                     .fillMaxWidth()
                                     .height(6.dp)
                                     .clip(RoundedCornerShape(50)),
-                                color = MomoraPurplePrimary,
-                                trackColor = Color.White.copy(alpha = 0.6f)
+                                color = MaterialTheme.colorScheme.primary,
+                                trackColor = MaterialTheme.colorScheme.outlineVariant
                             )
                         }
 
@@ -648,7 +651,7 @@ fun DueDateScreenContent(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(Color.White.copy(alpha = 0.85f))
+                                .background(MaterialTheme.colorScheme.surface)
                                 .padding(10.dp)
                         ) {
                             Column {
@@ -665,7 +668,7 @@ fun DueDateScreenContent(
                                         },
                                         fontSize = 11.5.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = MomoraPurpleDark
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
 
                                     if (uiState.selectedTrimesterView == uiState.currentTrimester) {
@@ -679,7 +682,7 @@ fun DueDateScreenContent(
                                         Text(
                                             text = "Preview · Current: T${uiState.currentTrimester}",
                                             fontSize = 9.5.sp,
-                                            color = MomoraBodyMuted
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
                                 }
@@ -688,7 +691,7 @@ fun DueDateScreenContent(
                                     text = triInfo,
                                     fontSize = 11.sp,
                                     lineHeight = 15.sp,
-                                    color = MomoraPurpleText
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -704,8 +707,8 @@ fun DueDateScreenContent(
                         .fillMaxWidth()
                         .height(48.dp)
                         .clip(RoundedCornerShape(14.dp))
-                        .background(Color.White)
-                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
+                        .background(MaterialTheme.colorScheme.surface)
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp))
                         .clickable { showEddDatePicker() }
                         .padding(horizontal = 14.dp),
                     contentAlignment = Alignment.CenterStart
@@ -719,9 +722,9 @@ fun DueDateScreenContent(
                             text = uiState.estimatedDueDate,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = MomoraPurpleDark
+                            color = MaterialTheme.colorScheme.onSurface
                         )
-                        CalendarIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp))
+                        CalendarIcon(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                     }
                 }
 
@@ -739,13 +742,13 @@ fun DueDateScreenContent(
                     Text(
                         text = "Last menstrual period · ${uiState.lastMenstrualPeriod}",
                         fontSize = 11.5.sp,
-                        color = MomoraBodyMuted
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = "Edit LMP",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MomoraPurplePrimary
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
 
@@ -758,7 +761,7 @@ fun DueDateScreenContent(
                     text = "Week ${uiState.gestationalWeeks} pregnancy guide",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MomoraPurpleDark
+                    color = MaterialTheme.colorScheme.onBackground
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -766,18 +769,18 @@ fun DueDateScreenContent(
                 Text(
                     text = "Tailored insights for your baby's growth and your changing body.",
                     fontSize = 12.sp,
-                    color = MomoraBodyMuted
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Card(
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
                         // Baby Development Row
@@ -786,7 +789,7 @@ fun DueDateScreenContent(
                                 modifier = Modifier
                                     .size(34.dp)
                                     .clip(CircleShape)
-                                    .background(Color(0xFFEDE4F0)),
+                                    .background(MaterialTheme.colorScheme.surfaceVariant),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(text = "👶", fontSize = 16.sp)
@@ -802,7 +805,7 @@ fun DueDateScreenContent(
                                         text = "Baby Development",
                                         fontSize = 13.5.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = MomoraPurpleDark
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                     Box(
                                         modifier = Modifier
@@ -823,13 +826,13 @@ fun DueDateScreenContent(
                                     text = weeklyInfo.babyDevelopment,
                                     fontSize = 12.sp,
                                     lineHeight = 17.sp,
-                                    color = MomoraPurpleText
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
 
                         Spacer(modifier = Modifier.height(12.dp))
-                        Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Color(0xFFF7F2FA)))
+                        Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outlineVariant))
                         Spacer(modifier = Modifier.height(12.dp))
 
                         // Mother's Body Changes Row
@@ -838,7 +841,7 @@ fun DueDateScreenContent(
                                 modifier = Modifier
                                     .size(34.dp)
                                     .clip(CircleShape)
-                                    .background(Color(0xFFFBE9E7)),
+                                    .background(MaterialTheme.colorScheme.surfaceVariant),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(text = "🤰", fontSize = 16.sp)
@@ -849,20 +852,20 @@ fun DueDateScreenContent(
                                     text = "Mother's Body",
                                     fontSize = 13.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = MomoraPurpleDark
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Spacer(modifier = Modifier.height(3.dp))
                                 Text(
                                     text = weeklyInfo.motherBodyChanges,
                                     fontSize = 12.sp,
                                     lineHeight = 17.sp,
-                                    color = MomoraPurpleText
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
 
                         Spacer(modifier = Modifier.height(12.dp))
-                        Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Color(0xFFF7F2FA)))
+                        Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outlineVariant))
                         Spacer(modifier = Modifier.height(12.dp))
 
                         // Care & Comfort Tip Row
@@ -882,14 +885,14 @@ fun DueDateScreenContent(
                                     text = "Care & Comfort Tip",
                                     fontSize = 13.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = MomoraPurpleDark
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Spacer(modifier = Modifier.height(3.dp))
                                 Text(
                                     text = weeklyInfo.careTip,
                                     fontSize = 12.sp,
                                     lineHeight = 17.sp,
-                                    color = MomoraPurpleText
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -910,13 +913,13 @@ fun DueDateScreenContent(
                                 text = "Explore full pregnancy timeline (Weeks 1 to 40)",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MomoraPurplePrimary
+                                color = MaterialTheme.colorScheme.primary
                             )
                             Text(
                                 text = "›",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MomoraPurplePrimary
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -929,18 +932,18 @@ fun DueDateScreenContent(
                     text = "Your care plan",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MomoraPurpleDark
+                    color = MaterialTheme.colorScheme.onBackground
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Card(
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
                 ) {
                     Column(
                         modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
@@ -949,7 +952,7 @@ fun DueDateScreenContent(
                         CarePlanRow(
                             title = data?.assignedDoctorName ?: "Dr Amelia Chen",
                             subtitle = data?.assignedDoctorSpecialty ?: "Obstetrics · Your assigned doctor",
-                            icon = { StethoscopeIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp)) },
+                            icon = { StethoscopeIcon(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp)) },
                             onClick = onDoctorCardClick
                         )
 
@@ -957,7 +960,7 @@ fun DueDateScreenContent(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(1.dp)
-                                .background(Color(0xFFF7F2FA))
+                                .background(MaterialTheme.colorScheme.outlineVariant)
                         )
 
                         // Item 2: Next Antenatal Visit (Entire card & chevron clickable)
@@ -965,7 +968,7 @@ fun DueDateScreenContent(
                             title = "Next antenatal visit",
                             subtitle = "${data?.nextVisitDate ?: "29 Oct 2026 · 10:30"} · ${data?.nextVisitClinic ?: "Willow Clinic"}",
                             tag = uiState.appointmentStatus,
-                            icon = { CalendarIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp)) },
+                            icon = { CalendarIcon(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp)) },
                             onClick = onNextVisitClick
                         )
                     }
@@ -978,7 +981,8 @@ fun DueDateScreenContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(14.dp))
-                        .background(Color(0xFFF4ECF8))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp))
                         .padding(horizontal = 14.dp, vertical = 11.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -986,11 +990,11 @@ fun DueDateScreenContent(
                             modifier = Modifier
                                 .size(30.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFFEBE0F2)),
+                                .background(MaterialTheme.colorScheme.surface),
                             contentAlignment = Alignment.Center
                         ) {
                             ShieldIcon(
-                                color = MomoraPurplePrimary,
+                                color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(14.dp)
                             )
                         }
@@ -1001,7 +1005,7 @@ fun DueDateScreenContent(
                             text = "Dates are estimates. Your maternity team may adjust your due date after clinical ultrasound assessments.",
                             fontSize = 11.5.sp,
                             lineHeight = 15.sp,
-                            color = MomoraPurplePrimary,
+                            color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -1015,7 +1019,7 @@ fun DueDateScreenContent(
                         .fillMaxWidth()
                         .height(50.dp)
                         .clip(RoundedCornerShape(50))
-                        .background(MomoraPurplePrimary)
+                        .background(MaterialTheme.colorScheme.primary)
                         .clickable { if (!uiState.isLoading) onSaveClick() },
                     contentAlignment = Alignment.Center
                 ) {
@@ -1023,7 +1027,7 @@ fun DueDateScreenContent(
                         text = if (uiState.isLoading) "Saving..." else "Save pregnancy details",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
 
@@ -1049,14 +1053,14 @@ private fun AppointmentInfoRow(label: String, value: String) {
         Text(
             text = label,
             fontSize = 12.sp,
-            color = MomoraBodyMuted,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(0.4f)
         )
         Text(
             text = value,
             fontSize = 12.5.sp,
             fontWeight = FontWeight.SemiBold,
-            color = MomoraPurpleDark,
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.End,
             modifier = Modifier.weight(0.6f)
         )
@@ -1074,10 +1078,10 @@ private fun TrimesterPill(
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(50))
-            .background(if (isSelected) Color(0xFFF4ECF8) else Color(0xFFF5EBF0))
+            .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant)
             .border(
                 width = 1.dp,
-                color = if (isSelected) MomoraPurplePrimary else Color.Transparent,
+                color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
                 shape = RoundedCornerShape(50)
             )
             .clickable { onClick() }
@@ -1089,14 +1093,14 @@ private fun TrimesterPill(
                 text = label,
                 fontSize = 10.5.sp,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                color = if (isSelected) MomoraPurplePrimary else MomoraBodyMuted
+                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
             )
             if (isCurrent) {
                 Text(
                     text = "● Current",
                     fontSize = 8.5.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (isSelected) MomoraPurplePrimary else MomoraMintBadgeText
+                    color = if (isSelected) MaterialTheme.colorScheme.primary else MomoraMintBadgeText
                 )
             }
         }
@@ -1128,7 +1132,7 @@ private fun CarePlanRow(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFEDE4F0)),
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
                 icon()
@@ -1142,7 +1146,7 @@ private fun CarePlanRow(
                         text = title,
                         fontSize = 13.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MomoraPurpleText
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     if (tag != null) {
                         Spacer(modifier = Modifier.width(6.dp))
@@ -1165,7 +1169,7 @@ private fun CarePlanRow(
                 Text(
                     text = subtitle,
                     fontSize = 11.5.sp,
-                    color = MomoraBodyMuted
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -1176,7 +1180,7 @@ private fun CarePlanRow(
             text = "›",
             fontSize = 20.sp,
             fontWeight = FontWeight.Medium,
-            color = Color(0xFF8C7F92)
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
@@ -1187,7 +1191,7 @@ private fun FormFieldLabel(text: String) {
         text = text,
         fontSize = 13.sp,
         fontWeight = FontWeight.Bold,
-        color = MomoraPurpleText
+        color = MaterialTheme.colorScheme.onBackground
     )
     Spacer(modifier = Modifier.height(5.dp))
 }
@@ -1200,11 +1204,17 @@ private fun DashboardBottomNavBar(
     selectedIndex: Int,
     onTabSelected: (Int) -> Unit
 ) {
+    val navSurface = MaterialTheme.colorScheme.surface
+    val navBorder = MaterialTheme.colorScheme.outlineVariant
+    val indicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val mutedColor = MaterialTheme.colorScheme.onSurfaceVariant
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
-            .border(1.dp, Color(0xFFF0E8F4), RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+            .background(navSurface)
+            .border(1.dp, navBorder, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
             .padding(top = 8.dp, bottom = 4.dp)
     ) {
         Row(
@@ -1216,31 +1226,31 @@ private fun DashboardBottomNavBar(
                 label = "Home",
                 isSelected = selectedIndex == 0,
                 onClick = { onTabSelected(0) },
-                icon = { HomeNavIcon(color = if (selectedIndex == 0) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { HomeNavIcon(color = if (selectedIndex == 0) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) }
             )
             NavTabItem(
                 label = "Track",
                 isSelected = selectedIndex == 1,
                 onClick = { onTabSelected(1) },
-                icon = { TrackNavIcon(color = if (selectedIndex == 1) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { TrackNavIcon(color = if (selectedIndex == 1) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) }
             )
             NavTabItem(
                 label = "AI",
                 isSelected = selectedIndex == 2,
                 onClick = { onTabSelected(2) },
-                icon = { SparklesIcon(color = if (selectedIndex == 2) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { SparklesIcon(color = if (selectedIndex == 2) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) }
             )
             NavTabItem(
                 label = "Care",
                 isSelected = selectedIndex == 3,
                 onClick = { onTabSelected(3) },
-                icon = { CareNavIcon(color = if (selectedIndex == 3) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { CareNavIcon(color = if (selectedIndex == 3) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) }
             )
             NavTabItem(
                 label = "Profile",
                 isSelected = selectedIndex == 4,
                 onClick = { onTabSelected(4) },
-                icon = { UserNavIcon(color = if (selectedIndex == 4) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { UserNavIcon(color = if (selectedIndex == 4) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) }
             )
         }
 
@@ -1252,7 +1262,7 @@ private fun DashboardBottomNavBar(
                 .width(134.dp)
                 .height(4.dp)
                 .clip(RoundedCornerShape(50))
-                .background(Color(0xFF333333))
+                .background(indicatorColor)
         )
     }
 }
@@ -1264,6 +1274,10 @@ private fun NavTabItem(
     onClick: () -> Unit,
     icon: @Composable () -> Unit
 ) {
+    val activeBg = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+    val activeColor = MaterialTheme.colorScheme.primary
+    val inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -1273,7 +1287,7 @@ private fun NavTabItem(
         Box(
             modifier = Modifier
                 .clip(CircleShape)
-                .background(if (isSelected) Color(0xFFF4ECF8) else Color.Transparent)
+                .background(if (isSelected) activeBg else Color.Transparent)
                 .padding(horizontal = 14.dp, vertical = 4.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -1286,7 +1300,7 @@ private fun NavTabItem(
             text = label,
             fontSize = 10.5.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-            color = if (isSelected) MomoraPurplePrimary else MomoraBodyMuted
+            color = if (isSelected) activeColor else inactiveColor
         )
     }
 }

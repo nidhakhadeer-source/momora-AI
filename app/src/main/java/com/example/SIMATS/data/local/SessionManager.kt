@@ -4,8 +4,11 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.example.SIMATS.data.model.UserRole
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -28,6 +31,10 @@ object SessionManager {
     private const val KEY_BLOOD_GROUP = "key_user_blood_group"
     private const val KEY_ADDRESS = "key_user_address"
     private const val KEY_PHOTO_URL = "key_user_photo_url"
+    private const val KEY_REMINDER_MEDICATION = "key_reminder_medication"
+    private const val KEY_REMINDER_APPOINTMENTS = "key_reminder_appointments"
+    private const val KEY_REMINDER_WEEKLY_UPDATES = "key_reminder_weekly_updates"
+    private const val KEY_APP_THEME = "key_app_theme" // "SYSTEM", "LIGHT", "DARK"
 
     @Volatile
     private var sharedPreferences: SharedPreferences? = null
@@ -47,6 +54,10 @@ object SessionManager {
     private var memBloodGroup: String = "O positive"
     private var memAddress: String? = null
     private var memPhotoUrl: String? = null
+    private var memAppTheme: String = "SYSTEM"
+
+    private val _themeFlow = MutableStateFlow("SYSTEM")
+    val themeFlow: StateFlow<String> = _themeFlow.asStateFlow()
 
     private val _sessionExpiredEvent = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     val sessionExpiredEvent: SharedFlow<Unit> = _sessionExpiredEvent.asSharedFlow()
@@ -59,6 +70,9 @@ object SessionManager {
     fun init(context: Context) {
         if (sharedPreferences == null) {
             sharedPreferences = context.applicationContext.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            val savedTheme = sharedPreferences?.getString(KEY_APP_THEME, "SYSTEM") ?: "SYSTEM"
+            memAppTheme = savedTheme
+            _themeFlow.value = savedTheme
         }
     }
 
@@ -273,6 +287,57 @@ object SessionManager {
                 .remove(KEY_BLOOD_GROUP)
                 .remove(KEY_ADDRESS)
                 .remove(KEY_PHOTO_URL)
+                .commit()
+        }
+    }
+
+    fun getReminderMedication(): Boolean {
+        return sharedPreferences?.getBoolean(KEY_REMINDER_MEDICATION, true) ?: true
+    }
+
+    fun getReminderAppointments(): Boolean {
+        return sharedPreferences?.getBoolean(KEY_REMINDER_APPOINTMENTS, true) ?: true
+    }
+
+    fun getReminderWeeklyUpdates(): Boolean {
+        return sharedPreferences?.getBoolean(KEY_REMINDER_WEEKLY_UPDATES, true) ?: true
+    }
+
+    fun saveReminderPreferences(medication: Boolean, appointments: Boolean, weeklyUpdates: Boolean) {
+        sharedPreferences?.let { prefs ->
+            prefs.edit()
+                .putBoolean(KEY_REMINDER_MEDICATION, medication)
+                .putBoolean(KEY_REMINDER_APPOINTMENTS, appointments)
+                .putBoolean(KEY_REMINDER_WEEKLY_UPDATES, weeklyUpdates)
+                .commit()
+        }
+    }
+
+    fun getReminderSummary(): String {
+        val med = getReminderMedication()
+        val appt = getReminderAppointments()
+        val weekly = getReminderWeeklyUpdates()
+        val active = mutableListOf<String>()
+        if (med) active.add("Medication")
+        if (appt) active.add("Appointment")
+        if (weekly) active.add("Weekly baby-development")
+        return when {
+            active.size == 3 -> "Medication, appointment and weekly updates"
+            active.isNotEmpty() -> active.joinToString(" · ")
+            else -> "All reminders disabled"
+        }
+    }
+
+    fun getAppTheme(): String {
+        return sharedPreferences?.getString(KEY_APP_THEME, memAppTheme) ?: memAppTheme
+    }
+
+    fun setAppTheme(theme: String) {
+        memAppTheme = theme
+        _themeFlow.value = theme
+        sharedPreferences?.let { prefs ->
+            prefs.edit()
+                .putString(KEY_APP_THEME, theme)
                 .commit()
         }
     }

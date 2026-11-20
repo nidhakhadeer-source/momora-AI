@@ -18,6 +18,18 @@ class LoginViewModel(
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
+    fun setRole(role: UserRole) {
+        _uiState.value = LoginUiState(
+            selectedRole = role,
+            email = "",
+            password = "",
+            isPasswordVisible = false,
+            isLoading = false,
+            errorMessage = null,
+            isLoginSuccess = false
+        )
+    }
+
     fun onEvent(event: LoginUiEvent) {
         when (event) {
             is LoginUiEvent.OnRoleSelected -> {

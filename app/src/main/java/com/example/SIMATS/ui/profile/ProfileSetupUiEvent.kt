@@ -18,7 +18,9 @@ sealed interface ProfileSetupUiEvent {
     data object OnBackClicked : ProfileSetupUiEvent
     data object OnNotificationClicked : ProfileSetupUiEvent
     data object OnReminderPreferencesClicked : ProfileSetupUiEvent
+    data class OnReminderPreferencesSaved(val medication: Boolean, val appointments: Boolean, val weeklyUpdates: Boolean) : ProfileSetupUiEvent
     data object OnExportHealthInfoClicked : ProfileSetupUiEvent
+    data class OnThemeSelected(val theme: String) : ProfileSetupUiEvent
     data object OnLogoutClicked : ProfileSetupUiEvent
     data object OnRetryClicked : ProfileSetupUiEvent
     data object DismissMessages : ProfileSetupUiEvent

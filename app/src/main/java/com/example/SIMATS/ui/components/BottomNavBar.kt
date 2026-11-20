@@ -1,6 +1,7 @@
 package com.example.SIMATS.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,7 +14,9 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,9 +28,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.SIMATS.R
-import com.example.SIMATS.ui.theme.MomoraMintLight
-import com.example.SIMATS.ui.theme.MomoraTealPrimary
-import com.example.SIMATS.ui.theme.MomoraTextMuted
 
 @Composable
 fun BottomNavBar(
@@ -37,7 +37,8 @@ fun BottomNavBar(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.surface)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
             .navigationBarsPadding()
             .padding(vertical = 8.dp, horizontal = 12.dp)
     ) {
@@ -97,14 +98,14 @@ private fun NavItem(
         Box(
             modifier = Modifier
                 .clip(CircleShape)
-                .background(if (isSelected) MomoraMintLight else Color.Transparent)
+                .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
                 .padding(horizontal = 16.dp, vertical = 4.dp),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 painter = painterResource(id = iconRes),
                 contentDescription = label,
-                tint = if (isSelected) MomoraTealPrimary else MomoraTextMuted,
+                tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -115,7 +116,7 @@ private fun NavItem(
             text = label,
             fontSize = 11.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-            color = if (isSelected) MomoraTealPrimary else MomoraTextMuted
+            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

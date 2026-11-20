@@ -3,6 +3,7 @@ package com.example.SIMATS.navigation
 sealed class Screen(val route: String) {
     data object Splash : Screen("splash")
     data object Onboarding : Screen("onboarding")
+    data object RoleSelect : Screen("role_select")
     data object Login : Screen("login")
     data object SignUp : Screen("signup")
     data object Home : Screen("home")

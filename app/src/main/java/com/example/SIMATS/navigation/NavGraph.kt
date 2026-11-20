@@ -70,6 +70,7 @@ import com.example.SIMATS.ui.patientlist.PatientListScreen
 import com.example.SIMATS.ui.patientlist.PatientListViewModel
 import com.example.SIMATS.ui.profile.ProfileSetupScreen
 import com.example.SIMATS.ui.profile.ProfileSetupViewModel
+import com.example.SIMATS.ui.roleselect.RoleSelectScreen
 import com.example.SIMATS.ui.signup.SignUpScreen
 import com.example.SIMATS.ui.signup.SignUpViewModel
 import com.example.SIMATS.ui.splash.SplashScreen
@@ -155,6 +156,7 @@ private fun sanitizeScreenForRole(target: Screen): Screen {
 @Composable
 fun AppNavHost() {
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Splash) }
+    var selectedLoginRole by remember { mutableStateOf(UserRole.PATIENT) }
     var selectedPatientId by remember { mutableStateOf<String?>(SelectedPatientHolder.selectedPatientId) }
     var selectedPatientName by remember { mutableStateOf<String?>(SelectedPatientHolder.selectedPatientName) }
 
@@ -163,7 +165,7 @@ fun AppNavHost() {
             SelectedPatientHolder.clear()
             selectedPatientId = null
             selectedPatientName = null
-            currentScreen = Screen.Login
+            currentScreen = Screen.RoleSelect
         }
     }
 
@@ -199,7 +201,7 @@ fun AppNavHost() {
                         }
                         else -> {
                             if (SessionManager.isOnboardingCompleted()) {
-                                currentScreen = Screen.Login
+                                currentScreen = Screen.RoleSelect
                             } else {
                                 currentScreen = Screen.Onboarding
                             }
@@ -214,7 +216,7 @@ fun AppNavHost() {
                 viewModel = onboardingViewModel,
                 onNavigateToLogin = {
                     SessionManager.setOnboardingCompleted(true)
-                    currentScreen = Screen.Login
+                    currentScreen = Screen.RoleSelect
                 },
                 onGetStartedComplete = {
                     SessionManager.setOnboardingCompleted(true)
@@ -222,12 +224,24 @@ fun AppNavHost() {
                 }
             )
         }
+        Screen.RoleSelect -> {
+            RoleSelectScreen(
+                onRoleSelected = { role ->
+                    selectedLoginRole = role
+                    currentScreen = Screen.Login
+                },
+                onNavigateBack = {
+                    currentScreen = Screen.Onboarding
+                }
+            )
+        }
         Screen.Login -> {
             val loginViewModel: LoginViewModel = viewModel()
             LoginScreen(
                 viewModel = loginViewModel,
+                role = selectedLoginRole,
                 onNavigateBack = {
-                    currentScreen = Screen.Onboarding
+                    currentScreen = Screen.RoleSelect
                 },
                 onLoginSuccess = { role ->
                     SelectedPatientHolder.clear()
@@ -248,10 +262,10 @@ fun AppNavHost() {
             SignUpScreen(
                 viewModel = signUpViewModel,
                 onNavigateBack = {
-                    currentScreen = Screen.Login
+                    currentScreen = Screen.RoleSelect
                 },
                 onNavigateToLogin = {
-                    currentScreen = Screen.Login
+                    currentScreen = Screen.RoleSelect
                 },
                 onRegistrationSuccess = {
                     currentScreen = Screen.Home
@@ -296,7 +310,7 @@ fun AppNavHost() {
                     currentScreen = Screen.Home
                 },
                 onLogoutSuccess = {
-                    currentScreen = Screen.Login
+                    currentScreen = Screen.RoleSelect
                 },
                 onNavTabSelected = { index ->
                     when (index) {
@@ -615,7 +629,7 @@ fun AppNavHost() {
                     SelectedPatientHolder.clear()
                     selectedPatientId = null
                     selectedPatientName = null
-                    currentScreen = Screen.Login
+                    currentScreen = Screen.RoleSelect
                 },
                 onProfileClick = {
                     currentScreen = Screen.DoctorProfile
@@ -824,7 +838,7 @@ fun AppNavHost() {
                 onLogoutSuccess = {
                     SelectedPatientHolder.clear()
                     selectedPatientId = null
-                    currentScreen = Screen.Login
+                    currentScreen = Screen.RoleSelect
                 },
                 onNavTabSelected = { index ->
                     when (index) {
@@ -921,7 +935,7 @@ fun AppNavHost() {
                     currentScreen = Screen.AdminDashboard
                 },
                 onLogoutSuccess = {
-                    currentScreen = Screen.Login
+                    currentScreen = Screen.RoleSelect
                 },
                 onNavTabSelected = { index ->
                     when (index) {

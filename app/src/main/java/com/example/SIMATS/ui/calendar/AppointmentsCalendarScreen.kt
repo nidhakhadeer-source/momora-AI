@@ -25,6 +25,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -128,7 +129,7 @@ fun AppointmentsCalendarScreenContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MomoraScreenBackground)
+            .background(MaterialTheme.colorScheme.background)
             .statusBarsPadding()
             .navigationBarsPadding(),
         verticalArrangement = Arrangement.SpaceBetween
@@ -151,7 +152,7 @@ fun AppointmentsCalendarScreenContent(
                     text = "←",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Medium,
-                    color = MomoraPurpleText
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
 
@@ -163,7 +164,7 @@ fun AppointmentsCalendarScreenContent(
                 contentAlignment = Alignment.Center
             ) {
                 BellIcon(
-                    color = MomoraPurplePrimary,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -177,7 +178,7 @@ fun AppointmentsCalendarScreenContent(
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = MomoraPurplePrimary)
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else if (uiState.errorMessage != null && data == null) {
             Box(
@@ -195,7 +196,7 @@ fun AppointmentsCalendarScreenContent(
                         text = "Unable to load appointments",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MomoraPurpleDark
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
@@ -208,7 +209,7 @@ fun AppointmentsCalendarScreenContent(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(50))
-                            .background(MomoraPurplePrimary)
+                            .background(MaterialTheme.colorScheme.primary)
                             .clickable { onRetryClick() }
                             .padding(horizontal = 24.dp, vertical = 10.dp),
                         contentAlignment = Alignment.Center
@@ -217,7 +218,7 @@ fun AppointmentsCalendarScreenContent(
                             text = "Retry",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 }
@@ -235,7 +236,7 @@ fun AppointmentsCalendarScreenContent(
                 text = "Make time for your care",
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
-                color = MomoraPurpleDark
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -243,7 +244,7 @@ fun AppointmentsCalendarScreenContent(
             Text(
                 text = "Book a visit with your assigned doctor.",
                 fontSize = 13.sp,
-                color = MomoraBodyMuted
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -253,8 +254,8 @@ fun AppointmentsCalendarScreenContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(18.dp))
-                    .background(Color.White)
-                    .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(18.dp))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(18.dp))
                     .padding(14.dp)
             ) {
                 Row(
@@ -270,10 +271,10 @@ fun AppointmentsCalendarScreenContent(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFFEDE4F0)),
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
                             contentAlignment = Alignment.Center
                         ) {
-                            StethoscopeIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp))
+                            StethoscopeIcon(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                         }
 
                         Spacer(modifier = Modifier.width(12.dp))
@@ -283,13 +284,13 @@ fun AppointmentsCalendarScreenContent(
                                 text = data?.doctorName ?: "Dr Amelia Chen",
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MomoraPurpleDark
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = data?.doctorSpecialty ?: "Obstetrician · Willow Maternity Clinic",
                                 fontSize = 11.5.sp,
-                                color = MomoraBodyMuted
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -297,14 +298,14 @@ fun AppointmentsCalendarScreenContent(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(50))
-                            .background(Color(0xFFF4ECF8))
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
                             .padding(horizontal = 12.dp, vertical = 5.dp)
                     ) {
                         Text(
                             text = "Assigned",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MomoraPurplePrimary
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -317,7 +318,7 @@ fun AppointmentsCalendarScreenContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFFF4ECF8))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
                     .padding(4.dp)
             ) {
                 Box(
@@ -325,8 +326,8 @@ fun AppointmentsCalendarScreenContent(
                         .fillMaxWidth()
                         .height(40.dp)
                         .clip(RoundedCornerShape(11.dp))
-                        .background(Color.White)
-                        .border(1.dp, Color(0xFFE2D6EA), RoundedCornerShape(11.dp)),
+                        .background(MaterialTheme.colorScheme.surface)
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(11.dp)),
                     contentAlignment = Alignment.Center
                 ) {
                     Row(
@@ -337,14 +338,14 @@ fun AppointmentsCalendarScreenContent(
                             modifier = Modifier
                                 .size(7.dp)
                                 .clip(CircleShape)
-                                .background(MomoraPurplePrimary)
+                                .background(MaterialTheme.colorScheme.primary)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "In-person appointment",
                             fontSize = 13.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MomoraPurpleDark
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -362,14 +363,14 @@ fun AppointmentsCalendarScreenContent(
                     text = data?.monthTitle ?: "October 2026",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MomoraPurpleDark
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Text(
                     text = "Next month ➔",
                     fontSize = 11.5.sp,
                     fontWeight = FontWeight.Medium,
-                    color = MomoraPurplePrimary,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.clickable { onNextMonthClick() }
                 )
             }
@@ -382,15 +383,15 @@ fun AppointmentsCalendarScreenContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(14.dp))
-                        .background(Color.White)
-                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
+                        .background(MaterialTheme.colorScheme.surface)
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp))
                         .padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "No appointment dates available",
                         fontSize = 13.sp,
-                        color = MomoraBodyMuted
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             } else {
@@ -400,13 +401,18 @@ fun AppointmentsCalendarScreenContent(
                 ) {
                     data?.availableDates?.forEach { item ->
                         val isSelected = uiState.selectedDayOfMonth == item.dayOfMonth
+                        val itemBg = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface
+                        val itemBorder = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
+                        val dayOfWeekColor = if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
+                        val dayOfMonthColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+
                         Box(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(64.dp)
                                 .clip(RoundedCornerShape(14.dp))
-                                .background(if (isSelected) MomoraPurplePrimary else Color.White)
-                                .border(1.dp, if (isSelected) MomoraPurplePrimary else Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
+                                .background(itemBg)
+                                .border(1.dp, itemBorder, RoundedCornerShape(14.dp))
                                 .clickable { onDateSelected(item.dayOfMonth) },
                             contentAlignment = Alignment.Center
                         ) {
@@ -416,14 +422,14 @@ fun AppointmentsCalendarScreenContent(
                                 Text(
                                     text = item.dayOfWeek,
                                     fontSize = 11.sp,
-                                    color = if (isSelected) Color.White.copy(alpha = 0.8f) else MomoraBodyMuted
+                                    color = dayOfWeekColor
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = "${item.dayOfMonth}",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (isSelected) Color.White else MomoraPurpleDark
+                                    color = dayOfMonthColor
                                 )
                             }
                         }
@@ -438,7 +444,7 @@ fun AppointmentsCalendarScreenContent(
                 text = "Available times · Clinic local time",
                 fontSize = 12.5.sp,
                 fontWeight = FontWeight.Bold,
-                color = MomoraPurpleDark
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -449,15 +455,15 @@ fun AppointmentsCalendarScreenContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(14.dp))
-                        .background(Color.White)
-                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
+                        .background(MaterialTheme.colorScheme.surface)
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp))
                         .padding(16.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = "No time slots available for this date",
                         fontSize = 13.sp,
-                        color = MomoraBodyMuted
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             } else {
@@ -467,13 +473,17 @@ fun AppointmentsCalendarScreenContent(
                 ) {
                     data?.availableTimeSlots?.forEach { slot ->
                         val isSelected = uiState.selectedTimeSlot == slot
+                        val slotBg = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant
+                        val slotBorder = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
+                        val slotColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+
                         Box(
                             modifier = Modifier
                                 .weight(1f)
                                 .height(42.dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(if (isSelected) Color.White else Color(0xFFF4ECF8))
-                                .border(1.dp, if (isSelected) MomoraPurplePrimary else Color.Transparent, RoundedCornerShape(12.dp))
+                                .background(slotBg)
+                                .border(1.dp, slotBorder, RoundedCornerShape(12.dp))
                                 .clickable { onTimeSlotSelected(slot) },
                             contentAlignment = Alignment.Center
                         ) {
@@ -481,7 +491,7 @@ fun AppointmentsCalendarScreenContent(
                                 text = slot,
                                 fontSize = 13.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSelected) MomoraPurpleDark else MomoraBodyMuted
+                                color = slotColor
                             )
                         }
                     }
@@ -493,7 +503,7 @@ fun AppointmentsCalendarScreenContent(
             // Appointment Summary Card
             Card(
                 shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = MomoraPinkCircleBg),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -507,22 +517,22 @@ fun AppointmentsCalendarScreenContent(
                             text = data?.defaultType ?: "Routine antenatal check",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MomoraPurpleDark
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
                         // Mode Badge
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(50))
-                                .background(Color.White)
-                                .border(1.dp, Color(0xFFE2D6EA), RoundedCornerShape(50))
+                                .background(MaterialTheme.colorScheme.surface)
+                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(50))
                                 .padding(horizontal = 10.dp, vertical = 4.dp)
                         ) {
                             Text(
                                 text = "In-person visit",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MomoraPurplePrimary
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -533,7 +543,7 @@ fun AppointmentsCalendarScreenContent(
                         text = "Assigned Doctor: ${data?.doctorName ?: "Dr Amelia Chen"}",
                         fontSize = 12.5.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = MomoraPurplePrimary
+                        color = MaterialTheme.colorScheme.primary
                     )
 
                     Spacer(modifier = Modifier.height(6.dp))
@@ -553,7 +563,7 @@ fun AppointmentsCalendarScreenContent(
                         text = "$dayOfWeekStr, $dayOfMonthVal $monthTitleStr · $timeSlotStr",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MomoraPurpleText
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Spacer(modifier = Modifier.height(6.dp))
@@ -562,7 +572,7 @@ fun AppointmentsCalendarScreenContent(
                         text = data?.defaultLocationNotes ?: "Willow Maternity Clinic · Room 3. Bring your pregnancy notes and recent reports.",
                         fontSize = 11.5.sp,
                         lineHeight = 16.sp,
-                        color = MomoraBodyMuted
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -586,7 +596,7 @@ fun AppointmentsCalendarScreenContent(
                     .fillMaxWidth()
                     .height(50.dp)
                     .clip(RoundedCornerShape(50))
-                    .background(MomoraPurplePrimary)
+                    .background(MaterialTheme.colorScheme.primary)
                     .clickable { if (!uiState.isLoading) onConfirmAppointmentClick() },
                 contentAlignment = Alignment.Center
             ) {
@@ -594,7 +604,7 @@ fun AppointmentsCalendarScreenContent(
                     text = if (uiState.isLoading) "Confirming..." else "Confirm appointment",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
 
@@ -605,7 +615,7 @@ fun AppointmentsCalendarScreenContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFFF4ECF8))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
                     .padding(horizontal = 14.dp, vertical = 11.dp)
             ) {
                 Row(
@@ -615,11 +625,11 @@ fun AppointmentsCalendarScreenContent(
                         modifier = Modifier
                             .size(28.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFFEBE0F2)),
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center
                     ) {
                         ShieldIcon(
-                            color = MomoraPurplePrimary,
+                            color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(13.dp)
                         )
                     }
@@ -630,7 +640,7 @@ fun AppointmentsCalendarScreenContent(
                         text = "For urgent symptoms, contact maternity care directly; do not wait for an appointment.",
                         fontSize = 11.5.sp,
                         lineHeight = 15.sp,
-                        color = MomoraPurplePrimary,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -655,7 +665,7 @@ fun AppointmentsCalendarScreenContent(
                 Text(
                     text = "Appointment Confirmed",
                     fontWeight = FontWeight.Bold,
-                    color = MomoraPurpleDark
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             },
             text = {
@@ -664,20 +674,20 @@ fun AppointmentsCalendarScreenContent(
                         ?: "Your appointment has been confirmed successfully.",
                     fontSize = 13.5.sp,
                     lineHeight = 18.sp,
-                    color = MomoraPurpleText
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             },
             confirmButton = {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(50))
-                        .background(MomoraPurplePrimary)
+                        .background(MaterialTheme.colorScheme.primary)
                         .clickable { onDismissConfirmationDialog() }
                         .padding(horizontal = 20.dp, vertical = 8.dp)
                 ) {
                     Text(
                         text = "Done",
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp
                     )
@@ -695,11 +705,17 @@ private fun DashboardBottomNavBar(
     selectedIndex: Int,
     onTabSelected: (Int) -> Unit
 ) {
+    val navSurface = MaterialTheme.colorScheme.surface
+    val navBorder = MaterialTheme.colorScheme.outlineVariant
+    val indicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val mutedColor = MaterialTheme.colorScheme.onSurfaceVariant
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
-            .border(1.dp, Color(0xFFF0E8F4), RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+            .background(navSurface)
+            .border(1.dp, navBorder, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
             .padding(top = 8.dp, bottom = 4.dp)
     ) {
         Row(
@@ -711,31 +727,31 @@ private fun DashboardBottomNavBar(
                 label = "Home",
                 isSelected = selectedIndex == 0,
                 onClick = { onTabSelected(0) },
-                icon = { HomeNavIcon(color = if (selectedIndex == 0) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { HomeNavIcon(color = if (selectedIndex == 0) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) }
             )
             NavTabItem(
                 label = "Track",
                 isSelected = selectedIndex == 1,
                 onClick = { onTabSelected(1) },
-                icon = { TrackNavIcon(color = if (selectedIndex == 1) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { TrackNavIcon(color = if (selectedIndex == 1) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) }
             )
             NavTabItem(
                 label = "AI",
                 isSelected = selectedIndex == 2,
                 onClick = { onTabSelected(2) },
-                icon = { SparklesIcon(color = if (selectedIndex == 2) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { SparklesIcon(color = if (selectedIndex == 2) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) }
             )
             NavTabItem(
                 label = "Care",
                 isSelected = selectedIndex == 3,
                 onClick = { onTabSelected(3) },
-                icon = { CareNavIcon(color = if (selectedIndex == 3) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { CareNavIcon(color = if (selectedIndex == 3) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) }
             )
             NavTabItem(
                 label = "Profile",
                 isSelected = selectedIndex == 4,
                 onClick = { onTabSelected(4) },
-                icon = { UserNavIcon(color = if (selectedIndex == 4) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { UserNavIcon(color = if (selectedIndex == 4) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) }
             )
         }
 
@@ -747,7 +763,7 @@ private fun DashboardBottomNavBar(
                 .width(134.dp)
                 .height(4.dp)
                 .clip(RoundedCornerShape(50))
-                .background(Color(0xFF333333))
+                .background(indicatorColor)
         )
     }
 }
@@ -759,6 +775,10 @@ private fun NavTabItem(
     onClick: () -> Unit,
     icon: @Composable () -> Unit
 ) {
+    val activeBg = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+    val activeColor = MaterialTheme.colorScheme.primary
+    val inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -768,7 +788,7 @@ private fun NavTabItem(
         Box(
             modifier = Modifier
                 .clip(CircleShape)
-                .background(if (isSelected) Color(0xFFF4ECF8) else Color.Transparent)
+                .background(if (isSelected) activeBg else Color.Transparent)
                 .padding(horizontal = 14.dp, vertical = 4.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -781,7 +801,7 @@ private fun NavTabItem(
             text = label,
             fontSize = 10.5.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-            color = if (isSelected) MomoraPurplePrimary else MomoraBodyMuted
+            color = if (isSelected) activeColor else inactiveColor
         )
     }
 }

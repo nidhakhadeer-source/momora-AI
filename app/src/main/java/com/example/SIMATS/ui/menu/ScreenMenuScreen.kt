@@ -58,7 +58,7 @@ fun ScreenMenuScreen(
         MenuItemData("01", "Splash Screen", "Initial branding and entry", Screen.Splash),
         MenuItemData("02", "Onboarding Welcome", "Welcome and feature showcase", Screen.Onboarding),
         MenuItemData("03", "Pregnancy Insights", "Feature highlights & getting started", Screen.Onboarding),
-        MenuItemData("04", "Role-Based Login", "Patient, Doctor, Admin sign-in", Screen.Login),
+        MenuItemData("04", "Role Selection & Login", "Select role and sign in", Screen.RoleSelect),
         MenuItemData("05", "Patient Registration", "New account registration form", Screen.SignUp),
         MenuItemData("06", "Patient Dashboard", "Main overview, daily progress & actions", Screen.Home),
         MenuItemData("07", "Patient Profile", "Personal info, due date & preferences", Screen.Profile),

@@ -7,11 +7,13 @@ import androidx.activity.enableEdgeToEdge
 import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.navigation.AppNavHost
 import com.example.SIMATS.ui.theme.MomoraAITheme
+import com.example.SIMATS.ui.theme.ThemeManager
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         SessionManager.init(this)
+        ThemeManager.init(this)
         enableEdgeToEdge()
         setContent {
             MomoraAITheme {

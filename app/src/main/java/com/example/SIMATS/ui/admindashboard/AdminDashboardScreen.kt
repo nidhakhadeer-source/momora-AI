@@ -21,6 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -118,7 +119,7 @@ fun AdminDashboardScreenContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MomoraScreenBackground)
+            .background(MaterialTheme.colorScheme.background)
             .statusBarsPadding()
             .navigationBarsPadding(),
         verticalArrangement = Arrangement.SpaceBetween
@@ -135,11 +136,11 @@ fun AdminDashboardScreenContent(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(MomoraIconBtnBg),
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
                 TopBarHeartIcon(
-                    color = MomoraPurplePrimary,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -152,7 +153,7 @@ fun AdminDashboardScreenContent(
                 contentAlignment = Alignment.Center
             ) {
                 BellIcon(
-                    color = MomoraPurplePrimary,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -173,14 +174,14 @@ fun AdminDashboardScreenContent(
                         .padding(vertical = 48.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = MomoraPurplePrimary)
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             } else if (uiState.errorMessage != null && data == null) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
-                        .background(Color.White)
+                        .background(MaterialTheme.colorScheme.surface)
                         .border(1.dp, Color(0xFFF2DEDE), RoundedCornerShape(16.dp))
                         .padding(24.dp),
                     contentAlignment = Alignment.Center
@@ -196,7 +197,7 @@ fun AdminDashboardScreenContent(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(50))
-                                .background(MomoraPurplePrimary)
+                                .background(MaterialTheme.colorScheme.primary)
                                 .clickable { onRetryClick() }
                                 .padding(horizontal = 20.dp, vertical = 8.dp),
                             contentAlignment = Alignment.Center
@@ -205,7 +206,7 @@ fun AdminDashboardScreenContent(
                                 text = "Retry",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                     }
@@ -236,7 +237,7 @@ fun AdminDashboardScreenContent(
                             text = "Retry",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MomoraPurplePrimary,
+                            color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.clickable { onRetryClick() }
                         )
                     }
@@ -247,7 +248,7 @@ fun AdminDashboardScreenContent(
                 text = "Care, well organized",
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
-                color = MomoraPurpleDark
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -255,7 +256,7 @@ fun AdminDashboardScreenContent(
             Text(
                 text = data?.lastUpdatedText ?: "Administrator · Updated 27 Oct 2026, 09:30",
                 fontSize = 12.sp,
-                color = MomoraBodyMuted
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -270,7 +271,7 @@ fun AdminDashboardScreenContent(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(16.dp))
-                        .background(MomoraPinkCircleBg)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                         .padding(14.dp)
                 ) {
                     Column {
@@ -278,20 +279,20 @@ fun AdminDashboardScreenContent(
                             text = "Total patients",
                             fontSize = 11.5.sp,
                             fontWeight = FontWeight.Medium,
-                            color = MomoraBodyMuted
+                            color = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "${data?.totalPatientsCount ?: 128}",
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MomoraPurpleDark
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = "${data?.activePatientsCount ?: 128} active · ${data?.inactivePatientsCount ?: 0} inactive",
                             fontSize = 10.5.sp,
-                            color = MomoraBodyMuted
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -301,7 +302,7 @@ fun AdminDashboardScreenContent(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(16.dp))
-                        .background(MomoraMintBadgeBg)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                         .padding(14.dp)
                 ) {
                     Column {
@@ -309,20 +310,20 @@ fun AdminDashboardScreenContent(
                             text = "Total doctors",
                             fontSize = 11.5.sp,
                             fontWeight = FontWeight.Medium,
-                            color = MomoraMintBadgeText
+                            color = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "${data?.totalDoctorsCount ?: 12}",
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MomoraPurpleDark
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = "${data?.activeDoctorsCount ?: 10} active · ${data?.inactiveDoctorsCount ?: 2} inactive",
                             fontSize = 10.5.sp,
-                            color = Color(0xFF43524E)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -335,8 +336,8 @@ fun AdminDashboardScreenContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Color.White)
-                    .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
                     .padding(14.dp)
             ) {
                 Column {
@@ -349,13 +350,13 @@ fun AdminDashboardScreenContent(
                             text = "Patient registrations",
                             fontSize = 14.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MomoraPurpleDark
+                            color = MaterialTheme.colorScheme.onSurface
                         )
 
                         Text(
                             text = "Last 4 months",
                             fontSize = 11.5.sp,
-                            color = MomoraBodyMuted
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
 
@@ -368,13 +369,13 @@ fun AdminDashboardScreenContent(
                             modifier = Modifier
                                 .size(8.dp)
                                 .clip(CircleShape)
-                                .background(MomoraPurplePrimary)
+                                .background(MaterialTheme.colorScheme.primary)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "New patients - accounts",
                             fontSize = 11.sp,
-                            color = MomoraPurplePrimary
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
 
@@ -394,7 +395,7 @@ fun AdminDashboardScreenContent(
                     Text(
                         text = "Monthly new accounts - Jul-Oct 2026",
                         fontSize = 11.sp,
-                        color = MomoraBodyMuted
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -406,7 +407,7 @@ fun AdminDashboardScreenContent(
                 text = "Account management",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
-                color = MomoraPurpleDark
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -416,8 +417,8 @@ fun AdminDashboardScreenContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Color.White)
-                    .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
                     .padding(horizontal = 14.dp, vertical = 6.dp)
             ) {
                 // Manage doctors
@@ -437,10 +438,10 @@ fun AdminDashboardScreenContent(
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFFEDE4F0)),
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
                             contentAlignment = Alignment.Center
                         ) {
-                            StethoscopeIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp))
+                            StethoscopeIcon(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                         }
 
                         Spacer(modifier = Modifier.width(12.dp))
@@ -450,13 +451,13 @@ fun AdminDashboardScreenContent(
                                 text = "Manage doctors",
                                 fontSize = 13.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MomoraPurpleText
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "${data?.totalDoctorsCount ?: 12} accounts · Edit, assign or deactivate",
                                 fontSize = 11.5.sp,
-                                color = MomoraBodyMuted
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -465,7 +466,7 @@ fun AdminDashboardScreenContent(
                         text = "›",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color(0xFF8C7F92)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
 
@@ -488,10 +489,10 @@ fun AdminDashboardScreenContent(
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(CircleShape)
-                                .background(MomoraPinkCircleBg),
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
                             contentAlignment = Alignment.Center
                         ) {
-                            PeopleNavIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp))
+                            PeopleNavIcon(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                         }
 
                         Spacer(modifier = Modifier.width(12.dp))
@@ -501,13 +502,13 @@ fun AdminDashboardScreenContent(
                                 text = "Manage patients",
                                 fontSize = 13.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MomoraPurpleText
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "${data?.totalPatientsCount ?: 128} accounts · Access and status",
                                 fontSize = 11.5.sp,
-                                color = MomoraBodyMuted
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -516,7 +517,7 @@ fun AdminDashboardScreenContent(
                         text = "›",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color(0xFF8C7F92)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -529,7 +530,7 @@ fun AdminDashboardScreenContent(
                     .fillMaxWidth()
                     .height(50.dp)
                     .clip(RoundedCornerShape(50))
-                    .background(MomoraPurplePrimary)
+                    .background(MaterialTheme.colorScheme.primary)
                     .clickable { onAddDoctorClick() },
                 contentAlignment = Alignment.Center
             ) {
@@ -540,13 +541,13 @@ fun AdminDashboardScreenContent(
                         text = "Add doctor",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "👤+",
                         fontSize = 15.sp,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
             }
@@ -556,7 +557,7 @@ fun AdminDashboardScreenContent(
             Text(
                 text = "Doctor accounts are created only by an administrator. No public doctor registration.",
                 fontSize = 11.sp,
-                color = MomoraFooterText,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -582,10 +583,12 @@ private fun RegistrationsTrendChart(
     months: List<String>,
     modifier: Modifier = Modifier
 ) {
+    val gridColor = MaterialTheme.colorScheme.outlineVariant
+    val curveColor = MaterialTheme.colorScheme.primary
+
     Canvas(modifier = modifier) {
         val w = size.width
         val h = size.height
-        val gridColor = Color(0xFFEFE8F4)
         val lineStroke = 2.dp.toPx()
 
         val yMin = 0f
@@ -616,7 +619,7 @@ private fun RegistrationsTrendChart(
 
         drawPath(
             path = path,
-            color = Color(0xFF6E4F76),
+            color = curveColor,
             style = Stroke(width = lineStroke, cap = StrokeCap.Round, join = StrokeJoin.Round)
         )
     }
@@ -630,11 +633,17 @@ private fun AdminBottomNavBar(
     selectedIndex: Int,
     onTabSelected: (Int) -> Unit
 ) {
+    val navSurface = MaterialTheme.colorScheme.surface
+    val navBorder = MaterialTheme.colorScheme.outlineVariant
+    val indicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val mutedColor = MaterialTheme.colorScheme.onSurfaceVariant
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
-            .border(1.dp, Color(0xFFF0E8F4), RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+            .background(navSurface)
+            .border(1.dp, navBorder, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
             .padding(top = 8.dp, bottom = 4.dp)
     ) {
         Row(
@@ -646,25 +655,25 @@ private fun AdminBottomNavBar(
                 label = "Overview",
                 isSelected = selectedIndex == 0,
                 onClick = { onTabSelected(0) },
-                icon = { OverviewNavIcon(color = if (selectedIndex == 0) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { OverviewNavIcon(color = if (selectedIndex == 0) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) }
             )
             NavTabItem(
                 label = "Doctors",
                 isSelected = selectedIndex == 1,
                 onClick = { onTabSelected(1) },
-                icon = { StethoscopeIcon(color = if (selectedIndex == 1) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { StethoscopeIcon(color = if (selectedIndex == 1) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) }
             )
             NavTabItem(
                 label = "Patients",
                 isSelected = selectedIndex == 2,
                 onClick = { onTabSelected(2) },
-                icon = { PeopleNavIcon(color = if (selectedIndex == 2) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { PeopleNavIcon(color = if (selectedIndex == 2) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) }
             )
             NavTabItem(
                 label = "Settings",
                 isSelected = selectedIndex == 3,
                 onClick = { onTabSelected(3) },
-                icon = { SettingsNavIcon(color = if (selectedIndex == 3) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { SettingsNavIcon(color = if (selectedIndex == 3) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) }
             )
         }
 
@@ -676,7 +685,7 @@ private fun AdminBottomNavBar(
                 .width(134.dp)
                 .height(4.dp)
                 .clip(RoundedCornerShape(50))
-                .background(Color(0xFF333333))
+                .background(indicatorColor)
         )
     }
 }
@@ -688,6 +697,10 @@ private fun NavTabItem(
     onClick: () -> Unit,
     icon: @Composable () -> Unit
 ) {
+    val activeBg = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+    val activeColor = MaterialTheme.colorScheme.primary
+    val inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -697,7 +710,7 @@ private fun NavTabItem(
         Box(
             modifier = Modifier
                 .clip(CircleShape)
-                .background(if (isSelected) Color(0xFFF4ECF8) else Color.Transparent)
+                .background(if (isSelected) activeBg else Color.Transparent)
                 .padding(horizontal = 14.dp, vertical = 4.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -710,7 +723,7 @@ private fun NavTabItem(
             text = label,
             fontSize = 10.5.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-            color = if (isSelected) MomoraPurplePrimary else MomoraBodyMuted
+            color = if (isSelected) activeColor else inactiveColor
         )
     }
 }

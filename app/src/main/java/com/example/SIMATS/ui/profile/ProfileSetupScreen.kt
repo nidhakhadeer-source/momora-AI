@@ -1,6 +1,7 @@
 package com.example.SIMATS.ui.profile
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -30,8 +31,18 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -72,6 +83,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
 import java.net.URL
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun ProfileSetupScreen(
@@ -114,6 +128,12 @@ fun ProfileSetupScreen(
             )
         },
         onCareTeamSharingToggled = { enabled -> viewModel.onEvent(ProfileSetupUiEvent.OnCareTeamSharingToggled(enabled)) },
+        onSaveReminderPreferences = { med, appt, baby ->
+            viewModel.onEvent(ProfileSetupUiEvent.OnReminderPreferencesSaved(med, appt, baby))
+        },
+        onThemeSelected = { theme ->
+            viewModel.onEvent(ProfileSetupUiEvent.OnThemeSelected(theme))
+        },
         onSaveClick = { viewModel.onEvent(ProfileSetupUiEvent.OnSaveClicked) },
         onLogoutClick = { viewModel.onEvent(ProfileSetupUiEvent.OnLogoutClicked) },
         onRetryClick = { viewModel.onEvent(ProfileSetupUiEvent.OnRetryClicked) },
@@ -129,6 +149,7 @@ fun ProfileSetupScreen(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileSetupScreenContent(
     modifier: Modifier = Modifier,
@@ -158,6 +179,8 @@ fun ProfileSetupScreenContent(
     onAddressChanged: (String) -> Unit = {},
     onPhotoClick: () -> Unit = {},
     onCareTeamSharingToggled: (Boolean) -> Unit = {},
+    onSaveReminderPreferences: (Boolean, Boolean, Boolean) -> Unit = { _, _, _ -> },
+    onThemeSelected: (String) -> Unit = {},
     onSaveClick: () -> Unit = {},
     onLogoutClick: () -> Unit = {},
     onRetryClick: () -> Unit = {},
@@ -165,12 +188,21 @@ fun ProfileSetupScreenContent(
     onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
+    val context = LocalContext.current
     val scrollState = rememberScrollState()
+
+    var showReminderSheet by remember { mutableStateOf(false) }
+    var showHealthInfoSheet by remember { mutableStateOf(false) }
+    var showDeleteConfirmationDialog by remember { mutableStateOf(false) }
+    var showDeletionNotedDialog by remember { mutableStateOf(false) }
+
+    val sheetStateReminder = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val sheetStateHealth = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MomoraScreenBackground)
+            .background(MaterialTheme.colorScheme.background)
             .statusBarsPadding()
             .navigationBarsPadding(),
         verticalArrangement = Arrangement.SpaceBetween
@@ -193,7 +225,7 @@ fun ProfileSetupScreenContent(
                     text = "←",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Medium,
-                    color = MomoraPurpleText
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
 
@@ -205,7 +237,7 @@ fun ProfileSetupScreenContent(
                 contentAlignment = Alignment.Center
             ) {
                 BellIcon(
-                    color = MomoraPurplePrimary,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -219,7 +251,7 @@ fun ProfileSetupScreenContent(
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = MomoraPurplePrimary)
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else if (uiState.errorMessage != null && uiState.profileData == null) {
             Box(
@@ -237,7 +269,7 @@ fun ProfileSetupScreenContent(
                         text = "Unable to load profile",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MomoraPurpleDark
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
@@ -250,7 +282,7 @@ fun ProfileSetupScreenContent(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(50))
-                            .background(MomoraPurplePrimary)
+                            .background(MaterialTheme.colorScheme.primary)
                             .clickable { onRetryClick() }
                             .padding(horizontal = 24.dp, vertical = 10.dp),
                         contentAlignment = Alignment.Center
@@ -259,7 +291,7 @@ fun ProfileSetupScreenContent(
                             text = "Retry",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 }
@@ -277,15 +309,7 @@ fun ProfileSetupScreenContent(
                 text = "Your profile",
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
-                color = MomoraPurpleDark
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = "Your details, always in your control.",
-                fontSize = 13.sp,
-                color = MomoraBodyMuted
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -314,20 +338,20 @@ fun ProfileSetupScreenContent(
                         text = uiState.fullName.ifBlank { uiState.profileData?.patientName ?: SessionManager.getUserName() },
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MomoraPurpleDark
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "Patient ID · ${uiState.profileData?.patientId ?: SessionManager.getPatientCode()}",
                         fontSize = 12.sp,
-                        color = MomoraBodyMuted
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = if (uiState.isUploadingPhoto) "Uploading photo..." else "Tap photo to change",
                         fontSize = 11.5.sp,
                         fontWeight = FontWeight.Medium,
-                        color = MomoraPurplePrimary
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -454,7 +478,7 @@ fun ProfileSetupScreenContent(
                 text = "Privacy & preferences",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
-                color = MomoraPurpleDark
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -463,8 +487,8 @@ fun ProfileSetupScreenContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Color.White)
-                    .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
                     .padding(horizontal = 14.dp, vertical = 6.dp)
             ) {
                 // Item 1: Care-team sharing
@@ -498,17 +522,18 @@ fun ProfileSetupScreenContent(
                 // Item 2: Reminder preferences
                 PrivacyPreferenceRow(
                     title = "Reminder preferences",
-                    subtitle = uiState.profileData?.reminderSummary ?: "Medication and appointment alerts",
+                    subtitle = uiState.reminderSummary,
                     icon = {
-                        BellIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp))
+                        BellIcon(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                     },
-                    iconBg = Color(0xFFEDE4F0),
+                    iconBg = MaterialTheme.colorScheme.surfaceVariant,
+                    onClick = { showReminderSheet = true },
                     trailingContent = {
                         Text(
                             text = "›",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color(0xFF8C7F92)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 )
@@ -520,18 +545,96 @@ fun ProfileSetupScreenContent(
                     title = "Your health information",
                     subtitle = "Export data or request deletion",
                     icon = {
-                        DownloadIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp))
+                        DownloadIcon(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                     },
-                    iconBg = Color(0xFFEDE4F0),
+                    iconBg = MaterialTheme.colorScheme.surfaceVariant,
+                    onClick = { showHealthInfoSheet = true },
                     trailingContent = {
                         Text(
                             text = "›",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color(0xFF8C7F92)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Appearance Section
+            Text(
+                text = "Appearance",
+                fontSize = 17.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Choose your preferred app theme",
+                fontSize = 12.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        text = "App Theme",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val themes = listOf(
+                            "SYSTEM" to "System default",
+                            "LIGHT" to "Light",
+                            "DARK" to "Dark"
+                        )
+                        themes.forEach { (key, label) ->
+                            val isSelected = uiState.appTheme == key
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(
+                                        if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                                    .border(
+                                        width = if (isSelected) 1.5.dp else 1.dp,
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+                                        shape = RoundedCornerShape(12.dp)
+                                    )
+                                    .clickable { onThemeSelected(key) }
+                                    .padding(vertical = 12.dp, horizontal = 4.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = label,
+                                    fontSize = 12.sp,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                    maxLines = 1
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -542,7 +645,7 @@ fun ProfileSetupScreenContent(
                     .fillMaxWidth()
                     .height(50.dp)
                     .clip(RoundedCornerShape(50))
-                    .background(MomoraPurplePrimary)
+                    .background(MaterialTheme.colorScheme.primary)
                     .clickable { if (!uiState.isLoading) onSaveClick() },
                 contentAlignment = Alignment.Center
             ) {
@@ -550,7 +653,7 @@ fun ProfileSetupScreenContent(
                     text = if (uiState.isLoading) "Saving..." else "Save personal details",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
 
@@ -584,6 +687,326 @@ fun ProfileSetupScreenContent(
             selectedIndex = uiState.selectedNavIndex,
             onTabSelected = onNavTabSelected
         )
+
+        // ModalBottomSheet for Reminder Preferences
+        if (showReminderSheet) {
+            var tempMedication by remember(uiState.medicationReminders) { mutableStateOf(uiState.medicationReminders) }
+            var tempAppointments by remember(uiState.appointmentReminders) { mutableStateOf(uiState.appointmentReminders) }
+            var tempWeeklyUpdates by remember(uiState.weeklyDevelopmentReminders) { mutableStateOf(uiState.weeklyDevelopmentReminders) }
+
+            ModalBottomSheet(
+                onDismissRequest = { showReminderSheet = false },
+                sheetState = sheetStateReminder,
+                containerColor = MaterialTheme.colorScheme.surface
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .padding(bottom = 32.dp)
+                ) {
+                    Text(
+                        text = "Reminder preferences",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Customize the alerts and updates you receive",
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    ReminderSwitchRow(
+                        title = "Medication reminders",
+                        description = "Daily reminders for prescribed prenatal vitamins & medicines",
+                        checked = tempMedication,
+                        onCheckedChange = { tempMedication = it }
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    ReminderSwitchRow(
+                        title = "Appointment reminders",
+                        description = "Alerts 24 hours and 2 hours before doctor visits",
+                        checked = tempAppointments,
+                        onCheckedChange = { tempAppointments = it }
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    ReminderSwitchRow(
+                        title = "Weekly baby-development updates",
+                        description = "Milestone alerts and fetal growth progression tips",
+                        checked = tempWeeklyUpdates,
+                        onCheckedChange = { tempWeeklyUpdates = it }
+                    )
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .clip(RoundedCornerShape(50))
+                            .background(MaterialTheme.colorScheme.primary)
+                            .clickable {
+                                onSaveReminderPreferences(tempMedication, tempAppointments, tempWeeklyUpdates)
+                                showReminderSheet = false
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Save preferences",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                }
+            }
+        }
+
+        // ModalBottomSheet for Health Information
+        if (showHealthInfoSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showHealthInfoSheet = false },
+                sheetState = sheetStateHealth,
+                containerColor = MaterialTheme.colorScheme.surface
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .padding(bottom = 32.dp)
+                ) {
+                    Text(
+                        text = "Your health information",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Manage and take control of your personal health data",
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Option 1: Export my data
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp))
+                            .clickable {
+                                showHealthInfoSheet = false
+                                val shareText = buildString {
+                                    appendLine("=== Momora AI Health Profile Summary ===")
+                                    appendLine("Generated: ${SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())}")
+                                    appendLine()
+                                    appendLine("Full Name: ${uiState.fullName.ifBlank { uiState.profileData?.fullName ?: "N/A" }}")
+                                    appendLine("Patient ID: ${uiState.profileData?.patientId ?: "N/A"}")
+                                    appendLine("Email: ${uiState.email.ifBlank { uiState.profileData?.email ?: "N/A" }}")
+                                    appendLine("Phone: ${uiState.phone.ifBlank { uiState.profileData?.phone ?: "N/A" }}")
+                                    appendLine("Date of Birth: ${uiState.dateOfBirth.ifBlank { uiState.profileData?.dateOfBirth ?: "N/A" }}")
+                                    appendLine("Gender: ${uiState.gender.ifBlank { uiState.profileData?.gender ?: "N/A" }}")
+                                    appendLine("Blood Group: ${uiState.bloodGroup.ifBlank { uiState.profileData?.bloodGroup ?: "N/A" }}")
+                                    appendLine("Address: ${uiState.address.ifBlank { uiState.profileData?.address ?: "N/A" }}")
+                                    appendLine("Care Team Sharing: ${if (uiState.isCareTeamSharingOn) "Enabled" else "Disabled"}")
+                                    appendLine("Reminder Preferences: ${uiState.reminderSummary}")
+                                }
+                                val sendIntent = Intent().apply {
+                                    action = Intent.ACTION_SEND
+                                    putExtra(Intent.EXTRA_TEXT, shareText)
+                                    type = "text/plain"
+                                }
+                                val shareIntent = Intent.createChooser(sendIntent, "Export Health Information").apply {
+                                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                context.startActivity(shareIntent)
+                            },
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.surface),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                DownloadIcon(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                            }
+                            Spacer(modifier = Modifier.width(14.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Export my data",
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "Share a plain-text summary of your profile details",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Text(
+                                text = "›",
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Option 2: Request deletion
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .clickable {
+                                showHealthInfoSheet = false
+                                showDeleteConfirmationDialog = true
+                            },
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF0F0))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFFFFE2E2)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                TrashIcon(color = Color(0xFFD32F2F), modifier = Modifier.size(18.dp))
+                            }
+                            Spacer(modifier = Modifier.width(14.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Request deletion",
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFD32F2F)
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "Submit a request to remove your account & health records",
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF995555)
+                                )
+                            }
+                            Text(
+                                text = "›",
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color(0xFFD32F2F)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Dialog for Delete Confirmation
+        if (showDeleteConfirmationDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteConfirmationDialog = false },
+                title = {
+                    Text(
+                        text = "Request Account & Data Deletion",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Are you sure you want to request deletion of your account and medical data? A patient support specialist will verify your request before any action is taken.",
+                        fontSize = 13.5.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showDeleteConfirmationDialog = false
+                            showDeletionNotedDialog = true
+                        }
+                    ) {
+                        Text(
+                            text = "Yes, Request Deletion",
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFD32F2F)
+                        )
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showDeleteConfirmationDialog = false }
+                    ) {
+                        Text(
+                            text = "Cancel",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        }
+
+        // Dialog for Deletion Noted
+        if (showDeletionNotedDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeletionNotedDialog = false },
+                title = {
+                    Text(
+                        text = "Request Noted",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                },
+                text = {
+                    Text(
+                        text = "Your deletion request has been noted. A member of our clinical and support team will contact you to confirm identity and proceed safely. No data has been deleted at this time.",
+                        fontSize = 13.5.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = { showDeletionNotedDialog = false }
+                    ) {
+                        Text(
+                            text = "OK",
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                },
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        }
     }
 }
 
@@ -710,12 +1133,17 @@ private fun PrivacyPreferenceRow(
     subtitle: String,
     icon: @Composable () -> Unit,
     iconBg: Color,
+    onClick: (() -> Unit)? = null,
     trailingContent: @Composable () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 10.dp),
+            .clip(RoundedCornerShape(12.dp))
+            .then(
+                if (onClick != null) Modifier.clickable { onClick() } else Modifier
+            )
+            .padding(vertical = 10.dp, horizontal = if (onClick != null) 6.dp else 0.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -757,12 +1185,92 @@ private fun PrivacyPreferenceRow(
 }
 
 @Composable
+private fun ReminderSwitchRow(
+    title: String,
+    description: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable { onCheckedChange(!checked) }
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = title,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MomoraPurpleText
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = description,
+                fontSize = 11.5.sp,
+                color = MomoraBodyMuted
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = MomoraPurplePrimary,
+                uncheckedThumbColor = Color.White,
+                uncheckedTrackColor = Color(0xFFD4C8DA)
+            )
+        )
+    }
+}
+
+@Composable
+private fun TrashIcon(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val strokeWidth = 1.8.dp.toPx()
+
+        // Can body
+        val canPath = Path().apply {
+            moveTo(w * 0.25f, h * 0.35f)
+            lineTo(w * 0.30f, h * 0.85f)
+            lineTo(w * 0.70f, h * 0.85f)
+            lineTo(w * 0.75f, h * 0.35f)
+        }
+        drawPath(canPath, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round))
+
+        // Lid
+        drawLine(
+            color = color,
+            start = Offset(w * 0.18f, h * 0.35f),
+            end = Offset(w * 0.82f, h * 0.35f),
+            strokeWidth = strokeWidth,
+            cap = StrokeCap.Round
+        )
+
+        // Handle
+        val handlePath = Path().apply {
+            moveTo(w * 0.38f, h * 0.35f)
+            lineTo(w * 0.38f, h * 0.22f)
+            lineTo(w * 0.62f, h * 0.22f)
+            lineTo(w * 0.62f, h * 0.35f)
+        }
+        drawPath(handlePath, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round))
+    }
+}
+
+@Composable
 private fun FormFieldLabel(text: String) {
     Text(
         text = text,
         fontSize = 13.sp,
         fontWeight = FontWeight.Bold,
-        color = MomoraPurpleText
+        color = MaterialTheme.colorScheme.onBackground
     )
     Spacer(modifier = Modifier.height(5.dp))
 }
@@ -779,8 +1287,8 @@ private fun CustomInputField(
             .fillMaxWidth()
             .height(48.dp)
             .clip(RoundedCornerShape(14.dp))
-            .background(Color.White)
-            .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp))
             .padding(horizontal = 14.dp),
         contentAlignment = Alignment.CenterStart
     ) {
@@ -788,7 +1296,7 @@ private fun CustomInputField(
             Text(
                 text = placeholder,
                 fontSize = 13.5.sp,
-                color = Color(0xFFA098A6)
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
         }
         BasicTextField(
@@ -799,7 +1307,7 @@ private fun CustomInputField(
             textStyle = TextStyle(
                 fontSize = 13.5.sp,
                 fontWeight = FontWeight.Normal,
-                color = MomoraPurpleText
+                color = MaterialTheme.colorScheme.onSurface
             ),
             modifier = Modifier.fillMaxWidth()
         )
@@ -817,8 +1325,8 @@ private fun DashboardBottomNavBar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
-            .border(1.dp, Color(0xFFF0E8F4), RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
             .padding(top = 8.dp, bottom = 4.dp)
     ) {
         Row(
@@ -830,31 +1338,31 @@ private fun DashboardBottomNavBar(
                 label = "Home",
                 isSelected = selectedIndex == 0,
                 onClick = { onTabSelected(0) },
-                icon = { HomeNavIcon(color = if (selectedIndex == 0) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { HomeNavIcon(color = if (selectedIndex == 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp)) }
             )
             NavTabItem(
                 label = "Track",
                 isSelected = selectedIndex == 1,
                 onClick = { onTabSelected(1) },
-                icon = { TrackNavIcon(color = if (selectedIndex == 1) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { TrackNavIcon(color = if (selectedIndex == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp)) }
             )
             NavTabItem(
                 label = "AI",
                 isSelected = selectedIndex == 2,
                 onClick = { onTabSelected(2) },
-                icon = { SparklesIcon(color = if (selectedIndex == 2) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { SparklesIcon(color = if (selectedIndex == 2) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp)) }
             )
             NavTabItem(
                 label = "Care",
                 isSelected = selectedIndex == 3,
                 onClick = { onTabSelected(3) },
-                icon = { CareNavIcon(color = if (selectedIndex == 3) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { CareNavIcon(color = if (selectedIndex == 3) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp)) }
             )
             NavTabItem(
                 label = "Profile",
                 isSelected = selectedIndex == 4,
                 onClick = { onTabSelected(4) },
-                icon = { UserNavIcon(color = if (selectedIndex == 4) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { UserNavIcon(color = if (selectedIndex == 4) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp)) }
             )
         }
 
@@ -866,7 +1374,7 @@ private fun DashboardBottomNavBar(
                 .width(134.dp)
                 .height(4.dp)
                 .clip(RoundedCornerShape(50))
-                .background(Color(0xFF333333))
+                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
         )
     }
 }
@@ -887,7 +1395,7 @@ private fun NavTabItem(
         Box(
             modifier = Modifier
                 .clip(CircleShape)
-                .background(if (isSelected) Color(0xFFF4ECF8) else Color.Transparent)
+                .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
                 .padding(horizontal = 14.dp, vertical = 4.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -900,7 +1408,7 @@ private fun NavTabItem(
             text = label,
             fontSize = 10.5.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-            color = if (isSelected) MomoraPurplePrimary else MomoraBodyMuted
+            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

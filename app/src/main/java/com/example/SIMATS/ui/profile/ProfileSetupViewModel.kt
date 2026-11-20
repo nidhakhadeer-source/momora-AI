@@ -20,6 +20,13 @@ class ProfileSetupViewModel(
     val uiState: StateFlow<ProfileSetupUiState> = _uiState.asStateFlow()
 
     init {
+        _uiState.value = _uiState.value.copy(
+            reminderSummary = SessionManager.getReminderSummary(),
+            medicationReminders = SessionManager.getReminderMedication(),
+            appointmentReminders = SessionManager.getReminderAppointments(),
+            weeklyDevelopmentReminders = SessionManager.getReminderWeeklyUpdates(),
+            appTheme = SessionManager.getAppTheme()
+        )
         loadProfileData()
     }
 
@@ -64,7 +71,25 @@ class ProfileSetupViewModel(
             ProfileSetupUiEvent.OnBackClicked -> {}
             ProfileSetupUiEvent.OnNotificationClicked -> {}
             ProfileSetupUiEvent.OnReminderPreferencesClicked -> {}
+            is ProfileSetupUiEvent.OnReminderPreferencesSaved -> {
+                SessionManager.saveReminderPreferences(
+                    medication = event.medication,
+                    appointments = event.appointments,
+                    weeklyUpdates = event.weeklyUpdates
+                )
+                val summary = SessionManager.getReminderSummary()
+                _uiState.value = _uiState.value.copy(
+                    medicationReminders = event.medication,
+                    appointmentReminders = event.appointments,
+                    weeklyDevelopmentReminders = event.weeklyUpdates,
+                    reminderSummary = summary
+                )
+            }
             ProfileSetupUiEvent.OnExportHealthInfoClicked -> {}
+            is ProfileSetupUiEvent.OnThemeSelected -> {
+                SessionManager.setAppTheme(event.theme)
+                _uiState.value = _uiState.value.copy(appTheme = event.theme)
+            }
             ProfileSetupUiEvent.OnLogoutClicked -> {
                 SessionManager.clearSession()
                 _uiState.value = _uiState.value.copy(isLoggedOut = true)
@@ -112,6 +137,11 @@ class ProfileSetupViewModel(
                             address = userAddress,
                             profilePhotoUrl = userPhoto,
                             isCareTeamSharingOn = profile.isCareTeamSharingOn,
+                            reminderSummary = SessionManager.getReminderSummary(),
+                            medicationReminders = SessionManager.getReminderMedication(),
+                            appointmentReminders = SessionManager.getReminderAppointments(),
+                            weeklyDevelopmentReminders = SessionManager.getReminderWeeklyUpdates(),
+                            appTheme = SessionManager.getAppTheme(),
                             isLoading = false,
                             errorMessage = null
                         )

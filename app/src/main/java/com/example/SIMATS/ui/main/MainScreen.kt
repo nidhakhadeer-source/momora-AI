@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -167,7 +168,7 @@ fun MainScreenContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MomoraScreenBackground)
+            .background(MaterialTheme.colorScheme.background)
             .statusBarsPadding()
             .navigationBarsPadding(),
         verticalArrangement = Arrangement.SpaceBetween
@@ -184,11 +185,11 @@ fun MainScreenContent(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(MomoraIconBtnBg),
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
                 TopBarHeartIcon(
-                    color = MomoraPurplePrimary,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -201,7 +202,7 @@ fun MainScreenContent(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
-                        .background(MomoraPurplePrimary)
+                        .background(MaterialTheme.colorScheme.primary)
                         .clickable { onProfileClick() },
                     contentAlignment = Alignment.Center
                 ) {
@@ -209,7 +210,7 @@ fun MainScreenContent(
                         text = "Dr",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
                 Box(
@@ -238,7 +239,7 @@ fun MainScreenContent(
                     contentAlignment = Alignment.Center
                 ) {
                     BellIcon(
-                        color = MomoraPurplePrimary,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -260,14 +261,14 @@ fun MainScreenContent(
                         .padding(vertical = 48.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = MomoraPurplePrimary)
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 }
             } else if (uiState.errorMessage != null && data == null) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
-                        .background(Color.White)
+                        .background(MaterialTheme.colorScheme.surface)
                         .border(1.dp, Color(0xFFF2DEDE), RoundedCornerShape(16.dp))
                         .padding(20.dp),
                     contentAlignment = Alignment.Center
@@ -283,7 +284,7 @@ fun MainScreenContent(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(50))
-                                .background(MomoraPurplePrimary)
+                                .background(MaterialTheme.colorScheme.primary)
                                 .clickable { onRetryClick() }
                                 .padding(horizontal = 20.dp, vertical = 8.dp),
                             contentAlignment = Alignment.Center
@@ -292,7 +293,7 @@ fun MainScreenContent(
                                 text = "Retry",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                     }
@@ -323,7 +324,7 @@ fun MainScreenContent(
                                 text = "Retry",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MomoraPurplePrimary,
+                                color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.clickable { onRetryClick() }
                             )
                         }
@@ -334,7 +335,7 @@ fun MainScreenContent(
                     text = "Good morning, ${(data?.doctorName ?: "Dr Chen").sanitizeDoctorText()}",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MomoraPurpleDark
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
             Spacer(modifier = Modifier.height(2.dp))
@@ -342,7 +343,7 @@ fun MainScreenContent(
             Text(
                 text = "${(data?.dateText ?: "Tuesday, 27 Oct 2026").sanitizeDoctorText()} · ${(data?.clinicName ?: "Willow Maternity Clinic").sanitizeDoctorText()}",
                 fontSize = 12.sp,
-                color = MomoraBodyMuted
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -352,7 +353,7 @@ fun MainScreenContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(18.dp))
-                    .background(MomoraMintBadgeBg)
+                    .background(MaterialTheme.colorScheme.primaryContainer)
                     .clickable { onViewAssignedPatientsClick() }
                     .padding(16.dp)
             ) {
@@ -361,7 +362,7 @@ fun MainScreenContent(
                         text = "${data?.assignedPatientsCount ?: 18} assigned patients",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1E2C28)
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -369,7 +370,7 @@ fun MainScreenContent(
                     Text(
                         text = "Pre-connected, consent-based care overview.",
                         fontSize = 12.sp,
-                        color = Color(0xFF43524E)
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                     )
                 }
             }
@@ -386,7 +387,7 @@ fun MainScreenContent(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(16.dp))
-                        .background(MomoraLavenderCircleBg)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                         .clickable { onScheduleClick() }
                         .padding(14.dp)
                 ) {
@@ -395,20 +396,20 @@ fun MainScreenContent(
                             text = "Visits today",
                             fontSize = 11.5.sp,
                             fontWeight = FontWeight.Medium,
-                            color = MomoraPurplePrimary
+                            color = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "${data?.visitsTodayCount ?: 6}",
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MomoraPurpleDark
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = "${data?.upcomingVisitsCount ?: 4} upcoming · ${data?.completedVisitsCount ?: 2} completed",
                             fontSize = 10.5.sp,
-                            color = MomoraBodyMuted
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -418,7 +419,7 @@ fun MainScreenContent(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(16.dp))
-                        .background(MomoraPinkCircleBg)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
                         .clickable { onViewAssignedPatientsClick() }
                         .padding(14.dp)
                 ) {
@@ -427,20 +428,20 @@ fun MainScreenContent(
                             text = "To review",
                             fontSize = 11.5.sp,
                             fontWeight = FontWeight.Medium,
-                            color = MomoraBodyMuted
+                            color = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "${data?.toReviewCount ?: 2}",
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MomoraPurpleDark
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = "routine report updates",
                             fontSize = 10.5.sp,
-                            color = MomoraBodyMuted
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -458,14 +459,14 @@ fun MainScreenContent(
                     text = "Needs your review",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MomoraPurpleDark
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Text(
                     text = "View patients",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
-                    color = MomoraPurplePrimary,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.clickable { onViewAssignedPatientsClick() }
                 )
             }
@@ -478,8 +479,8 @@ fun MainScreenContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
-                        .background(Color.White)
-                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.surface)
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
                         .padding(20.dp),
                     contentAlignment = Alignment.Center
                 ) {
@@ -488,13 +489,13 @@ fun MainScreenContent(
                             text = "No items to review",
                             fontSize = 13.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MomoraPurpleDark
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "New lab and ultrasound reports requiring your review will appear here.",
                             fontSize = 11.5.sp,
-                            color = MomoraBodyMuted
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -503,8 +504,8 @@ fun MainScreenContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
-                        .background(Color.White)
-                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.surface)
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
                         .padding(horizontal = 14.dp, vertical = 6.dp)
                 ) {
                     data?.reviewItems?.forEachIndexed { index, item ->
@@ -531,14 +532,14 @@ fun MainScreenContent(
                     text = "Next appointment",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MomoraPurpleDark
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 Text(
                     text = "Schedule",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
-                    color = MomoraPurplePrimary,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.clickable { onScheduleClick() }
                 )
             }
@@ -551,8 +552,8 @@ fun MainScreenContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Color.White)
-                    .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.surface)
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
                     .clickable { onNextAppointmentClick() }
                     .padding(14.dp)
             ) {
@@ -569,10 +570,10 @@ fun MainScreenContent(
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFFEDE4F0)),
+                                .background(MaterialTheme.colorScheme.surfaceVariant),
                             contentAlignment = Alignment.Center
                         ) {
-                            VideoIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp))
+                            VideoIcon(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                         }
 
                         Spacer(modifier = Modifier.width(12.dp))
@@ -582,13 +583,13 @@ fun MainScreenContent(
                                 text = (nextAppt?.patientName ?: "Nora Williams").sanitizeDoctorText(),
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MomoraPurpleDark
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "${(nextAppt?.timeText ?: "Today, 11:30").sanitizeDoctorText()} · ${(nextAppt?.visitType ?: "Routine antenatal").sanitizeDoctorText()} · ${(nextAppt?.mode ?: "Video").sanitizeDoctorText()}",
                                 fontSize = 11.5.sp,
-                                color = MomoraBodyMuted
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -597,7 +598,7 @@ fun MainScreenContent(
                         text = "›",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color(0xFF8C7F92)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -609,7 +610,7 @@ fun MainScreenContent(
             Text(
                 text = rawFutureNote.sanitizeDoctorText(),
                 fontSize = 11.5.sp,
-                color = MomoraBodyMuted
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(18.dp))
@@ -620,7 +621,7 @@ fun MainScreenContent(
                     .fillMaxWidth()
                     .height(50.dp)
                     .clip(RoundedCornerShape(50))
-                    .background(MomoraPurplePrimary)
+                    .background(MaterialTheme.colorScheme.primary)
                     .clickable { onViewAssignedPatientsClick() },
                 contentAlignment = Alignment.Center
             ) {
@@ -631,7 +632,7 @@ fun MainScreenContent(
                         text = "View assigned patients",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
@@ -646,7 +647,7 @@ fun MainScreenContent(
             Text(
                 text = "Clinical decisions remain with the treating care team.",
                 fontSize = 11.sp,
-                color = MomoraFooterText,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -684,10 +685,10 @@ private fun DoctorReviewRow(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFEDE4F0)),
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
-                DocumentIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp))
+                DocumentIcon(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
             }
 
             Spacer(modifier = Modifier.width(12.dp))
@@ -697,13 +698,13 @@ private fun DoctorReviewRow(
                     text = item.patientName.sanitizeDoctorText(),
                     fontSize = 13.5.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MomoraPurpleText
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = "${item.gestationalAge.sanitizeDoctorText()} · ${item.reportType.sanitizeDoctorText()}",
                     fontSize = 11.5.sp,
-                    color = MomoraBodyMuted
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -711,14 +712,14 @@ private fun DoctorReviewRow(
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(50))
-                .background(Color(0xFFF4ECF8))
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
                 .padding(horizontal = 14.dp, vertical = 5.dp)
         ) {
             Text(
                 text = "Review",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
-                color = MomoraPurplePrimary
+                color = MaterialTheme.colorScheme.primary
             )
         }
     }
@@ -732,11 +733,17 @@ private fun DoctorBottomNavBar(
     selectedIndex: Int,
     onTabSelected: (Int) -> Unit
 ) {
+    val navSurface = MaterialTheme.colorScheme.surface
+    val navBorder = MaterialTheme.colorScheme.outlineVariant
+    val indicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val mutedColor = MaterialTheme.colorScheme.onSurfaceVariant
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
-            .border(1.dp, Color(0xFFF0E8F4), RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+            .background(navSurface)
+            .border(1.dp, navBorder, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
             .padding(top = 8.dp, bottom = 4.dp)
     ) {
         Row(
@@ -748,25 +755,25 @@ private fun DoctorBottomNavBar(
                 label = "Home",
                 isSelected = selectedIndex == 0,
                 onClick = { onTabSelected(0) },
-                icon = { HomeNavIcon(color = if (selectedIndex == 0) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { HomeNavIcon(color = if (selectedIndex == 0) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) }
             )
             NavTabItem(
                 label = "Patients",
                 isSelected = selectedIndex == 1,
                 onClick = { onTabSelected(1) },
-                icon = { PeopleNavIcon(color = if (selectedIndex == 1) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { PeopleNavIcon(color = if (selectedIndex == 1) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) }
             )
             NavTabItem(
                 label = "Schedule",
                 isSelected = selectedIndex == 2,
                 onClick = { onTabSelected(2) },
-                icon = { CalendarNavIcon(color = if (selectedIndex == 2) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { CalendarNavIcon(color = if (selectedIndex == 2) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) }
             )
             NavTabItem(
                 label = "Advice",
                 isSelected = selectedIndex == 3,
                 onClick = { onTabSelected(3) },
-                icon = { ChatNavIcon(color = if (selectedIndex == 3) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { ChatNavIcon(color = if (selectedIndex == 3) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) }
             )
         }
 
@@ -778,7 +785,7 @@ private fun DoctorBottomNavBar(
                 .width(134.dp)
                 .height(4.dp)
                 .clip(RoundedCornerShape(50))
-                .background(Color(0xFF333333))
+                .background(indicatorColor)
         )
     }
 }
@@ -790,6 +797,10 @@ private fun NavTabItem(
     onClick: () -> Unit,
     icon: @Composable () -> Unit
 ) {
+    val activeBg = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+    val activeColor = MaterialTheme.colorScheme.primary
+    val inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -799,7 +810,7 @@ private fun NavTabItem(
         Box(
             modifier = Modifier
                 .clip(CircleShape)
-                .background(if (isSelected) Color(0xFFF4ECF8) else Color.Transparent)
+                .background(if (isSelected) activeBg else Color.Transparent)
                 .padding(horizontal = 14.dp, vertical = 4.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -812,7 +823,7 @@ private fun NavTabItem(
             text = label,
             fontSize = 10.5.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-            color = if (isSelected) MomoraPurplePrimary else MomoraBodyMuted
+            color = if (isSelected) activeColor else inactiveColor
         )
     }
 }

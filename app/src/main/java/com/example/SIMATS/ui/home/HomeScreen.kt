@@ -24,6 +24,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -188,7 +189,7 @@ fun HomeScreenContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MomoraScreenBackground)
+            .background(MaterialTheme.colorScheme.background)
             .statusBarsPadding()
             .navigationBarsPadding(),
         verticalArrangement = Arrangement.SpaceBetween
@@ -205,11 +206,11 @@ fun HomeScreenContent(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(MomoraIconBtnBg),
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
                 TopBarHeartIcon(
-                    color = MomoraPurplePrimary,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -222,7 +223,7 @@ fun HomeScreenContent(
                 contentAlignment = Alignment.Center
             ) {
                 BellIcon(
-                    color = MomoraPurplePrimary,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -236,7 +237,7 @@ fun HomeScreenContent(
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = MomoraPurplePrimary)
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else if (uiState.errorMessage != null && data == null) {
             Box(
@@ -254,7 +255,7 @@ fun HomeScreenContent(
                         text = "Unable to load dashboard",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MomoraPurpleDark
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
@@ -267,7 +268,7 @@ fun HomeScreenContent(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(50))
-                            .background(MomoraPurplePrimary)
+                            .background(MaterialTheme.colorScheme.primary)
                             .clickable { onRetryClick() }
                             .padding(horizontal = 24.dp, vertical = 10.dp),
                         contentAlignment = Alignment.Center
@@ -276,7 +277,7 @@ fun HomeScreenContent(
                             text = "Retry",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 }
@@ -294,7 +295,7 @@ fun HomeScreenContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFFFFF0F0))
+                            .background(MaterialTheme.colorScheme.surfaceVariant)
                             .border(1.dp, Color(0xFFFFD2D2), RoundedCornerShape(12.dp))
                             .padding(12.dp)
                     ) {
@@ -314,7 +315,7 @@ fun HomeScreenContent(
                                 text = "Retry",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MomoraPurplePrimary,
+                                color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.clickable { onRetryClick() }
                             )
                         }
@@ -327,7 +328,7 @@ fun HomeScreenContent(
                     text = "Good morning, ${data?.patientName ?: "Maya"}",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MomoraPurpleDark
+                    color = MaterialTheme.colorScheme.onBackground
                 )
 
                 Spacer(modifier = Modifier.height(2.dp))
@@ -335,7 +336,7 @@ fun HomeScreenContent(
                 Text(
                     text = data?.dateText ?: "Tuesday, 27 Oct 2026 · A little care, every day.",
                     fontSize = 12.5.sp,
-                    color = MomoraBodyMuted
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -343,11 +344,12 @@ fun HomeScreenContent(
                 // Pregnancy Summary Card (Feature 2)
                 Card(
                     shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(containerColor = MomoraPinkCircleBg),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(18.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(18.dp))
                         .clickable { onPregnancyDetailsClick() }
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
@@ -361,7 +363,7 @@ fun HomeScreenContent(
                                     text = data?.trimesterText ?: "SECOND TRIMESTER",
                                     fontSize = 10.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = MomoraPurplePrimary,
+                                    color = MaterialTheme.colorScheme.primary,
                                     letterSpacing = 0.5.sp
                                 )
 
@@ -371,7 +373,7 @@ fun HomeScreenContent(
                                     text = data?.gestationalAgeText ?: "24 weeks, 3 days",
                                     fontSize = 23.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = MomoraPurpleDark
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
 
                                 Spacer(modifier = Modifier.height(6.dp))
@@ -393,14 +395,14 @@ fun HomeScreenContent(
                                         text = cleanedDueText,
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = MomoraPurplePrimary
+                                        color = MaterialTheme.colorScheme.primary
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
                                         text = "›",
                                         fontSize = 16.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = MomoraPurplePrimary
+                                        color = MaterialTheme.colorScheme.primary
                                     )
                                 }
                             }
@@ -410,12 +412,12 @@ fun HomeScreenContent(
                                 modifier = Modifier
                                     .size(48.dp)
                                     .clip(CircleShape)
-                                    .background(Color.White)
-                                    .border(1.dp, Color(0xFFF0E4EC), CircleShape),
+                                    .background(MaterialTheme.colorScheme.surface)
+                                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
                                 BabyFaceIcon(
-                                    color = MomoraPurplePrimary,
+                                    color = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(24.dp)
                                 )
                             }
@@ -429,14 +431,14 @@ fun HomeScreenContent(
                                 .fillMaxWidth()
                                 .height(6.dp)
                                 .clip(RoundedCornerShape(50))
-                                .background(Color(0xFFEFE8F4))
+                                .background(MaterialTheme.colorScheme.outlineVariant)
                         ) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth((data?.progressPercent ?: 0.60f).coerceIn(0.05f, 1f))
                                     .height(6.dp)
                                     .clip(RoundedCornerShape(50))
-                                    .background(MomoraPurplePrimary)
+                                    .background(MaterialTheme.colorScheme.primary)
                             )
                         }
                     }
@@ -452,11 +454,12 @@ fun HomeScreenContent(
                     // Blood Pressure Card
                     Card(
                         shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = MomoraMintBadgeBg),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(16.dp))
+                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
                             .clickable { onBloodPressureClick() }
                     ) {
                         Column(
@@ -473,13 +476,13 @@ fun HomeScreenContent(
                                     text = "Blood pressure",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = Color(0xFF334440)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
                                     text = "›",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF556662)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
 
@@ -489,7 +492,7 @@ fun HomeScreenContent(
                                 text = data?.bloodPressureValue ?: "112/72",
                                 fontSize = 22.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF1E2C28)
+                                color = MaterialTheme.colorScheme.onSurface
                             )
 
                             Spacer(modifier = Modifier.height(3.dp))
@@ -497,7 +500,7 @@ fun HomeScreenContent(
                             Text(
                                 text = data?.bloodPressureTime ?: "mmHg · Today, 08:15",
                                 fontSize = 10.5.sp,
-                                color = Color(0xFF5A6B66)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -505,11 +508,12 @@ fun HomeScreenContent(
                     // Weight Card
                     Card(
                         shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = MomoraLavenderCircleBg),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(16.dp))
+                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
                             .clickable { onWeightClick() }
                     ) {
                         Column(
@@ -526,13 +530,13 @@ fun HomeScreenContent(
                                     text = "Weight",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = MomoraPurplePrimary
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                                 Text(
                                     text = "›",
                                     fontSize = 16.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = MomoraPurplePrimary
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                             }
 
@@ -547,7 +551,7 @@ fun HomeScreenContent(
                                 text = weightDisplay,
                                 fontSize = 22.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MomoraPurpleDark
+                                color = MaterialTheme.colorScheme.onSurface
                             )
 
                             Spacer(modifier = Modifier.height(3.dp))
@@ -555,7 +559,7 @@ fun HomeScreenContent(
                             Text(
                                 text = data?.weightTime ?: "kg · Today, 08:10",
                                 fontSize = 10.5.sp,
-                                color = MomoraBodyMuted
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -573,14 +577,14 @@ fun HomeScreenContent(
                         text = "Your daily care",
                         fontSize = 15.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MomoraPurpleDark
+                        color = MaterialTheme.colorScheme.onBackground
                     )
 
                     Text(
                         text = "View all",
                         fontSize = 12.5.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = MomoraPurplePrimary,
+                        color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier
                             .clip(RoundedCornerShape(6.dp))
                             .clickable { onViewAllDailyCareClick() }
@@ -598,11 +602,11 @@ fun HomeScreenContent(
                     if (data?.dailyCareItems.isNullOrEmpty()) {
                         Card(
                             shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                             elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
                                 .padding(20.dp)
                         ) {
                             Column(
@@ -613,13 +617,13 @@ fun HomeScreenContent(
                                     text = "No daily care tasks for today",
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = MomoraPurpleDark
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = "You're all caught up with your daily routine.",
                                     fontSize = 12.sp,
-                                    color = MomoraBodyMuted
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -641,7 +645,7 @@ fun HomeScreenContent(
                     text = "Explore your care",
                     fontSize = 15.5.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MomoraPurpleDark
+                    color = MaterialTheme.colorScheme.onBackground
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -652,13 +656,13 @@ fun HomeScreenContent(
                 ) {
                     ExploreCard(
                         title = "Baby growth",
-                        icon = { BabyFaceIcon(color = MomoraPurplePrimary, modifier = Modifier.size(20.dp)) },
+                        icon = { BabyFaceIcon(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp)) },
                         onClick = onBabyGrowthClick,
                         modifier = Modifier.weight(1f)
                     )
                     ExploreCard(
                         title = "Nutrition",
-                        icon = { NutritionIcon(color = MomoraPurplePrimary, modifier = Modifier.size(20.dp)) },
+                        icon = { NutritionIcon(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp)) },
                         onClick = onNutritionClick,
                         modifier = Modifier.weight(1f)
                     )
@@ -669,11 +673,11 @@ fun HomeScreenContent(
                 // Doctor Advice Card (Feature 5: Fixed alignment, no arrow overlap)
                 Card(
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
                         .clip(RoundedCornerShape(16.dp))
                         .clickable { onDoctorAdviceClick() }
                 ) {
@@ -692,11 +696,11 @@ fun HomeScreenContent(
                                 modifier = Modifier
                                     .size(40.dp)
                                     .clip(CircleShape)
-                                    .background(MomoraLavenderCircleBg),
+                                    .background(MaterialTheme.colorScheme.surfaceVariant),
                                 contentAlignment = Alignment.Center
                             ) {
                                 DoctorAdviceCardIcon(
-                                    color = MomoraPurplePrimary,
+                                    color = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
@@ -708,14 +712,14 @@ fun HomeScreenContent(
                                     text = "Doctor advice",
                                     fontSize = 14.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = MomoraPurpleDark
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = "View clinical guidance & care plans from your doctor",
                                     fontSize = 11.5.sp,
                                     lineHeight = 16.sp,
-                                    color = MomoraBodyMuted
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -726,7 +730,7 @@ fun HomeScreenContent(
                             text = "›",
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color(0xFF8C7F92)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -736,11 +740,11 @@ fun HomeScreenContent(
                 // Medical Reports Card (Shortcut to MedicalReportsScreen)
                 Card(
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
                         .clip(RoundedCornerShape(16.dp))
                         .clickable { onMedicalReportsClick() }
                 ) {
@@ -759,11 +763,11 @@ fun HomeScreenContent(
                                 modifier = Modifier
                                     .size(40.dp)
                                     .clip(CircleShape)
-                                    .background(Color(0xFFEDE4F0)),
+                                    .background(MaterialTheme.colorScheme.surfaceVariant),
                                 contentAlignment = Alignment.Center
                             ) {
                                 MedicalReportCardIcon(
-                                    color = MomoraPurplePrimary,
+                                    color = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
@@ -775,14 +779,14 @@ fun HomeScreenContent(
                                     text = "Medical reports",
                                     fontSize = 14.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = MomoraPurpleDark
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = "Upload, view and manage ultrasound and lab reports",
                                     fontSize = 11.5.sp,
                                     lineHeight = 16.sp,
-                                    color = MomoraBodyMuted
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -793,7 +797,7 @@ fun HomeScreenContent(
                             text = "›",
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color(0xFF8C7F92)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -824,11 +828,11 @@ private fun DailyCareCardItem(
 
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
             .clip(RoundedCornerShape(16.dp))
             .clickable { onClick() }
     ) {
@@ -850,17 +854,16 @@ private fun DailyCareCardItem(
                         .background(
                             when {
                                 item.isTaken -> MomoraMintBadgeBg
-                                item.isAppointment -> Color(0xFFF4ECF8)
-                                else -> Color(0xFFEDE4F0)
+                                else -> MaterialTheme.colorScheme.surfaceVariant
                             }
                         ),
                     contentAlignment = Alignment.Center
                 ) {
                     if (item.isAppointment) {
-                        CalendarIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp))
+                        CalendarIcon(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                     } else {
                         PillCapsuleIcon(
-                            color = if (item.isTaken) MomoraMintBadgeText else MomoraPurplePrimary,
+                            color = if (item.isTaken) MomoraMintBadgeText else MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -885,35 +888,35 @@ private fun DailyCareCardItem(
                             text = appointmentTitle,
                             fontSize = 13.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MomoraPurpleText
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = doctorAndClinic,
                             fontSize = 11.5.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = MomoraPurplePrimary
+                            color = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = item.subtitle,
                             fontSize = 11.sp,
                             lineHeight = 15.sp,
-                            color = MomoraBodyMuted
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     } else {
                         Text(
                             text = item.title,
                             fontSize = 13.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MomoraPurpleText
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = item.subtitle,
                             fontSize = 11.5.sp,
                             lineHeight = 15.sp,
-                            color = MomoraBodyMuted
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -943,14 +946,14 @@ private fun DailyCareCardItem(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(50))
-                                .background(Color(0xFFF4ECF8))
+                                .background(MaterialTheme.colorScheme.surfaceVariant)
                                 .padding(horizontal = 8.dp, vertical = 3.dp)
                         ) {
                             Text(
                                 text = mode,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MomoraPurplePrimary
+                                color = MaterialTheme.colorScheme.primary
                             )
                         }
                         Spacer(modifier = Modifier.width(6.dp))
@@ -959,7 +962,7 @@ private fun DailyCareCardItem(
                         text = "›",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color(0xFF8C7F92)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -979,10 +982,10 @@ private fun ExploreCard(
 ) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = modifier
-            .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
             .clip(RoundedCornerShape(16.dp))
             .clickable { onClick() }
     ) {
@@ -997,7 +1000,7 @@ private fun ExploreCard(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFF4ECF8)),
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
                 icon()
@@ -1007,7 +1010,7 @@ private fun ExploreCard(
                 text = title,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                color = MomoraPurpleDark,
+                color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             )
         }
@@ -1025,8 +1028,8 @@ private fun DashboardBottomNavBar(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
-            .border(1.dp, Color(0xFFF0E8F4), RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+            .background(MaterialTheme.colorScheme.surface)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
             .padding(top = 8.dp, bottom = 4.dp)
     ) {
         Row(
@@ -1038,31 +1041,31 @@ private fun DashboardBottomNavBar(
                 label = "Home",
                 isSelected = selectedIndex == 0,
                 onClick = { onTabSelected(0) },
-                icon = { HomeNavIcon(color = if (selectedIndex == 0) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { HomeNavIcon(color = if (selectedIndex == 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp)) }
             )
             NavTabItem(
                 label = "Track",
                 isSelected = selectedIndex == 1,
                 onClick = { onTabSelected(1) },
-                icon = { TrackNavIcon(color = if (selectedIndex == 1) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { TrackNavIcon(color = if (selectedIndex == 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp)) }
             )
             NavTabItem(
                 label = "AI",
                 isSelected = selectedIndex == 2,
                 onClick = { onTabSelected(2) },
-                icon = { SparklesIcon(color = if (selectedIndex == 2) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { SparklesIcon(color = if (selectedIndex == 2) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp)) }
             )
             NavTabItem(
                 label = "Care",
                 isSelected = selectedIndex == 3,
                 onClick = { onTabSelected(3) },
-                icon = { CareNavIcon(color = if (selectedIndex == 3) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { CareNavIcon(color = if (selectedIndex == 3) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp)) }
             )
             NavTabItem(
                 label = "Profile",
                 isSelected = selectedIndex == 4,
                 onClick = { onTabSelected(4) },
-                icon = { UserNavIcon(color = if (selectedIndex == 4) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { UserNavIcon(color = if (selectedIndex == 4) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp)) }
             )
         }
 
@@ -1075,7 +1078,7 @@ private fun DashboardBottomNavBar(
                 .width(134.dp)
                 .height(4.dp)
                 .clip(RoundedCornerShape(50))
-                .background(Color(0xFF333333))
+                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
         )
     }
 }
@@ -1090,26 +1093,17 @@ private fun NavTabItem(
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
+            .clip(RoundedCornerShape(8.dp))
             .clickable { onClick() }
             .padding(horizontal = 8.dp, vertical = 4.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .clip(CircleShape)
-                .background(if (isSelected) Color(0xFFF4ECF8) else Color.Transparent)
-                .padding(horizontal = 14.dp, vertical = 4.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            icon()
-        }
-
-        Spacer(modifier = Modifier.height(2.dp))
-
+        icon()
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = label,
             fontSize = 10.5.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-            color = if (isSelected) MomoraPurplePrimary else MomoraBodyMuted
+            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
