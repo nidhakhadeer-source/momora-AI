@@ -24,10 +24,11 @@ object ThemeManager {
     @Composable
     fun isDarkTheme(): Boolean {
         val theme by SessionManager.themeFlow.collectAsState()
-        return when (theme) {
+        val isSystemDark = isSystemInDarkTheme()
+        return when (theme.uppercase()) {
             "DARK" -> true
             "LIGHT" -> false
-            else -> isSystemInDarkTheme()
+            else -> isSystemDark
         }
     }
 }

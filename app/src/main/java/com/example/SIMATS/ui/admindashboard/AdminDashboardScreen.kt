@@ -61,6 +61,7 @@ import com.example.SIMATS.data.model.AdminDashboardData
 import com.example.SIMATS.data.model.NotificationItem
 import com.example.SIMATS.data.repository.NotificationStateManager
 import com.example.SIMATS.ui.components.formatErrorMessage
+import com.example.SIMATS.ui.theme.MomoraPurplePrimary
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -595,6 +596,38 @@ fun AdminDashboardScreenContent(
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // "+ Add Doctor" Action Button
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(MomoraPurplePrimary)
+                        .clickable { safeNavigate(onAddDoctorClick) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "+",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Add Doctor",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
                         )
                     }
                 }

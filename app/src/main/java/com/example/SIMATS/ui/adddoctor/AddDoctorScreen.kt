@@ -55,6 +55,7 @@ import com.example.SIMATS.ui.theme.MomoraPurpleDark
 import com.example.SIMATS.ui.theme.MomoraPurplePrimary
 import com.example.SIMATS.ui.theme.MomoraPurpleText
 import com.example.SIMATS.ui.theme.MomoraScreenBackground
+import com.example.SIMATS.ui.theme.ThemeManager
 
 @Composable
 fun AddDoctorScreen(
@@ -117,6 +118,7 @@ fun AddDoctorScreenContent(
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
+    val isDark = ThemeManager.isDarkTheme()
 
     Column(
         modifier = modifier
@@ -144,7 +146,7 @@ fun AddDoctorScreenContent(
                     text = "←",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Medium,
-                    color = MomoraPurpleText
+                    color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleText
                 )
             }
 
@@ -156,7 +158,7 @@ fun AddDoctorScreenContent(
                 contentAlignment = Alignment.Center
             ) {
                 BellIcon(
-                    color = MomoraPurplePrimary,
+                    color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -174,7 +176,7 @@ fun AddDoctorScreenContent(
                 text = "Add a doctor",
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
-                color = MomoraPurpleDark
+                color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -182,7 +184,7 @@ fun AddDoctorScreenContent(
             Text(
                 text = "Admin / Doctor management / New account",
                 fontSize = 12.sp,
-                color = MomoraBodyMuted
+                color = if (isDark) Color(0xFFB5ACB9) else MomoraBodyMuted
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -191,14 +193,14 @@ fun AddDoctorScreenContent(
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(50))
-                    .background(Color(0xFFF4ECF8))
+                    .background(if (isDark) Color(0xFF28212F) else Color(0xFFF4ECF8))
                     .padding(horizontal = 12.dp, vertical = 5.dp)
             ) {
                 Text(
                     text = "ADMIN-ONLY ACCOUNT CREATION",
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MomoraPurplePrimary,
+                    color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary,
                     letterSpacing = 0.5.sp
                 )
             }
@@ -257,7 +259,7 @@ fun AddDoctorScreenContent(
                 text = "Doctor's full name",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                color = MomoraPurpleDark
+                color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -266,8 +268,8 @@ fun AddDoctorScreenContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(14.dp))
-                    .background(Color.White)
-                    .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
+                    .background(if (isDark) Color(0xFF1F1A24) else Color.White)
+                    .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
                     .padding(horizontal = 14.dp, vertical = 12.dp)
             ) {
                 BasicTextField(
@@ -278,7 +280,7 @@ fun AddDoctorScreenContent(
                     textStyle = TextStyle(
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
-                        color = MomoraPurpleDark
+                        color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -291,7 +293,7 @@ fun AddDoctorScreenContent(
                 text = "Work email",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                color = MomoraPurpleDark
+                color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -300,8 +302,8 @@ fun AddDoctorScreenContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(14.dp))
-                    .background(Color.White)
-                    .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
+                    .background(if (isDark) Color(0xFF1F1A24) else Color.White)
+                    .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
                     .padding(horizontal = 14.dp, vertical = 12.dp)
             ) {
                 Row(
@@ -318,7 +320,7 @@ fun AddDoctorScreenContent(
                             textStyle = TextStyle(
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = MomoraPurpleDark
+                                color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
                             ),
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -326,7 +328,7 @@ fun AddDoctorScreenContent(
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    MailIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp))
+                    MailIcon(color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary, modifier = Modifier.size(16.dp))
                 }
             }
 
@@ -343,7 +345,7 @@ fun AddDoctorScreenContent(
                         text = "Specialty",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MomoraPurpleDark
+                        color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
                     )
 
                     Spacer(modifier = Modifier.height(6.dp))
@@ -352,8 +354,8 @@ fun AddDoctorScreenContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(14.dp))
-                            .background(Color.White)
-                            .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
+                            .background(if (isDark) Color(0xFF1F1A24) else Color.White)
+                            .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
                             .padding(horizontal = 14.dp, vertical = 12.dp)
                     ) {
                         BasicTextField(
@@ -364,7 +366,7 @@ fun AddDoctorScreenContent(
                             textStyle = TextStyle(
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = MomoraPurpleDark
+                                color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
                             ),
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -377,7 +379,7 @@ fun AddDoctorScreenContent(
                         text = "License ID",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MomoraPurpleDark
+                        color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
                     )
 
                     Spacer(modifier = Modifier.height(6.dp))
@@ -386,8 +388,8 @@ fun AddDoctorScreenContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(14.dp))
-                            .background(Color.White)
-                            .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
+                            .background(if (isDark) Color(0xFF1F1A24) else Color.White)
+                            .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
                             .padding(horizontal = 14.dp, vertical = 12.dp)
                     ) {
                         BasicTextField(
@@ -398,7 +400,7 @@ fun AddDoctorScreenContent(
                             textStyle = TextStyle(
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = MomoraPurpleDark
+                                color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
                             ),
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -413,7 +415,7 @@ fun AddDoctorScreenContent(
                 text = "Clinic",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                color = MomoraPurpleDark
+                color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -422,8 +424,8 @@ fun AddDoctorScreenContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(14.dp))
-                    .background(Color.White)
-                    .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
+                    .background(if (isDark) Color(0xFF1F1A24) else Color.White)
+                    .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
                     .padding(horizontal = 14.dp, vertical = 12.dp)
             ) {
                 Row(
@@ -435,14 +437,14 @@ fun AddDoctorScreenContent(
                         text = uiState.clinicInput,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
-                        color = MomoraPurpleDark
+                        color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
                     )
 
                     Text(
                         text = "∨",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MomoraPurplePrimary
+                        color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary
                     )
                 }
             }
@@ -503,7 +505,7 @@ fun AddDoctorScreenContent(
                     text = "Send a secure, time-limited activation invitation. Requires password setup and MFA.",
                     fontSize = 11.5.sp,
                     lineHeight = 15.sp,
-                    color = MomoraPurpleDark
+                    color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
                 )
             }
 
@@ -514,7 +516,7 @@ fun AddDoctorScreenContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFFF4ECF8))
+                    .background(if (isDark) Color(0xFF241C2A) else Color(0xFFF4ECF8))
                     .padding(horizontal = 14.dp, vertical = 11.dp)
             ) {
                 Row(
@@ -524,11 +526,11 @@ fun AddDoctorScreenContent(
                         modifier = Modifier
                             .size(28.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFFEBE0F2)),
+                            .background(if (isDark) Color(0xFF3B2745) else Color(0xFFEBE0F2)),
                         contentAlignment = Alignment.Center
                     ) {
                         ShieldIcon(
-                            color = MomoraPurplePrimary,
+                            color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary,
                             modifier = Modifier.size(13.dp)
                         )
                     }
@@ -539,7 +541,7 @@ fun AddDoctorScreenContent(
                         text = "Verify identity and license before creating access. No patient records are assigned by default.",
                         fontSize = 11.5.sp,
                         lineHeight = 15.sp,
-                        color = MomoraPurplePrimary,
+                        color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -600,11 +602,18 @@ private fun AdminBottomNavBar(
     selectedIndex: Int,
     onTabSelected: (Int) -> Unit
 ) {
+    val isDark = ThemeManager.isDarkTheme()
+    val navSurface = if (isDark) Color(0xFF1F1A24) else Color.White
+    val navBorder = if (isDark) Color(0xFF332A3B) else Color(0xFFF0E8F4)
+    val indicatorColor = if (isDark) Color(0xFF4A3857) else Color(0xFF333333)
+    val primaryColor = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary
+    val mutedColor = if (isDark) Color(0xFF8E8394) else MomoraBodyMuted
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
-            .border(1.dp, Color(0xFFF0E8F4), RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+            .background(navSurface)
+            .border(1.dp, navBorder, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
             .padding(top = 8.dp, bottom = 4.dp)
     ) {
         Row(
@@ -616,25 +625,29 @@ private fun AdminBottomNavBar(
                 label = "Overview",
                 isSelected = selectedIndex == 0,
                 onClick = { onTabSelected(0) },
-                icon = { OverviewNavIcon(color = if (selectedIndex == 0) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { OverviewNavIcon(color = if (selectedIndex == 0) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) },
+                isDark = isDark
             )
             NavTabItem(
                 label = "Doctors",
                 isSelected = selectedIndex == 1,
                 onClick = { onTabSelected(1) },
-                icon = { StethoscopeIcon(color = if (selectedIndex == 1) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { StethoscopeIcon(color = if (selectedIndex == 1) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) },
+                isDark = isDark
             )
             NavTabItem(
                 label = "Patients",
                 isSelected = selectedIndex == 2,
                 onClick = { onTabSelected(2) },
-                icon = { PeopleNavIcon(color = if (selectedIndex == 2) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { PeopleNavIcon(color = if (selectedIndex == 2) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) },
+                isDark = isDark
             )
             NavTabItem(
                 label = "Settings",
                 isSelected = selectedIndex == 3,
                 onClick = { onTabSelected(3) },
-                icon = { SettingsNavIcon(color = if (selectedIndex == 3) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { SettingsNavIcon(color = if (selectedIndex == 3) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) },
+                isDark = isDark
             )
         }
 
@@ -646,7 +659,7 @@ private fun AdminBottomNavBar(
                 .width(134.dp)
                 .height(4.dp)
                 .clip(RoundedCornerShape(50))
-                .background(Color(0xFF333333))
+                .background(indicatorColor)
         )
     }
 }
@@ -656,8 +669,12 @@ private fun NavTabItem(
     label: String,
     isSelected: Boolean,
     onClick: () -> Unit,
-    icon: @Composable () -> Unit
+    icon: @Composable () -> Unit,
+    isDark: Boolean = false
 ) {
+    val activeColor = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary
+    val inactiveColor = if (isDark) Color(0xFF8E8394) else MomoraBodyMuted
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -667,7 +684,7 @@ private fun NavTabItem(
         Box(
             modifier = Modifier
                 .clip(CircleShape)
-                .background(if (isSelected) Color(0xFFF4ECF8) else Color.Transparent)
+                .background(if (isSelected) (if (isDark) Color(0xFF28212F) else Color(0xFFF4ECF8)) else Color.Transparent)
                 .padding(horizontal = 14.dp, vertical = 4.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -680,7 +697,7 @@ private fun NavTabItem(
             text = label,
             fontSize = 10.5.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-            color = if (isSelected) MomoraPurplePrimary else MomoraBodyMuted
+            color = if (isSelected) activeColor else inactiveColor
         )
     }
 }

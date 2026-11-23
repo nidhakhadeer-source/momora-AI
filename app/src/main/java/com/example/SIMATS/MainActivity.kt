@@ -16,7 +16,8 @@ class MainActivity : ComponentActivity() {
         ThemeManager.init(this)
         enableEdgeToEdge()
         setContent {
-            MomoraAITheme {
+            val isDark = ThemeManager.isDarkTheme()
+            MomoraAITheme(darkTheme = isDark) {
                 AppNavHost()
             }
         }

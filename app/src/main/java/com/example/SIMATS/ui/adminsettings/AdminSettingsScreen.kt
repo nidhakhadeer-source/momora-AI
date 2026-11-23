@@ -51,6 +51,7 @@ import com.example.SIMATS.ui.theme.MomoraPurpleDark
 import com.example.SIMATS.ui.theme.MomoraPurplePrimary
 import com.example.SIMATS.ui.theme.MomoraPurpleText
 import com.example.SIMATS.ui.theme.MomoraScreenBackground
+import com.example.SIMATS.ui.theme.ThemeManager
 
 @Composable
 fun AdminSettingsScreen(
@@ -125,6 +126,7 @@ fun AdminSettingsScreenContent(
 ) {
     val scrollState = rememberScrollState()
     val data = uiState.settingsData
+    val isDark = ThemeManager.isDarkTheme()
 
     Column(
         modifier = modifier
@@ -155,7 +157,7 @@ fun AdminSettingsScreenContent(
                         text = "←",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Medium,
-                        color = MomoraPurpleText
+                        color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleText
                     )
                 }
 
@@ -166,13 +168,13 @@ fun AdminSettingsScreenContent(
                         text = "momora AI",
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MomoraPurpleDark
+                        color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
                     )
                     Text(
                         text = "ADMIN / 30",
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MomoraBodyMuted,
+                        color = if (isDark) Color(0xFFB5ACB9) else MomoraBodyMuted,
                         letterSpacing = 0.5.sp
                     )
                 }
@@ -186,7 +188,7 @@ fun AdminSettingsScreenContent(
                 contentAlignment = Alignment.Center
             ) {
                 BellIcon(
-                    color = MomoraPurplePrimary,
+                    color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -204,7 +206,7 @@ fun AdminSettingsScreenContent(
                 text = "Admin settings",
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
-                color = MomoraPurpleDark
+                color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -269,7 +271,7 @@ fun AdminSettingsScreenContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(18.dp))
-                    .background(Color(0xFFF4ECF8))
+                    .background(if (isDark) Color(0xFF241C2A) else Color(0xFFF4ECF8))
                     .clickable { onProfileClick() }
                     .padding(14.dp)
             ) {
@@ -283,7 +285,7 @@ fun AdminSettingsScreenContent(
                             text = "PRE-CREATED ADMIN ACCOUNT",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MomoraBodyMuted,
+                            color = if (isDark) Color(0xFFB5ACB9) else MomoraBodyMuted,
                             letterSpacing = 0.5.sp
                         )
 
@@ -293,7 +295,7 @@ fun AdminSettingsScreenContent(
                             text = data?.adminName ?: "Alex Morgan",
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MomoraPurpleDark
+                            color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
                         )
 
                         Spacer(modifier = Modifier.height(2.dp))
@@ -301,7 +303,7 @@ fun AdminSettingsScreenContent(
                         Text(
                             text = data?.adminEmailText ?: "admin@willow.example · Administrator",
                             fontSize = 11.5.sp,
-                            color = MomoraPurplePrimary
+                            color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary
                         )
                     }
 
@@ -309,7 +311,7 @@ fun AdminSettingsScreenContent(
                         text = "›",
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Medium,
-                        color = MomoraPurplePrimary
+                        color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary
                     )
                 }
             }
@@ -321,7 +323,7 @@ fun AdminSettingsScreenContent(
                 text = "Security",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
-                color = MomoraPurpleDark
+                color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -331,8 +333,8 @@ fun AdminSettingsScreenContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Color.White)
-                    .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                    .background(if (isDark) Color(0xFF1F1A24) else Color.White)
+                    .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
                     .padding(horizontal = 14.dp, vertical = 4.dp)
             ) {
                 // Change password
@@ -423,7 +425,7 @@ fun AdminSettingsScreenContent(
                 text = "Administration",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
-                color = MomoraPurpleDark
+                color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -433,21 +435,21 @@ fun AdminSettingsScreenContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Color.White)
-                    .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                    .background(if (isDark) Color(0xFF1F1A24) else Color.White)
+                    .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
                     .padding(horizontal = 14.dp, vertical = 4.dp)
             ) {
                 SettingsRowItem(
                     title = "Admin profile",
                     subtitle = "View and manage administrator account details.",
-                    icon = { DocumentIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp)) },
+                    icon = { DocumentIcon(color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary, modifier = Modifier.size(16.dp)) },
                     onClick = onProfileClick
                 )
 
                 SettingsRowItem(
                     title = "Account access audit",
                     subtitle = "Review account changes and sign-ins.",
-                    icon = { DocumentIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp)) },
+                    icon = { DocumentIcon(color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary, modifier = Modifier.size(16.dp)) },
                     onClick = onAccountAccessAuditClick
                 )
             }
@@ -509,6 +511,7 @@ private fun SettingsRowItem(
     icon: @Composable () -> Unit,
     onClick: () -> Unit
 ) {
+    val isDark = ThemeManager.isDarkTheme()
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -525,7 +528,7 @@ private fun SettingsRowItem(
                 modifier = Modifier
                     .size(36.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFEDE4F0)),
+                    .background(if (isDark) Color(0xFF28212F) else Color(0xFFEDE4F0)),
                 contentAlignment = Alignment.Center
             ) {
                 icon()
@@ -538,13 +541,13 @@ private fun SettingsRowItem(
                     text = title,
                     fontSize = 13.5.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MomoraPurpleText
+                    color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleText
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = subtitle,
                     fontSize = 11.5.sp,
-                    color = MomoraBodyMuted
+                    color = if (isDark) Color(0xFFB5ACB9) else MomoraBodyMuted
                 )
             }
         }
@@ -553,7 +556,7 @@ private fun SettingsRowItem(
             text = "›",
             fontSize = 20.sp,
             fontWeight = FontWeight.Medium,
-            color = Color(0xFF8C7F92)
+            color = if (isDark) Color(0xFF8E8394) else Color(0xFF8C7F92)
         )
     }
 }
@@ -566,11 +569,18 @@ private fun AdminBottomNavBar(
     selectedIndex: Int,
     onTabSelected: (Int) -> Unit
 ) {
+    val isDark = ThemeManager.isDarkTheme()
+    val navSurface = if (isDark) Color(0xFF1F1A24) else Color.White
+    val navBorder = if (isDark) Color(0xFF332A3B) else Color(0xFFF0E8F4)
+    val indicatorColor = if (isDark) Color(0xFF4A3857) else Color(0xFF333333)
+    val primaryColor = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary
+    val mutedColor = if (isDark) Color(0xFF8E8394) else MomoraBodyMuted
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
-            .border(1.dp, Color(0xFFF0E8F4), RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+            .background(navSurface)
+            .border(1.dp, navBorder, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
             .padding(top = 8.dp, bottom = 4.dp)
     ) {
         Row(
@@ -582,25 +592,29 @@ private fun AdminBottomNavBar(
                 label = "Overview",
                 isSelected = selectedIndex == 0,
                 onClick = { onTabSelected(0) },
-                icon = { OverviewNavIcon(color = if (selectedIndex == 0) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { OverviewNavIcon(color = if (selectedIndex == 0) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) },
+                isDark = isDark
             )
             NavTabItem(
                 label = "Doctors",
                 isSelected = selectedIndex == 1,
                 onClick = { onTabSelected(1) },
-                icon = { StethoscopeIcon(color = if (selectedIndex == 1) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { StethoscopeIcon(color = if (selectedIndex == 1) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) },
+                isDark = isDark
             )
             NavTabItem(
                 label = "Patients",
                 isSelected = selectedIndex == 2,
                 onClick = { onTabSelected(2) },
-                icon = { PeopleNavIcon(color = if (selectedIndex == 2) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { PeopleNavIcon(color = if (selectedIndex == 2) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) },
+                isDark = isDark
             )
             NavTabItem(
                 label = "Settings",
                 isSelected = selectedIndex == 3,
                 onClick = { onTabSelected(3) },
-                icon = { SettingsNavIcon(color = if (selectedIndex == 3) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { SettingsNavIcon(color = if (selectedIndex == 3) primaryColor else mutedColor, modifier = Modifier.size(20.dp)) },
+                isDark = isDark
             )
         }
 
@@ -612,7 +626,7 @@ private fun AdminBottomNavBar(
                 .width(134.dp)
                 .height(4.dp)
                 .clip(RoundedCornerShape(50))
-                .background(Color(0xFF333333))
+                .background(indicatorColor)
         )
     }
 }
@@ -622,8 +636,12 @@ private fun NavTabItem(
     label: String,
     isSelected: Boolean,
     onClick: () -> Unit,
-    icon: @Composable () -> Unit
+    icon: @Composable () -> Unit,
+    isDark: Boolean = false
 ) {
+    val activeColor = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary
+    val inactiveColor = if (isDark) Color(0xFF8E8394) else MomoraBodyMuted
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
@@ -633,7 +651,7 @@ private fun NavTabItem(
         Box(
             modifier = Modifier
                 .clip(CircleShape)
-                .background(if (isSelected) Color(0xFFF4ECF8) else Color.Transparent)
+                .background(if (isSelected) (if (isDark) Color(0xFF28212F) else Color(0xFFF4ECF8)) else Color.Transparent)
                 .padding(horizontal = 14.dp, vertical = 4.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -646,7 +664,7 @@ private fun NavTabItem(
             text = label,
             fontSize = 10.5.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-            color = if (isSelected) MomoraPurplePrimary else MomoraBodyMuted
+            color = if (isSelected) activeColor else inactiveColor
         )
     }
 }
