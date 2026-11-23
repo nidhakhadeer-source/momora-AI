@@ -15,6 +15,8 @@ import com.example.SIMATS.ui.adddoctor.AddDoctorScreen
 import com.example.SIMATS.ui.adddoctor.AddDoctorViewModel
 import com.example.SIMATS.ui.admindashboard.AdminDashboardScreen
 import com.example.SIMATS.ui.admindashboard.AdminDashboardViewModel
+import com.example.SIMATS.ui.adminprofile.AdminProfileScreen
+import com.example.SIMATS.ui.adminprofile.AdminProfileViewModel
 import com.example.SIMATS.ui.adminsettings.AdminSettingsScreen
 import com.example.SIMATS.ui.adminsettings.AdminSettingsViewModel
 import com.example.SIMATS.ui.ai.AiChatScreen
@@ -115,7 +117,8 @@ private val AdminScreens: Set<Screen> = setOf(
     Screen.AddDoctor,
     Screen.ManageDoctors,
     Screen.ManagePatients,
-    Screen.AdminSettings
+    Screen.AdminSettings,
+    Screen.AdminProfile
 )
 
 /**
@@ -136,7 +139,7 @@ fun getSelectedNavIndexForScreen(screen: Screen): Int = when (screen) {
     Screen.Profile -> 4
 
     // Admin
-    Screen.AdminDashboard -> 0
+    Screen.AdminDashboard, Screen.AdminProfile -> 0
     Screen.ManageDoctors, Screen.AddDoctor -> 1
     Screen.ManagePatients -> 2
     Screen.AdminSettings -> 3
@@ -914,6 +917,9 @@ fun AppNavHost() {
                 onAddDoctorClick = {
                     currentScreen = Screen.AddDoctor
                 },
+                onProfileClick = {
+                    currentScreen = Screen.AdminProfile
+                },
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.AdminDashboard
@@ -985,6 +991,30 @@ fun AppNavHost() {
             val adminSettingsViewModel: AdminSettingsViewModel = viewModel()
             AdminSettingsScreen(
                 viewModel = adminSettingsViewModel,
+                selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
+                onNavigateBack = {
+                    currentScreen = Screen.AdminDashboard
+                },
+                onProfileClick = {
+                    currentScreen = Screen.AdminProfile
+                },
+                onLogoutSuccess = {
+                    currentScreen = Screen.RoleSelect
+                },
+                onNavTabSelected = { index ->
+                    when (index) {
+                        0 -> currentScreen = Screen.AdminDashboard
+                        1 -> currentScreen = Screen.ManageDoctors
+                        2 -> currentScreen = Screen.ManagePatients
+                        3 -> currentScreen = Screen.AdminSettings
+                    }
+                }
+            )
+        }
+        Screen.AdminProfile -> {
+            val adminProfileViewModel: AdminProfileViewModel = viewModel()
+            AdminProfileScreen(
+                viewModel = adminProfileViewModel,
                 selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.AdminDashboard

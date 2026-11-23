@@ -58,6 +58,7 @@ fun AdminSettingsScreen(
     modifier: Modifier = Modifier,
     selectedNavIndex: Int = 3,
     onNavigateBack: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
     onLogoutSuccess: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
@@ -71,7 +72,11 @@ fun AdminSettingsScreen(
         modifier = modifier,
         uiState = uiState,
         selectedNavIndex = selectedNavIndex,
-        onChangePasswordClick = { viewModel.onEvent(AdminSettingsUiEvent.OnChangePasswordClicked) },
+        onProfileClick = onProfileClick,
+        onChangePasswordClick = {
+            viewModel.onEvent(AdminSettingsUiEvent.OnChangePasswordClicked)
+            onProfileClick()
+        },
         onMfaClick = { viewModel.onEvent(AdminSettingsUiEvent.OnMfaClicked) },
         onSessionTimeoutClick = { viewModel.onEvent(AdminSettingsUiEvent.OnSessionTimeoutClicked) },
         onActiveSessionsClick = { viewModel.onEvent(AdminSettingsUiEvent.OnActiveSessionsClicked) },
@@ -105,6 +110,7 @@ fun AdminSettingsScreenContent(
             appVersionText = "Momora AI · v1.0.0 · Ends your session on this device."
         )
     ),
+    onProfileClick: () -> Unit = {},
     onChangePasswordClick: () -> Unit = {},
     onMfaClick: () -> Unit = {},
     onSessionTimeoutClick: () -> Unit = {},
@@ -264,31 +270,45 @@ fun AdminSettingsScreenContent(
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(18.dp))
                     .background(Color(0xFFF4ECF8))
+                    .clickable { onProfileClick() }
                     .padding(14.dp)
             ) {
-                Column {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "PRE-CREATED ADMIN ACCOUNT",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraBodyMuted,
+                            letterSpacing = 0.5.sp
+                        )
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Text(
+                            text = data?.adminName ?: "Alex Morgan",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurpleDark
+                        )
+
+                        Spacer(modifier = Modifier.height(2.dp))
+
+                        Text(
+                            text = data?.adminEmailText ?: "admin@willow.example · Administrator",
+                            fontSize = 11.5.sp,
+                            color = MomoraPurplePrimary
+                        )
+                    }
+
                     Text(
-                        text = "PRE-CREATED ADMIN ACCOUNT",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MomoraBodyMuted,
-                        letterSpacing = 0.5.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    Text(
-                        text = data?.adminName ?: "Alex Morgan",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MomoraPurpleDark
-                    )
-
-                    Spacer(modifier = Modifier.height(2.dp))
-
-                    Text(
-                        text = data?.adminEmailText ?: "admin@willow.example · Administrator",
-                        fontSize = 11.5.sp,
+                        text = "›",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Medium,
                         color = MomoraPurplePrimary
                     )
                 }
@@ -409,7 +429,7 @@ fun AdminSettingsScreenContent(
             Spacer(modifier = Modifier.height(10.dp))
 
             // Administration Container Card
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
@@ -417,6 +437,13 @@ fun AdminSettingsScreenContent(
                     .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
                     .padding(horizontal = 14.dp, vertical = 4.dp)
             ) {
+                SettingsRowItem(
+                    title = "Admin profile",
+                    subtitle = "View and manage administrator account details.",
+                    icon = { DocumentIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp)) },
+                    onClick = onProfileClick
+                )
+
                 SettingsRowItem(
                     title = "Account access audit",
                     subtitle = "Review account changes and sign-ins.",

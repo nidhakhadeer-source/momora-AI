@@ -63,6 +63,7 @@ fun AdminDashboardScreen(
     onManageDoctorsClick: () -> Unit = {},
     onManagePatientsClick: () -> Unit = {},
     onAddDoctorClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -83,6 +84,7 @@ fun AdminDashboardScreen(
             viewModel.onEvent(AdminDashboardUiEvent.OnAddDoctorClicked)
             onAddDoctorClick()
         },
+        onProfileClick = onProfileClick,
         onRetryClick = { viewModel.onEvent(AdminDashboardUiEvent.OnRetryClicked) },
         onNotificationClick = { viewModel.onEvent(AdminDashboardUiEvent.OnNotificationClicked) },
         onNavTabSelected = { index ->
@@ -111,6 +113,7 @@ fun AdminDashboardScreenContent(
     onManageDoctorsClick: () -> Unit = {},
     onManagePatientsClick: () -> Unit = {},
     onAddDoctorClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
     onRetryClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     selectedNavIndex: Int = 0,
@@ -148,17 +151,36 @@ fun AdminDashboardScreenContent(
                 )
             }
 
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .clickable { onNotificationClick() },
-                contentAlignment = Alignment.Center
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                BellIcon(
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(20.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .clickable { onNotificationClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    BellIcon(
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .clickable { onProfileClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "👤",
+                        fontSize = 18.sp
+                    )
+                }
             }
         }
 
