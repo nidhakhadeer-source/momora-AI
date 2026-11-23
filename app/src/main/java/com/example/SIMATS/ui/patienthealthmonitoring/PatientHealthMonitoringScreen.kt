@@ -48,6 +48,7 @@ import com.example.SIMATS.navigation.SelectedPatientHolder
 import com.example.SIMATS.ui.components.formatDoctorTime
 import com.example.SIMATS.ui.components.formatErrorMessage
 import com.example.SIMATS.ui.components.sanitizeDoctorText
+import com.example.SIMATS.ui.theme.ThemeManager
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraLavenderCircleBg
 import com.example.SIMATS.ui.theme.MomoraMintBadgeBg
@@ -129,6 +130,7 @@ fun PatientHealthMonitoringScreenContent(
     selectedNavIndex: Int = 1,
     onNavTabSelected: (Int) -> Unit = {}
 ) {
+    val isDark = ThemeManager.isDarkTheme()
     val scrollState = rememberScrollState()
     val data = uiState.monitoringData
     val resolvedPatientName = data?.patientName?.takeIf { it.isNotBlank() }
@@ -153,7 +155,7 @@ fun PatientHealthMonitoringScreenContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MomoraScreenBackground)
+            .background(if (isDark) Color(0xFF141218) else MomoraScreenBackground)
             .statusBarsPadding()
             .navigationBarsPadding(),
         verticalArrangement = Arrangement.SpaceBetween
@@ -251,7 +253,7 @@ fun PatientHealthMonitoringScreenContent(
                     text = "Health monitoring",
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MomoraPurpleDark
+                    color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
                 )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -259,7 +261,7 @@ fun PatientHealthMonitoringScreenContent(
             Text(
                 text = "Patient-entered readings · ${(data?.dateText ?: "27 Oct 2026").sanitizeDoctorText()}",
                 fontSize = 13.sp,
-                color = MomoraBodyMuted
+                color = if (isDark) Color(0xFFB5ACB9) else MomoraBodyMuted
             )
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -269,7 +271,8 @@ fun PatientHealthMonitoringScreenContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(18.dp))
-                    .background(Color(0xFFF4ECF8))
+                    .background(if (isDark) Color(0xFF1F1A24) else Color(0xFFF4ECF8))
+                    .border(1.dp, if (isDark) Color(0xFF332A3B) else Color.Transparent, RoundedCornerShape(18.dp))
                     .padding(14.dp)
             ) {
                 Row(
@@ -285,14 +288,14 @@ fun PatientHealthMonitoringScreenContent(
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
-                                .background(Color.White),
+                                .background(if (isDark) Color(0xFF2E2435) else Color.White),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = resolvedInitials,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MomoraPurplePrimary
+                                color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary
                             )
                         }
 
@@ -303,13 +306,13 @@ fun PatientHealthMonitoringScreenContent(
                                 text = resolvedPatientName.sanitizeDoctorText(),
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MomoraPurpleDark
+                                color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = "${(data?.gestationalAge ?: "24w 3d").sanitizeDoctorText()} · ${(data?.dueDateText ?: "Due 13 Feb 2027").sanitizeDoctorText()}",
                                 fontSize = 11.5.sp,
-                                color = MomoraBodyMuted
+                                color = if (isDark) Color(0xFFB5ACB9) else MomoraBodyMuted
                             )
                         }
                     }
@@ -318,7 +321,7 @@ fun PatientHealthMonitoringScreenContent(
                         text = data?.patientIdText ?: "P-13042",
                         fontSize = 11.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MomoraPurplePrimary
+                        color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary
                     )
                 }
             }
@@ -335,7 +338,8 @@ fun PatientHealthMonitoringScreenContent(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(16.dp))
-                        .background(MomoraMintBadgeBg)
+                        .background(if (isDark) Color(0xFF1D3328) else MomoraMintBadgeBg)
+                        .border(1.dp, if (isDark) Color(0xFF2C4D3D) else Color.Transparent, RoundedCornerShape(16.dp))
                         .clickable { onBpCardClick() }
                         .padding(14.dp)
                 ) {
@@ -349,13 +353,13 @@ fun PatientHealthMonitoringScreenContent(
                                 text = "Blood pressure",
                                 fontSize = 11.5.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = MomoraMintBadgeText
+                                color = if (isDark) Color(0xFF88D4A8) else MomoraMintBadgeText
                             )
                             Text(
                                 text = "›",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MomoraMintBadgeText
+                                color = if (isDark) Color(0xFF88D4A8) else MomoraMintBadgeText
                             )
                         }
                         Spacer(modifier = Modifier.height(4.dp))
@@ -368,13 +372,13 @@ fun PatientHealthMonitoringScreenContent(
                             text = bpVal,
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MomoraPurpleDark
+                            color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = data?.bpReadingTime?.let { "mmHg · ${it.formatDoctorTime()}" } ?: "mmHg · Tap to view",
                             fontSize = 10.5.sp,
-                            color = Color(0xFF43524E)
+                            color = if (isDark) Color(0xFF88D4A8) else Color(0xFF43524E)
                         )
                     }
                 }
@@ -384,7 +388,8 @@ fun PatientHealthMonitoringScreenContent(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(16.dp))
-                        .background(MomoraLavenderCircleBg)
+                        .background(if (isDark) Color(0xFF261F2C) else MomoraLavenderCircleBg)
+                        .border(1.dp, if (isDark) Color(0xFF45364E) else Color.Transparent, RoundedCornerShape(16.dp))
                         .clickable { onWeightCardClick() }
                         .padding(14.dp)
                 ) {
@@ -398,13 +403,13 @@ fun PatientHealthMonitoringScreenContent(
                                 text = "Weight",
                                 fontSize = 11.5.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = MomoraPurplePrimary
+                                color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary
                             )
                             Text(
                                 text = "›",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MomoraPurplePrimary
+                                color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary
                             )
                         }
                         Spacer(modifier = Modifier.height(4.dp))
@@ -413,13 +418,13 @@ fun PatientHealthMonitoringScreenContent(
                             text = wVal,
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MomoraPurpleDark
+                            color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = data?.weightReadingTime?.let { "kg · ${it.formatDoctorTime()}" } ?: "kg · Tap to view",
                             fontSize = 10.5.sp,
-                            color = MomoraBodyMuted
+                            color = if (isDark) Color(0xFFB5ACB9) else MomoraBodyMuted
                         )
                     }
                 }

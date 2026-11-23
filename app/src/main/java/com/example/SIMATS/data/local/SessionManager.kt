@@ -31,6 +31,7 @@ object SessionManager {
     private const val KEY_BLOOD_GROUP = "key_user_blood_group"
     private const val KEY_ADDRESS = "key_user_address"
     private const val KEY_PHOTO_URL = "key_user_photo_url"
+    private const val KEY_DOCTOR_LOCAL_PHOTO_PATH = "key_doctor_local_photo_path"
     private const val KEY_REMINDER_MEDICATION = "key_reminder_medication"
     private const val KEY_REMINDER_APPOINTMENTS = "key_reminder_appointments"
     private const val KEY_REMINDER_WEEKLY_UPDATES = "key_reminder_weekly_updates"
@@ -54,10 +55,14 @@ object SessionManager {
     private var memBloodGroup: String = "O positive"
     private var memAddress: String? = null
     private var memPhotoUrl: String? = null
+    private var memDoctorLocalPhotoPath: String? = null
     private var memAppTheme: String = "SYSTEM"
 
     private val _themeFlow = MutableStateFlow("SYSTEM")
     val themeFlow: StateFlow<String> = _themeFlow.asStateFlow()
+
+    private val _doctorPhotoFlow = MutableStateFlow<String?>(null)
+    val doctorPhotoFlow: StateFlow<String?> = _doctorPhotoFlow.asStateFlow()
 
     private val _sessionExpiredEvent = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     val sessionExpiredEvent: SharedFlow<Unit> = _sessionExpiredEvent.asSharedFlow()
@@ -73,6 +78,17 @@ object SessionManager {
             val savedTheme = sharedPreferences?.getString(KEY_APP_THEME, "SYSTEM") ?: "SYSTEM"
             memAppTheme = savedTheme
             _themeFlow.value = savedTheme
+
+            val localPath = sharedPreferences?.getString(KEY_DOCTOR_LOCAL_PHOTO_PATH, null)
+            val remoteUrl = sharedPreferences?.getString(KEY_PHOTO_URL, null)
+            memDoctorLocalPhotoPath = localPath
+            memPhotoUrl = remoteUrl
+            val effectivePhoto = if (!localPath.isNullOrBlank() && java.io.File(localPath).exists()) {
+                localPath
+            } else {
+                remoteUrl
+            }
+            _doctorPhotoFlow.value = effectivePhoto
         }
     }
 
@@ -216,6 +232,34 @@ object SessionManager {
                 .putString(KEY_PHOTO_URL, url)
                 .commit()
         }
+        _doctorPhotoFlow.value = getDoctorPhoto()
+    }
+
+    fun getDoctorPhoto(): String? {
+        val local = sharedPreferences?.getString(KEY_DOCTOR_LOCAL_PHOTO_PATH, memDoctorLocalPhotoPath) ?: memDoctorLocalPhotoPath
+        if (!local.isNullOrBlank() && java.io.File(local).exists()) {
+            return local
+        }
+        return getPhotoUrl()
+    }
+
+    fun setDoctorLocalPhotoPath(path: String?) {
+        memDoctorLocalPhotoPath = path
+        sharedPreferences?.let { prefs ->
+            prefs.edit()
+                .putString(KEY_DOCTOR_LOCAL_PHOTO_PATH, path)
+                .commit()
+        }
+        _doctorPhotoFlow.value = path ?: getPhotoUrl()
+    }
+
+    fun setDoctorPhoto(urlOrPath: String?) {
+        if (urlOrPath != null && (urlOrPath.startsWith("/") || urlOrPath.startsWith("file://"))) {
+            setDoctorLocalPhotoPath(urlOrPath.removePrefix("file://"))
+        } else {
+            setPhotoUrl(urlOrPath)
+            _doctorPhotoFlow.value = getDoctorPhoto()
+        }
     }
 
     fun saveUserProfileDetails(
@@ -270,6 +314,8 @@ object SessionManager {
         memBloodGroup = "O positive"
         memAddress = null
         memPhotoUrl = null
+        memDoctorLocalPhotoPath = null
+        _doctorPhotoFlow.value = null
         memRole = UserRole.PATIENT
         sharedPreferences?.let { prefs ->
             prefs.edit()
@@ -287,6 +333,7 @@ object SessionManager {
                 .remove(KEY_BLOOD_GROUP)
                 .remove(KEY_ADDRESS)
                 .remove(KEY_PHOTO_URL)
+                .remove(KEY_DOCTOR_LOCAL_PHOTO_PATH)
                 .commit()
         }
     }

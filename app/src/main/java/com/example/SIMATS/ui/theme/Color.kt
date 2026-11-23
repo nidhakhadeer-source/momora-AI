@@ -1,5 +1,6 @@
 package com.example.SIMATS.ui.theme
 
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 // Momora AI Brand Color Palette (Splash & App Theme)
@@ -20,7 +21,9 @@ val MomoraDotActive = Color(0xFF6E4F76)
 val MomoraDotInactive = Color(0xFFE7DFE8)
 
 val MomoraFooterText = Color(0xFF9C93A3)
-val MomoraScreenBackground = Color(0xFFFFFFFF)
+val MomoraScreenBackground: Color
+    @Composable
+    get() = if (ThemeManager.isDarkTheme()) Color(0xFF141218) else Color(0xFFFFFFFF)
 
 // Legacy / Extended Colors
 val MomoraTealPrimary = Color(0xFF235C53)

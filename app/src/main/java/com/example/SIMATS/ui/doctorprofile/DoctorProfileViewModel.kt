@@ -134,8 +134,23 @@ class DoctorProfileViewModel(
     }
 
     private fun uploadPhoto(uri: Uri, context: Context) {
+        var localPath: String? = null
+        try {
+            val avatarFile = java.io.File(context.filesDir, "doctor_profile_avatar.jpg")
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                avatarFile.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+            if (avatarFile.exists()) {
+                localPath = avatarFile.absolutePath
+                SessionManager.setDoctorLocalPhotoPath(localPath)
+            }
+        } catch (_: Exception) {}
+
         _uiState.value = _uiState.value.copy(
             localPhotoUri = uri,
+            photoUrl = localPath ?: _uiState.value.photoUrl,
             isUploadingPhoto = true,
             errorMessage = null,
             successMessage = null
@@ -144,6 +159,8 @@ class DoctorProfileViewModel(
             profileRepository.uploadProfilePhoto(context, uri).collect { result ->
                 result.fold(
                     onSuccess = { url ->
+                        SessionManager.setPhotoUrl(url)
+                        SessionManager.setDoctorPhoto(url)
                         _uiState.value = _uiState.value.copy(
                             isUploadingPhoto = false,
                             photoUrl = url,
@@ -182,6 +199,10 @@ class DoctorProfileViewModel(
     }
 
     private fun populateFromProfile(profile: DoctorProfileData) {
+        val effectivePhoto = profile.photoUrl?.takeIf { it.isNotBlank() } ?: SessionManager.getDoctorPhoto()
+        if (!effectivePhoto.isNullOrBlank()) {
+            SessionManager.setDoctorPhoto(effectivePhoto)
+        }
         _uiState.value = _uiState.value.copy(
             fullName = profile.fullName.ifBlank { SessionManager.getUserName() }.sanitizeDoctorText(),
             email = profile.email.ifBlank { SessionManager.getUserEmail() },
@@ -193,7 +214,7 @@ class DoctorProfileViewModel(
             address = (profile.address ?: "").sanitizeDoctorText(),
             qualification = (profile.qualification ?: "").sanitizeDoctorText(),
             experienceYears = profile.experienceYears?.toString() ?: "",
-            photoUrl = profile.photoUrl
+            photoUrl = effectivePhoto
         )
     }
 

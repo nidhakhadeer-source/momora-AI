@@ -57,6 +57,7 @@ import com.example.SIMATS.ui.theme.MomoraPurpleDark
 import com.example.SIMATS.ui.theme.MomoraPurplePrimary
 import com.example.SIMATS.ui.theme.MomoraPurpleText
 import com.example.SIMATS.ui.theme.MomoraScreenBackground
+import com.example.SIMATS.ui.theme.ThemeManager
 
 @Composable
 fun DoctorNotificationsScreen(
@@ -93,6 +94,7 @@ fun DoctorNotificationsScreenContent(
     onBackClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
+    val isDark = ThemeManager.isDarkTheme()
     val scrollState = rememberScrollState()
 
     val displayNotifications = when (uiState.selectedFilterTab) {
@@ -103,7 +105,7 @@ fun DoctorNotificationsScreenContent(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MomoraScreenBackground)
+            .background(if (isDark) Color(0xFF141218) else MomoraScreenBackground)
             .statusBarsPadding()
             .navigationBarsPadding(),
         verticalArrangement = Arrangement.SpaceBetween
@@ -120,7 +122,7 @@ fun DoctorNotificationsScreenContent(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(MomoraIconBtnBg)
+                    .background(if (isDark) Color(0xFF28212F) else MomoraIconBtnBg)
                     .clickable { onBackClick() },
                 contentAlignment = Alignment.Center
             ) {
@@ -128,7 +130,7 @@ fun DoctorNotificationsScreenContent(
                     text = "←",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium,
-                    color = MomoraPurpleText
+                    color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleText
                 )
             }
 
@@ -137,12 +139,12 @@ fun DoctorNotificationsScreenContent(
                     text = "Doctor Notifications",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MomoraPurpleDark
+                    color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
                 )
                 Text(
                     text = "Clinic alerts & patient updates",
                     fontSize = 11.5.sp,
-                    color = MomoraBodyMuted
+                    color = if (isDark) Color(0xFFB5ACB9) else MomoraBodyMuted
                 )
             }
 
@@ -150,11 +152,11 @@ fun DoctorNotificationsScreenContent(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFF4ECF8)),
+                    .background(if (isDark) Color(0xFF28212F) else Color(0xFFF4ECF8)),
                 contentAlignment = Alignment.Center
             ) {
                 BellIcon(
-                    color = MomoraPurplePrimary,
+                    color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary,
                     modifier = Modifier.size(20.dp)
                 )
                 if (uiState.unreadCount > 0) {
@@ -193,12 +195,14 @@ fun DoctorNotificationsScreenContent(
                     FilterChip(
                         label = "All (${uiState.notifications.size})",
                         isSelected = uiState.selectedFilterTab == 0,
-                        onClick = { onFilterTabSelected(0) }
+                        onClick = { onFilterTabSelected(0) },
+                        isDark = isDark
                     )
                     FilterChip(
                         label = "Unread (${uiState.unreadCount})",
                         isSelected = uiState.selectedFilterTab == 1,
-                        onClick = { onFilterTabSelected(1) }
+                        onClick = { onFilterTabSelected(1) },
+                        isDark = isDark
                     )
                 }
 
@@ -207,7 +211,7 @@ fun DoctorNotificationsScreenContent(
                         text = "Mark all read",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = MomoraPurplePrimary,
+                        color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary,
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
                             .clickable { onMarkAllReadClick() }
@@ -274,8 +278,8 @@ fun DoctorNotificationsScreenContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(16.dp))
-                            .background(Color.White)
-                            .border(1.dp, Color(0xFFF0E8F4), RoundedCornerShape(16.dp))
+                            .background(if (isDark) Color(0xFF1F1A24) else Color.White)
+                            .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFF0E8F4), RoundedCornerShape(16.dp))
                             .padding(32.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -284,11 +288,11 @@ fun DoctorNotificationsScreenContent(
                                 modifier = Modifier
                                     .size(56.dp)
                                     .clip(CircleShape)
-                                    .background(Color(0xFFF4ECF8)),
+                                    .background(if (isDark) Color(0xFF28212F) else Color(0xFFF4ECF8)),
                                 contentAlignment = Alignment.Center
                             ) {
                                 BellIcon(
-                                    color = MomoraPurplePrimary,
+                                    color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary,
                                     modifier = Modifier.size(28.dp)
                                 )
                             }
@@ -297,7 +301,7 @@ fun DoctorNotificationsScreenContent(
                                 text = "No notifications yet",
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MomoraPurpleDark
+                                color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
@@ -306,7 +310,7 @@ fun DoctorNotificationsScreenContent(
                                 else
                                     "You're all caught up with clinic updates and patient alerts.",
                                 fontSize = 12.sp,
-                                color = MomoraBodyMuted,
+                                color = if (isDark) Color(0xFFB5ACB9) else MomoraBodyMuted,
                                 textAlign = TextAlign.Center
                             )
                         }
@@ -339,15 +343,16 @@ fun DoctorNotificationsScreenContent(
 private fun FilterChip(
     label: String,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    isDark: Boolean = ThemeManager.isDarkTheme()
 ) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(if (isSelected) MomoraPurplePrimary else Color.White)
+            .background(if (isSelected) (if (isDark) Color(0xFF4A2F56) else MomoraPurplePrimary) else (if (isDark) Color(0xFF1F1A24) else Color.White))
             .border(
                 1.dp,
-                if (isSelected) MomoraPurplePrimary else Color(0xFFE2D9E8),
+                if (isSelected) (if (isDark) Color(0xFF6B457B) else MomoraPurplePrimary) else (if (isDark) Color(0xFF332A3B) else Color(0xFFE2D9E8)),
                 RoundedCornerShape(20.dp)
             )
             .clickable { onClick() }
@@ -357,7 +362,7 @@ private fun FilterChip(
             text = label,
             fontSize = 12.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-            color = if (isSelected) Color.White else MomoraPurpleDark
+            color = if (isSelected) Color.White else (if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark)
         )
     }
 }
@@ -367,23 +372,42 @@ private fun DoctorNotificationCardItem(
     item: NotificationItem,
     onClick: () -> Unit
 ) {
-    val cardBg = when (item.type) {
-        NotificationType.APPOINTMENT -> Color(0xFFF4ECF8)
-        NotificationType.REMINDER -> MomoraPinkCircleBg
-        NotificationType.REPORT_REVIEW -> MomoraMintBadgeBg
-        NotificationType.WEEKLY_DISCOVERY -> Color.White
+    val isDark = ThemeManager.isDarkTheme()
+    val cardBg = if (isDark) {
+        when (item.type) {
+            NotificationType.APPOINTMENT -> Color(0xFF28212F)
+            NotificationType.REMINDER -> Color(0xFF332029)
+            NotificationType.REPORT_REVIEW -> Color(0xFF1B2E26)
+            NotificationType.WEEKLY_DISCOVERY -> Color(0xFF1F1A24)
+        }
+    } else {
+        when (item.type) {
+            NotificationType.APPOINTMENT -> Color(0xFFF4ECF8)
+            NotificationType.REMINDER -> MomoraPinkCircleBg
+            NotificationType.REPORT_REVIEW -> MomoraMintBadgeBg
+            NotificationType.WEEKLY_DISCOVERY -> Color.White
+        }
     }
 
-    val iconBg = when (item.type) {
-        NotificationType.APPOINTMENT -> Color(0xFFEDE4F0)
-        NotificationType.REMINDER -> Color(0xFFF8E2E8)
-        NotificationType.REPORT_REVIEW -> Color(0xFFD4EFE3)
-        NotificationType.WEEKLY_DISCOVERY -> Color(0xFFEDE4F0)
+    val iconBg = if (isDark) {
+        when (item.type) {
+            NotificationType.APPOINTMENT -> Color(0xFF3B2E45)
+            NotificationType.REMINDER -> Color(0xFF452230)
+            NotificationType.REPORT_REVIEW -> Color(0xFF204234)
+            NotificationType.WEEKLY_DISCOVERY -> Color(0xFF2E2435)
+        }
+    } else {
+        when (item.type) {
+            NotificationType.APPOINTMENT -> Color(0xFFEDE4F0)
+            NotificationType.REMINDER -> Color(0xFFF8E2E8)
+            NotificationType.REPORT_REVIEW -> Color(0xFFD4EFE3)
+            NotificationType.WEEKLY_DISCOVERY -> Color(0xFFEDE4F0)
+        }
     }
 
     val tagColor = when (item.type) {
         NotificationType.REPORT_REVIEW -> MomoraMintBadgeText
-        else -> MomoraPurplePrimary
+        else -> if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary
     }
 
     Box(
@@ -393,7 +417,7 @@ private fun DoctorNotificationCardItem(
             .background(cardBg)
             .border(
                 1.dp,
-                if (item.type == NotificationType.WEEKLY_DISCOVERY) Color(0xFFEFE8F4) else Color.Transparent,
+                if (isDark) Color(0xFF332A3B) else if (item.type == NotificationType.WEEKLY_DISCOVERY) Color(0xFFEFE8F4) else Color.Transparent,
                 RoundedCornerShape(16.dp)
             )
             .clickable { onClick() }
@@ -416,10 +440,10 @@ private fun DoctorNotificationCardItem(
                     contentAlignment = Alignment.Center
                 ) {
                     when (item.type) {
-                        NotificationType.APPOINTMENT -> CalendarIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp))
-                        NotificationType.REMINDER -> PillCapsuleIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp))
+                        NotificationType.APPOINTMENT -> CalendarIcon(color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary, modifier = Modifier.size(16.dp))
+                        NotificationType.REMINDER -> PillCapsuleIcon(color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary, modifier = Modifier.size(16.dp))
                         NotificationType.REPORT_REVIEW -> DocumentIcon(color = MomoraMintBadgeText, modifier = Modifier.size(16.dp))
-                        NotificationType.WEEKLY_DISCOVERY -> SparklesIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp))
+                        NotificationType.WEEKLY_DISCOVERY -> SparklesIcon(color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary, modifier = Modifier.size(16.dp))
                     }
                 }
 
@@ -430,7 +454,7 @@ private fun DoctorNotificationCardItem(
                         text = item.title.sanitizeDoctorText(),
                         fontSize = 13.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MomoraPurpleDark
+                        color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
                     )
 
                     Spacer(modifier = Modifier.height(2.dp))
@@ -438,7 +462,7 @@ private fun DoctorNotificationCardItem(
                     Text(
                         text = item.subtitle.sanitizeDoctorText(),
                         fontSize = 11.5.sp,
-                        color = MomoraBodyMuted
+                        color = if (isDark) Color(0xFFB5ACB9) else MomoraBodyMuted
                     )
 
                     if (item.detailText.isNotEmpty()) {
@@ -446,7 +470,7 @@ private fun DoctorNotificationCardItem(
                         Text(
                             text = item.detailText.sanitizeDoctorText(),
                             fontSize = 11.sp,
-                            color = MomoraBodyMuted
+                            color = if (isDark) Color(0xFFB5ACB9) else MomoraBodyMuted
                         )
                     }
                 }
@@ -466,7 +490,7 @@ private fun DoctorNotificationCardItem(
                     text = "›",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color(0xFF8C7F92)
+                    color = if (isDark) Color(0xFFB5ACB9) else Color(0xFF8C7F92)
                 )
             }
         }
@@ -481,11 +505,18 @@ private fun DoctorBottomNavBar(
     selectedIndex: Int,
     onTabSelected: (Int) -> Unit
 ) {
+    val isDark = ThemeManager.isDarkTheme()
+    val navBg = if (isDark) Color(0xFF1E1A22) else Color.White
+    val navBorder = if (isDark) Color(0xFF2E2633) else Color(0xFFF0E8F4)
+    val activePillBg = if (isDark) Color(0xFF352B3C) else Color(0xFFF4ECF8)
+    val activeColor = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary
+    val inactiveColor = if (isDark) Color(0xFF8D8392) else MomoraBodyMuted
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
-            .border(1.dp, Color(0xFFF0E8F4), RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+            .background(navBg)
+            .border(1.dp, navBorder, RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
             .padding(top = 8.dp, bottom = 4.dp)
     ) {
         Row(
@@ -497,25 +528,37 @@ private fun DoctorBottomNavBar(
                 label = "Home",
                 isSelected = selectedIndex == 0,
                 onClick = { onTabSelected(0) },
-                icon = { HomeNavIcon(color = if (selectedIndex == 0) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { HomeNavIcon(color = if (selectedIndex == 0) activeColor else inactiveColor, modifier = Modifier.size(20.dp)) },
+                activePillBg = activePillBg,
+                activeColor = activeColor,
+                inactiveColor = inactiveColor
             )
             NavTabItem(
                 label = "Patients",
                 isSelected = selectedIndex == 1,
                 onClick = { onTabSelected(1) },
-                icon = { PeopleNavIcon(color = if (selectedIndex == 1) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { PeopleNavIcon(color = if (selectedIndex == 1) activeColor else inactiveColor, modifier = Modifier.size(20.dp)) },
+                activePillBg = activePillBg,
+                activeColor = activeColor,
+                inactiveColor = inactiveColor
             )
             NavTabItem(
                 label = "Schedule",
                 isSelected = selectedIndex == 2,
                 onClick = { onTabSelected(2) },
-                icon = { CalendarNavIcon(color = if (selectedIndex == 2) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { CalendarNavIcon(color = if (selectedIndex == 2) activeColor else inactiveColor, modifier = Modifier.size(20.dp)) },
+                activePillBg = activePillBg,
+                activeColor = activeColor,
+                inactiveColor = inactiveColor
             )
             NavTabItem(
                 label = "Advice",
                 isSelected = selectedIndex == 3,
                 onClick = { onTabSelected(3) },
-                icon = { ChatNavIcon(color = if (selectedIndex == 3) MomoraPurplePrimary else MomoraBodyMuted, modifier = Modifier.size(20.dp)) }
+                icon = { ChatNavIcon(color = if (selectedIndex == 3) activeColor else inactiveColor, modifier = Modifier.size(20.dp)) },
+                activePillBg = activePillBg,
+                activeColor = activeColor,
+                inactiveColor = inactiveColor
             )
         }
 
@@ -527,7 +570,7 @@ private fun DoctorBottomNavBar(
                 .width(134.dp)
                 .height(4.dp)
                 .clip(RoundedCornerShape(50))
-                .background(Color(0xFF333333))
+                .background(if (isDark) Color(0xFF4A4250) else Color(0xFF333333))
         )
     }
 }
@@ -537,7 +580,10 @@ private fun NavTabItem(
     label: String,
     isSelected: Boolean,
     onClick: () -> Unit,
-    icon: @Composable () -> Unit
+    icon: @Composable () -> Unit,
+    activePillBg: Color = Color(0xFFF4ECF8),
+    activeColor: Color = MomoraPurplePrimary,
+    inactiveColor: Color = MomoraBodyMuted
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -548,7 +594,7 @@ private fun NavTabItem(
         Box(
             modifier = Modifier
                 .clip(CircleShape)
-                .background(if (isSelected) Color(0xFFF4ECF8) else Color.Transparent)
+                .background(if (isSelected) activePillBg else Color.Transparent)
                 .padding(horizontal = 14.dp, vertical = 4.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -561,7 +607,7 @@ private fun NavTabItem(
             text = label,
             fontSize = 10.5.sp,
             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-            color = if (isSelected) MomoraPurplePrimary else MomoraBodyMuted
+            color = if (isSelected) activeColor else inactiveColor
         )
     }
 }

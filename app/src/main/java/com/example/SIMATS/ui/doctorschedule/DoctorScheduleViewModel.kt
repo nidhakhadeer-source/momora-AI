@@ -134,10 +134,25 @@ class DoctorScheduleViewModel(
             repository.getScheduleData(date).collect { result ->
                 result.fold(
                     onSuccess = { data ->
-                        val activeDate = data.selectedDate ?: date ?: _uiState.value.selectedDate
-                        val matchingIdx = findMatchingTabIndex(data.dateTabs, activeDate)
+                        val todayCal = Calendar.getInstance().apply {
+                            set(Calendar.HOUR_OF_DAY, 0)
+                            set(Calendar.MINUTE, 0)
+                            set(Calendar.SECOND, 0)
+                            set(Calendar.MILLISECOND, 0)
+                        }
+                        val todayYmd = SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).format(todayCal.time)
+                        val rawActiveDate = data.selectedDate ?: date ?: _uiState.value.selectedDate
+                        val activeDate = if (date == null && rawActiveDate != null && rawActiveDate < todayYmd) {
+                            todayYmd
+                        } else {
+                            rawActiveDate ?: todayYmd
+                        }
+
+                        val filteredTabs = filterAndGenerateUpcomingDateTabs(data.dateTabs, activeDate)
+                        val sanitizedData = data.copy(dateTabs = filteredTabs)
+                        val matchingIdx = findMatchingTabIndex(filteredTabs, activeDate)
                         _uiState.value = _uiState.value.copy(
-                            scheduleData = data,
+                            scheduleData = sanitizedData,
                             selectedDate = activeDate,
                             selectedDateTabIndex = if (matchingIdx >= 0) matchingIdx else 0,
                             isLoading = false,
@@ -153,6 +168,92 @@ class DoctorScheduleViewModel(
                 )
             }
         }
+    }
+
+    private fun filterAndGenerateUpcomingDateTabs(rawTabs: List<String>, activeDateStr: String?): List<String> {
+        val todayCal = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val currentYear = todayCal.get(Calendar.YEAR)
+        val sdfTab = SimpleDateFormat("dd MMM", Locale.ENGLISH)
+        val sdfYmd = SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
+
+        // Store distinct upcoming dates mapped by "yyyy-MM-dd"
+        val upcomingDateMap = linkedMapOf<String, Calendar>()
+
+        // 1. Pre-populate consecutive 21 upcoming days starting from TODAY (Day 0 = Current Date)
+        for (i in 0..20) {
+            val c = (todayCal.clone() as Calendar).apply {
+                add(Calendar.DAY_OF_YEAR, i)
+            }
+            val key = sdfYmd.format(c.time)
+            upcomingDateMap[key] = c
+        }
+
+        // 2. Parse rawTabs from backend: strictly exclude past dates, include any future appointment date
+        rawTabs.forEach { tab ->
+            try {
+                val clean = tab.trim()
+                val parts = clean.split(" ")
+                if (parts.size >= 2) {
+                    val day = parts[0].toIntOrNull()
+                    val monthStr = parts[1]
+                    if (day != null) {
+                        val sdfIn = SimpleDateFormat("d MMM yyyy", Locale.ENGLISH)
+                        val parsed = sdfIn.parse("$day $monthStr $currentYear")
+                        if (parsed != null) {
+                            val c = Calendar.getInstance().apply {
+                                time = parsed
+                                set(Calendar.HOUR_OF_DAY, 0)
+                                set(Calendar.MINUTE, 0)
+                                set(Calendar.SECOND, 0)
+                                set(Calendar.MILLISECOND, 0)
+                            }
+                            // Adjust for year rollover if tab is in early next year while today is late year
+                            val todayMonth = todayCal.get(Calendar.MONTH)
+                            val tabMonth = c.get(Calendar.MONTH)
+                            if (todayMonth >= Calendar.NOVEMBER && tabMonth <= Calendar.FEBRUARY) {
+                                c.set(Calendar.YEAR, currentYear + 1)
+                            }
+
+                            // Only keep dates that are >= today (remove previous dates)
+                            if (!c.before(todayCal)) {
+                                val key = sdfYmd.format(c.time)
+                                upcomingDateMap[key] = c
+                            }
+                        }
+                    }
+                }
+            } catch (_: Exception) {}
+        }
+
+        // 3. Ensure activeDateStr is present if >= today
+        if (!activeDateStr.isNullOrBlank()) {
+            try {
+                val d = sdfYmd.parse(activeDateStr)
+                if (d != null) {
+                    val c = Calendar.getInstance().apply {
+                        time = d
+                        set(Calendar.HOUR_OF_DAY, 0)
+                        set(Calendar.MINUTE, 0)
+                        set(Calendar.SECOND, 0)
+                        set(Calendar.MILLISECOND, 0)
+                    }
+                    if (!c.before(todayCal)) {
+                        val key = sdfYmd.format(c.time)
+                        upcomingDateMap[key] = c
+                    }
+                }
+            } catch (_: Exception) {}
+        }
+
+        // Return sorted list formatted as "dd MMM"
+        return upcomingDateMap.values
+            .sortedBy { it.timeInMillis }
+            .map { sdfTab.format(it.time) }
     }
 
     fun rescheduleAppointment(appointmentId: Int, newDate: String, newTime: String) {
@@ -185,9 +286,12 @@ class DoctorScheduleViewModel(
             val sdfIn = SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
             val d = sdfIn.parse(dateStr) ?: return 0
             val sdfTab = SimpleDateFormat("dd MMM", Locale.ENGLISH)
+            val sdfTabSingle = SimpleDateFormat("d MMM", Locale.ENGLISH)
             val targetTab = sdfTab.format(d)
+            val targetTabSingle = sdfTabSingle.format(d)
             val idx = tabs.indexOfFirst {
                 it.equals(targetTab, ignoreCase = true) ||
+                it.equals(targetTabSingle, ignoreCase = true) ||
                 it.trim().replace("0", "").equals(targetTab.trim().replace("0", ""), ignoreCase = true)
             }
             if (idx >= 0) idx else 0
@@ -198,16 +302,24 @@ class DoctorScheduleViewModel(
 
     private fun convertTabToDate(tabText: String, currentSelectedDate: String?): String {
         return try {
-            val year = if (!currentSelectedDate.isNullOrBlank() && currentSelectedDate.length >= 4) {
-                currentSelectedDate.substring(0, 4)
+            val todayCal = Calendar.getInstance()
+            val currentYear = todayCal.get(Calendar.YEAR)
+            val baseYear = if (!currentSelectedDate.isNullOrBlank() && currentSelectedDate.length >= 4) {
+                currentSelectedDate.substring(0, 4).toIntOrNull() ?: currentYear
             } else {
-                Calendar.getInstance().get(Calendar.YEAR).toString()
+                currentYear
             }
             val sdfIn = SimpleDateFormat("d MMM yyyy", Locale.ENGLISH)
-            val date = sdfIn.parse("${tabText.trim()} $year")
+            val date = sdfIn.parse("${tabText.trim()} $baseYear")
             if (date != null) {
+                val cal = Calendar.getInstance().apply { time = date }
+                val todayMonth = todayCal.get(Calendar.MONTH)
+                val tabMonth = cal.get(Calendar.MONTH)
+                if (todayMonth >= Calendar.NOVEMBER && tabMonth <= Calendar.FEBRUARY) {
+                    cal.set(Calendar.YEAR, baseYear + 1)
+                }
                 val sdfOut = SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
-                sdfOut.format(date)
+                sdfOut.format(cal.time)
             } else {
                 currentSelectedDate ?: ""
             }

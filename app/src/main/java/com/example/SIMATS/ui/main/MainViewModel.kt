@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.SIMATS.data.local.SessionManager
+import com.example.SIMATS.data.repository.DoctorProfileRepository
+import com.example.SIMATS.data.repository.DoctorProfileRepositoryImpl
 import com.example.SIMATS.data.repository.DoctorRepository
 import com.example.SIMATS.data.repository.DoctorRepositoryImpl
 import com.example.SIMATS.data.repository.NotificationRepository
@@ -17,10 +19,11 @@ import kotlinx.coroutines.launch
 
 class MainViewModel(
     private val repository: DoctorRepository = DoctorRepositoryImpl(),
-    private val notificationRepository: NotificationRepository = NotificationRepositoryImpl()
+    private val notificationRepository: NotificationRepository = NotificationRepositoryImpl(),
+    private val doctorProfileRepository: DoctorProfileRepository = DoctorProfileRepositoryImpl()
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(MainUiState())
+    private val _uiState = MutableStateFlow(MainUiState(doctorPhoto = SessionManager.getDoctorPhoto()))
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 
     init {
@@ -31,6 +34,26 @@ class MainViewModel(
                 _uiState.value = _uiState.value.copy(unreadNotificationCount = count)
             }
         }
+        viewModelScope.launch {
+            SessionManager.doctorPhotoFlow.collect { photo ->
+                _uiState.value = _uiState.value.copy(doctorPhoto = photo ?: SessionManager.getDoctorPhoto())
+            }
+        }
+        if (SessionManager.getDoctorPhoto().isNullOrBlank()) {
+            viewModelScope.launch {
+                doctorProfileRepository.getDoctorProfile().collect { result ->
+                    result.onSuccess { profile ->
+                        if (!profile.photoUrl.isNullOrBlank()) {
+                            SessionManager.setDoctorPhoto(profile.photoUrl)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun refreshDoctorPhoto() {
+        _uiState.value = _uiState.value.copy(doctorPhoto = SessionManager.getDoctorPhoto())
     }
 
     fun refreshNotifications() {

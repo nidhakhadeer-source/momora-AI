@@ -65,6 +65,7 @@ import com.example.SIMATS.ui.theme.MomoraPurpleDark
 import com.example.SIMATS.ui.theme.MomoraPurplePrimary
 import com.example.SIMATS.ui.theme.MomoraPurpleText
 import com.example.SIMATS.ui.theme.MomoraScreenBackground
+import com.example.SIMATS.ui.theme.ThemeManager
 
 @Composable
 fun PatientListScreen(
@@ -166,11 +167,12 @@ fun PatientListScreenContent(
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
+    val isDark = ThemeManager.isDarkTheme()
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MomoraScreenBackground)
+            .background(if (isDark) Color(0xFF141218) else MomoraScreenBackground)
             .statusBarsPadding()
             .navigationBarsPadding(),
         verticalArrangement = Arrangement.SpaceBetween
@@ -188,12 +190,12 @@ fun PatientListScreenContent(
                     .size(40.dp)
                     .shadow(elevation = 1.dp, shape = CircleShape)
                     .clip(CircleShape)
-                    .background(Color(0xFFF7F2FA))
+                    .background(if (isDark) Color(0xFF28212F) else Color(0xFFF7F2FA))
                     .clickable { onBackClick() },
                 contentAlignment = Alignment.Center
             ) {
                 BackArrowIcon(
-                    color = Color(0xFF5A3D63),
+                    color = if (isDark) Color(0xFFEDE7EF) else Color(0xFF5A3D63),
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -204,12 +206,12 @@ fun PatientListScreenContent(
                     .size(40.dp)
                     .shadow(elevation = 1.dp, shape = CircleShape)
                     .clip(CircleShape)
-                    .background(Color(0xFFFAF0F3))
+                    .background(if (isDark) Color(0xFF2E2435) else Color(0xFFFAF0F3))
                     .clickable { onNotificationClick() },
                 contentAlignment = Alignment.Center
             ) {
                 BellIcon(
-                    color = Color(0xFF6E4F76),
+                    color = if (isDark) Color(0xFFD4B3DC) else Color(0xFF6E4F76),
                     modifier = Modifier.size(19.dp)
                 )
                 if (unreadCount > 0) {
@@ -237,7 +239,7 @@ fun PatientListScreenContent(
                 text = "Your assigned patients",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = if (isDark) Color(0xFFEDE7EF) else MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(4.dp))
@@ -254,14 +256,14 @@ fun PatientListScreenContent(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .background(Color(0xFFF1E7F5))
+                        .background(if (isDark) Color(0xFF2D2335) else Color(0xFFF1E7F5))
                         .padding(horizontal = 8.dp, vertical = 2.dp)
                 ) {
                     Text(
                         text = countLabel,
                         fontSize = 11.5.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF6E4F76)
+                        color = if (isDark) Color(0xFFD4B3DC) else Color(0xFF6E4F76)
                     )
                 }
                 Text(
@@ -284,7 +286,7 @@ fun PatientListScreenContent(
                 text = "Find a patient",
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = if (isDark) Color(0xFFEDE7EF) else MaterialTheme.colorScheme.onSurface
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -295,8 +297,8 @@ fun PatientListScreenContent(
                     .height(48.dp)
                     .shadow(elevation = 1.dp, shape = RoundedCornerShape(16.dp))
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Color.White)
-                    .border(1.dp, Color(0xFFEADBEE), RoundedCornerShape(16.dp))
+                    .background(if (isDark) Color(0xFF1F1A24) else Color.White)
+                    .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFEADBEE), RoundedCornerShape(16.dp))
                     .padding(horizontal = 14.dp),
                 contentAlignment = Alignment.CenterStart
             ) {
@@ -310,7 +312,7 @@ fun PatientListScreenContent(
                             Text(
                                 text = "Search by name or patient ID",
                                 fontSize = 13.sp,
-                                color = Color(0xFFA098A6)
+                                color = if (isDark) Color(0xFF7D7382) else Color(0xFFA098A6)
                             )
                         }
                         BasicTextField(
@@ -320,7 +322,7 @@ fun PatientListScreenContent(
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                             textStyle = TextStyle(
                                 fontSize = 13.sp,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = if (isDark) Color(0xFFEDE7EF) else MaterialTheme.colorScheme.onSurface
                             ),
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -328,7 +330,7 @@ fun PatientListScreenContent(
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    SearchIcon(color = Color(0xFF6E4F76), modifier = Modifier.size(18.dp))
+                    SearchIcon(color = if (isDark) Color(0xFFD4B3DC) else Color(0xFF6E4F76), modifier = Modifier.size(18.dp))
                 }
             }
 
@@ -339,7 +341,8 @@ fun PatientListScreenContent(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Color(0xFFF3ECF7))
+                    .background(if (isDark) Color(0xFF1F1A24) else Color(0xFFF3ECF7))
+                    .border(1.dp, if (isDark) Color(0xFF332A3B) else Color.Transparent, RoundedCornerShape(16.dp))
                     .padding(4.dp)
             ) {
                 Row(
@@ -357,7 +360,7 @@ fun PatientListScreenContent(
                                     if (isSelected) Modifier.shadow(elevation = 1.5.dp, shape = RoundedCornerShape(12.dp)) else Modifier
                                 )
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(if (isSelected) Color.White else Color.Transparent)
+                                .background(if (isSelected) (if (isDark) Color(0xFF3B2745) else Color.White) else Color.Transparent)
                                 .clickable { onFilterTabSelected(index) },
                             contentAlignment = Alignment.Center
                         ) {
@@ -365,7 +368,7 @@ fun PatientListScreenContent(
                                 text = label,
                                 fontSize = 13.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isSelected) Color(0xFF5A3D63) else Color(0xFF7D7584)
+                                color = if (isSelected) (if (isDark) Color(0xFFEDE7EF) else Color(0xFF5A3D63)) else (if (isDark) Color(0xFFB5ACB9) else Color(0xFF7D7584))
                             )
                         }
                     }
@@ -491,6 +494,7 @@ fun PatientListScreenContent(
                     filteredList.forEach { patient ->
                         PatientCardItem(
                             item = patient,
+                            isDark = isDark,
                             onClick = { onPatientClick(patient.id, patient.name) }
                         )
                     }
@@ -514,10 +518,19 @@ fun PatientListScreenContent(
 @Composable
 private fun PatientCardItem(
     item: AssignedPatientItem,
+    isDark: Boolean = false,
     onClick: () -> Unit
 ) {
-    val cardBg = if (item.isHighlighted) Color(0xFFFBF8FD) else Color.White
-    val borderColor = if (item.isHighlighted) Color(0xFFEADBEE) else Color(0xFFEFE8F4)
+    val cardBg = if (isDark) {
+        if (item.isHighlighted) Color(0xFF261F2C) else Color(0xFF1F1A24)
+    } else {
+        if (item.isHighlighted) Color(0xFFFBF8FD) else Color.White
+    }
+    val borderColor = if (isDark) {
+        if (item.isHighlighted) Color(0xFF4A3852) else Color(0xFF332A3B)
+    } else {
+        if (item.isHighlighted) Color(0xFFEADBEE) else Color(0xFFEFE8F4)
+    }
 
     Box(
         modifier = Modifier
@@ -540,15 +553,31 @@ private fun PatientCardItem(
                     modifier = Modifier.weight(1f),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    val avatarBg = when {
-                        item.visitNote != null -> Color(0xFFE2F4EB)
-                        item.needsReview -> Color(0xFFFAF0F3)
-                        else -> Color(0xFFF1E7F5)
+                    val avatarBg = if (isDark) {
+                        when {
+                            item.visitNote != null -> Color(0xFF1D3328)
+                            item.needsReview -> Color(0xFF3B1E28)
+                            else -> Color(0xFF2E2435)
+                        }
+                    } else {
+                        when {
+                            item.visitNote != null -> Color(0xFFE2F4EB)
+                            item.needsReview -> Color(0xFFFAF0F3)
+                            else -> Color(0xFFF1E7F5)
+                        }
                     }
-                    val avatarBorder = when {
-                        item.visitNote != null -> Color(0xFFC7EBD7)
-                        item.needsReview -> Color(0xFFF5D8E4)
-                        else -> Color(0xFFEADBEE)
+                    val avatarBorder = if (isDark) {
+                        when {
+                            item.visitNote != null -> Color(0xFF2C4D3D)
+                            item.needsReview -> Color(0xFF552838)
+                            else -> Color(0xFF45364E)
+                        }
+                    } else {
+                        when {
+                            item.visitNote != null -> Color(0xFFC7EBD7)
+                            item.needsReview -> Color(0xFFF5D8E4)
+                            else -> Color(0xFFEADBEE)
+                        }
                     }
 
                     Box(
@@ -559,7 +588,7 @@ private fun PatientCardItem(
                             .border(1.dp, avatarBorder, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
-                        UserNavIcon(color = Color(0xFF6E4F76), modifier = Modifier.size(18.dp))
+                        UserNavIcon(color = if (isDark) Color(0xFFD4B3DC) else Color(0xFF6E4F76), modifier = Modifier.size(18.dp))
                     }
 
                     Column(modifier = Modifier.weight(1f)) {
@@ -567,7 +596,7 @@ private fun PatientCardItem(
                             text = item.name.sanitizeDoctorText(),
                             fontSize = 14.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = if (isDark) Color(0xFFEDE7EF) else MaterialTheme.colorScheme.onSurface
                         )
 
                         Spacer(modifier = Modifier.height(3.dp))
@@ -576,7 +605,7 @@ private fun PatientCardItem(
                             append(item.patientIdText.sanitizeDoctorText())
                             if (item.gestationalAge.isNotBlank()) {
                                 append(" · ")
-                                withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = Color(0xFF944B68))) {
+                                withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = if (isDark) Color(0xFFFFB2CB) else Color(0xFF944B68))) {
                                     append(item.gestationalAge.sanitizeDoctorText())
                                 }
                             }
@@ -593,7 +622,7 @@ private fun PatientCardItem(
                         Text(
                             text = subtitleText,
                             fontSize = 11.5.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = if (isDark) Color(0xFFB5ACB9) else MaterialTheme.colorScheme.onSurfaceVariant,
                             lineHeight = 16.sp
                         )
                     }
@@ -605,7 +634,7 @@ private fun PatientCardItem(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(50))
-                            .background(Color(0xFF6E4F76))
+                            .background(if (isDark) Color(0xFF9370A3) else Color(0xFF6E4F76))
                             .clickable { onClick() }
                             .padding(horizontal = 14.dp, vertical = 6.dp)
                     ) {
@@ -621,14 +650,14 @@ private fun PatientCardItem(
                         modifier = Modifier
                             .size(32.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFFF7F2FA)),
+                            .background(if (isDark) Color(0xFF28212F) else Color(0xFFF7F2FA)),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = "›",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF6E4F76)
+                            color = if (isDark) Color(0xFFD4B3DC) else Color(0xFF6E4F76)
                         )
                     }
                 }
@@ -645,7 +674,7 @@ private fun PatientCardItem(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
-                        .background(Color(0xFFF5EEF7))
+                        .background(if (isDark) Color(0xFF2D2535) else Color(0xFFF5EEF7))
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -655,35 +684,35 @@ private fun PatientCardItem(
                 ) {
                     if (hasVitals) {
                         VitalsPulseIcon(
-                            color = Color(0xFF8E8394),
+                            color = if (isDark) Color(0xFFB5ACB9) else Color(0xFF8E8394),
                             modifier = Modifier.size(13.dp)
                         )
                         Text(
                             text = item.latestVitalsNote!!.sanitizeDoctorText(),
                             fontSize = 11.5.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = if (isDark) Color(0xFFB5ACB9) else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     } else if (hasReviewType) {
                         DocumentIcon(
-                            color = Color(0xFF944B68),
+                            color = if (isDark) Color(0xFFFFB2CB) else Color(0xFF944B68),
                             modifier = Modifier.size(13.dp)
                         )
                         Text(
                             text = item.reviewType!!.sanitizeDoctorText(),
                             fontSize = 11.5.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color(0xFF944B68)
+                            color = if (isDark) Color(0xFFFFB2CB) else Color(0xFF944B68)
                         )
                     } else if (hasVisitNote) {
                         CalendarClockIcon(
-                            color = Color(0xFF3D7B59),
+                            color = if (isDark) Color(0xFF88D4A8) else Color(0xFF3D7B59),
                             modifier = Modifier.size(13.dp)
                         )
                         Text(
                             text = item.visitNote!!.sanitizeDoctorText(),
                             fontSize = 11.5.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color(0xFF3D7B59)
+                            color = if (isDark) Color(0xFF88D4A8) else Color(0xFF3D7B59)
                         )
                     }
                 }
@@ -700,9 +729,12 @@ private fun DoctorBottomNavBar(
     selectedIndex: Int,
     onTabSelected: (Int) -> Unit
 ) {
-    val navSurface = MaterialTheme.colorScheme.surface
-    val navBorder = Color(0xFFEFE8F2)
-    val indicatorColor = Color(0xFFDFD5E3)
+    val isDark = ThemeManager.isDarkTheme()
+    val navSurface = if (isDark) Color(0xFF1E1A22) else Color.White
+    val navBorder = if (isDark) Color(0xFF2E2633) else Color(0xFFEFE8F2)
+    val indicatorColor = if (isDark) Color(0xFF483D4F) else Color(0xFFDFD5E3)
+    val activeNavColor = if (isDark) Color(0xFFE0C4E7) else Color(0xFF6E4F76)
+    val inactiveNavColor = if (isDark) Color(0xFF8D8392) else Color(0xFF8E8394)
 
     Column(
         modifier = Modifier
@@ -722,25 +754,25 @@ private fun DoctorBottomNavBar(
                 label = "Home",
                 isSelected = selectedIndex == 0,
                 onClick = { onTabSelected(0) },
-                icon = { HomeNavIcon(color = if (selectedIndex == 0) Color(0xFF6E4F76) else Color(0xFF8E8394), modifier = Modifier.size(22.dp)) }
+                icon = { HomeNavIcon(color = if (selectedIndex == 0) activeNavColor else inactiveNavColor, modifier = Modifier.size(22.dp)) }
             )
             NavTabItem(
                 label = "Patients",
                 isSelected = selectedIndex == 1,
                 onClick = { onTabSelected(1) },
-                icon = { PeopleNavIcon(color = if (selectedIndex == 1) Color(0xFF6E4F76) else Color(0xFF8E8394), modifier = Modifier.size(22.dp)) }
+                icon = { PeopleNavIcon(color = if (selectedIndex == 1) activeNavColor else inactiveNavColor, modifier = Modifier.size(22.dp)) }
             )
             NavTabItem(
                 label = "Schedule",
                 isSelected = selectedIndex == 2,
                 onClick = { onTabSelected(2) },
-                icon = { CalendarNavIcon(color = if (selectedIndex == 2) Color(0xFF6E4F76) else Color(0xFF8E8394), modifier = Modifier.size(22.dp)) }
+                icon = { CalendarNavIcon(color = if (selectedIndex == 2) activeNavColor else inactiveNavColor, modifier = Modifier.size(22.dp)) }
             )
             NavTabItem(
                 label = "Advice",
                 isSelected = selectedIndex == 3,
                 onClick = { onTabSelected(3) },
-                icon = { ChatNavIcon(color = if (selectedIndex == 3) Color(0xFF6E4F76) else Color(0xFF8E8394), modifier = Modifier.size(22.dp)) }
+                icon = { ChatNavIcon(color = if (selectedIndex == 3) activeNavColor else inactiveNavColor, modifier = Modifier.size(22.dp)) }
             )
         }
 
@@ -764,9 +796,10 @@ private fun NavTabItem(
     onClick: () -> Unit,
     icon: @Composable () -> Unit
 ) {
-    val activeBg = Color(0xFFF1E7F5)
-    val activeColor = Color(0xFF5A3D63)
-    val inactiveColor = Color(0xFF8E8394)
+    val isDark = ThemeManager.isDarkTheme()
+    val activeBg = if (isDark) Color(0xFF35263B) else Color(0xFFF1E7F5)
+    val activeColor = if (isDark) Color(0xFFD4B3DC) else Color(0xFF5A3D63)
+    val inactiveColor = if (isDark) Color(0xFF8D8392) else Color(0xFF8E8394)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,

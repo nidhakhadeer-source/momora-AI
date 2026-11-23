@@ -33,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,6 +66,7 @@ import com.example.SIMATS.ui.theme.MomoraPurpleDark
 import com.example.SIMATS.ui.theme.MomoraPurplePrimary
 import com.example.SIMATS.ui.theme.MomoraPurpleText
 import com.example.SIMATS.ui.theme.MomoraScreenBackground
+import com.example.SIMATS.ui.theme.ThemeManager
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -111,6 +113,7 @@ fun DoctorScheduleScreen(
             calendar.get(Calendar.MONTH),
             calendar.get(Calendar.DAY_OF_MONTH)
         )
+        datePickerDialog.datePicker.minDate = System.currentTimeMillis() - 1000
         datePickerDialog.show()
     }
 
@@ -223,14 +226,21 @@ fun DoctorScheduleScreenContent(
     uiState: DoctorScheduleUiState = DoctorScheduleUiState(
         scheduleData = DoctorScheduleData(
             doctorName = "Dr Amelia Chen",
-            dateText = "Thursday, 29 Oct 2026",
-            dateTabs = listOf("27 Oct", "28 Oct", "29 Oct"),
+            dateText = "Monday, 23 Nov 2026",
+            dateTabs = run {
+                val cal = Calendar.getInstance()
+                val sdf = SimpleDateFormat("dd MMM", Locale.ENGLISH)
+                (0..6).map {
+                    val c = (cal.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, it) }
+                    sdf.format(c.time)
+                }
+            },
             mainAppointment = DoctorMainAppointment(
                 id = "1",
                 timeRange = "10:30–11:00",
                 statusText = "Confirmed",
                 patientName = "Maya Patel",
-                patientSubtitle = "24w 3d on 27 Oct · Patient P-13042",
+                patientSubtitle = "24w 3d · Patient P-13042",
                 patientIdText = "P-13042",
                 notesText = "Routine antenatal check · In person, Willow Maternity Clinic · Room 3."
             ),
@@ -270,11 +280,12 @@ fun DoctorScheduleScreenContent(
 ) {
     val scrollState = rememberScrollState()
     val data = uiState.scheduleData
+    val isDark = ThemeManager.isDarkTheme()
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MomoraScreenBackground)
+            .background(if (isDark) Color(0xFF141218) else MomoraScreenBackground)
             .statusBarsPadding()
             .navigationBarsPadding(),
         verticalArrangement = Arrangement.SpaceBetween
@@ -292,12 +303,12 @@ fun DoctorScheduleScreenContent(
                     .size(40.dp)
                     .shadow(elevation = 1.dp, shape = CircleShape)
                     .clip(CircleShape)
-                    .background(Color(0xFFF7F2FA))
+                    .background(if (isDark) Color(0xFF28212F) else Color(0xFFF7F2FA))
                     .clickable { onBackClick() },
                 contentAlignment = Alignment.Center
             ) {
                 BackArrowIcon(
-                    color = Color(0xFF5A3D63),
+                    color = if (isDark) Color(0xFFEDE7EF) else Color(0xFF5A3D63),
                     modifier = Modifier.size(18.dp)
                 )
             }
@@ -308,12 +319,12 @@ fun DoctorScheduleScreenContent(
                     .size(40.dp)
                     .shadow(elevation = 1.dp, shape = CircleShape)
                     .clip(CircleShape)
-                    .background(Color(0xFFFAF0F3))
+                    .background(if (isDark) Color(0xFF2E2435) else Color(0xFFFAF0F3))
                     .clickable { onNotificationClick() },
                 contentAlignment = Alignment.Center
             ) {
                 BellIcon(
-                    color = Color(0xFF6E4F76),
+                    color = if (isDark) Color(0xFFD4B3DC) else Color(0xFF6E4F76),
                     modifier = Modifier.size(19.dp)
                 )
                 if (unreadCount > 0) {
@@ -396,7 +407,7 @@ fun DoctorScheduleScreenContent(
                     text = "Your appointment book",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = if (isDark) Color(0xFFEDE7EF) else Color(0xFF3E2D44)
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -412,24 +423,32 @@ fun DoctorScheduleScreenContent(
                         text = formattedDoc.sanitizeDoctorText(),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = if (isDark) Color(0xFFB5ACB9) else Color(0xFF756779)
                     )
                     Text(
                         text = "•",
                         fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = if (isDark) Color(0xFFB5ACB9) else Color(0xFF756779)
                     )
                     Text(
                         text = "Clinic local time",
                         fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = if (isDark) Color(0xFFB5ACB9) else Color(0xFF756779)
                     )
                 }
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Date Tabs (Horizontally Scrollable Strip)
-                val tabs = data?.dateTabs?.takeIf { it.isNotEmpty() } ?: listOf("27 Oct", "28 Oct", "29 Oct")
+                // Date Tabs (Horizontally Scrollable Strip - starting from today)
+                val defaultTabs = remember {
+                    val cal = Calendar.getInstance()
+                    val sdf = SimpleDateFormat("dd MMM", Locale.ENGLISH)
+                    (0..14).map {
+                        val c = (cal.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, it) }
+                        sdf.format(c.time)
+                    }
+                }
+                val tabs = data?.dateTabs?.takeIf { it.isNotEmpty() } ?: defaultTabs
                 val scrollStateDates = rememberScrollState()
 
                 LaunchedEffect(uiState.selectedDateTabIndex) {
@@ -459,10 +478,10 @@ fun DoctorScheduleScreenContent(
                                     shape = RoundedCornerShape(16.dp)
                                 )
                                 .clip(RoundedCornerShape(16.dp))
-                                .background(if (isSelected) Color(0xFF6E4F76) else Color.White)
+                                .background(if (isSelected) (if (isDark) Color(0xFF4A2F56) else Color(0xFF6E4F76)) else (if (isDark) Color(0xFF1F1A24) else Color.White))
                                 .border(
                                     1.dp,
-                                    if (isSelected) Color(0xFF5A3D63) else Color(0xFFEADBEE),
+                                    if (isSelected) (if (isDark) Color(0xFF7D508F) else Color(0xFF5A3D63)) else (if (isDark) Color(0xFF332A3B) else Color(0xFFEADBEE)),
                                     RoundedCornerShape(16.dp)
                                 )
                                 .clickable { onDateTabSelected(index) }
@@ -478,7 +497,7 @@ fun DoctorScheduleScreenContent(
                                         text = dayOfWeek,
                                         fontSize = 9.5.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = if (isSelected) Color(0xFFE8D4F0) else Color(0xFF8E8394),
+                                        color = if (isSelected) Color(0xFFE8D4F0) else (if (isDark) Color(0xFFB5ACB9) else Color(0xFF8E8394)),
                                         letterSpacing = 0.5.sp
                                     )
                                     Spacer(modifier = Modifier.height(2.dp))
@@ -487,14 +506,14 @@ fun DoctorScheduleScreenContent(
                                     text = dayNum,
                                     fontSize = 17.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (isSelected) Color.White else Color(0xFF3E2D44)
+                                    color = if (isSelected) Color.White else (if (isDark) Color(0xFFEDE7EF) else Color(0xFF3E2D44))
                                 )
                                 Spacer(modifier = Modifier.height(1.dp))
                                 Text(
                                     text = monthName,
                                     fontSize = 10.5.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = if (isSelected) Color(0xFFF1E7F5) else Color(0xFF8E8394)
+                                    color = if (isSelected) Color(0xFFF1E7F5) else (if (isDark) Color(0xFFB5ACB9) else Color(0xFF8E8394))
                                 )
                             }
                         }
@@ -585,10 +604,10 @@ fun DoctorScheduleScreenContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = (data?.dateText?.takeIf { it.isNotBlank() } ?: "Friday, 20 Nov 2026").sanitizeDoctorText(),
+                        text = (data?.dateText?.takeIf { it.isNotBlank() } ?: "Monday, 23 Nov 2026").sanitizeDoctorText(),
                         fontSize = 15.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = if (isDark) Color(0xFFEDE7EF) else Color(0xFF3E2D44)
                     )
 
                     Row(
@@ -596,13 +615,13 @@ fun DoctorScheduleScreenContent(
                         modifier = Modifier
                             .shadow(elevation = 1.dp, shape = RoundedCornerShape(10.dp))
                             .clip(RoundedCornerShape(10.dp))
-                            .background(Color.White)
-                            .border(1.dp, Color(0xFFEADBEE), RoundedCornerShape(10.dp))
+                            .background(if (isDark) Color(0xFF1F1A24) else Color.White)
+                            .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFEADBEE), RoundedCornerShape(10.dp))
                             .clickable { onCalendarClick() }
                             .padding(horizontal = 10.dp, vertical = 6.dp)
                     ) {
                         CalendarNavIcon(
-                            color = Color(0xFF6E4F76),
+                            color = if (isDark) Color(0xFFD4B3DC) else Color(0xFF6E4F76),
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
@@ -610,7 +629,7 @@ fun DoctorScheduleScreenContent(
                             text = "Calendar",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF6E4F76)
+                            color = if (isDark) Color(0xFFD4B3DC) else Color(0xFF6E4F76)
                         )
                     }
                 }
@@ -628,8 +647,8 @@ fun DoctorScheduleScreenContent(
                             .fillMaxWidth()
                             .shadow(elevation = 1.dp, shape = RoundedCornerShape(20.dp))
                             .clip(RoundedCornerShape(20.dp))
-                            .background(Color.White)
-                            .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(20.dp))
+                            .background(if (isDark) Color(0xFF1F1A24) else Color.White)
+                            .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFEFE8F4), RoundedCornerShape(20.dp))
                             .padding(24.dp),
                         contentAlignment = Alignment.Center
                     ) {
@@ -638,10 +657,10 @@ fun DoctorScheduleScreenContent(
                                 modifier = Modifier
                                     .size(56.dp)
                                     .clip(CircleShape)
-                                    .background(Color(0xFFF4ECF8)),
+                                    .background(if (isDark) Color(0xFF2E2435) else Color(0xFFF4ECF8)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                CalendarNavIcon(color = Color(0xFF6E4F76), modifier = Modifier.size(24.dp))
+                                CalendarNavIcon(color = if (isDark) Color(0xFFD4B3DC) else Color(0xFF6E4F76), modifier = Modifier.size(24.dp))
                             }
 
                             Spacer(modifier = Modifier.height(12.dp))
@@ -650,7 +669,7 @@ fun DoctorScheduleScreenContent(
                                 text = "No appointments scheduled",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
+                                color = if (isDark) Color(0xFFEDE7EF) else MaterialTheme.colorScheme.onSurface
                             )
 
                             Spacer(modifier = Modifier.height(4.dp))
@@ -658,7 +677,7 @@ fun DoctorScheduleScreenContent(
                             Text(
                                 text = "There are no visits booked for ${(data?.dateText ?: "this date").sanitizeDoctorText()}.",
                                 fontSize = 12.5.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = if (isDark) Color(0xFFB5ACB9) else MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center
                             )
 
@@ -667,7 +686,7 @@ fun DoctorScheduleScreenContent(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(50))
-                                    .background(Color(0xFFF1E7F5))
+                                    .background(if (isDark) Color(0xFF35263B) else Color(0xFFF1E7F5))
                                     .clickable { onCalendarClick() }
                                     .padding(horizontal = 22.dp, vertical = 9.dp),
                                 contentAlignment = Alignment.Center
@@ -676,7 +695,7 @@ fun DoctorScheduleScreenContent(
                                     text = "Pick another date",
                                     fontSize = 12.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF6E4F76)
+                                    color = if (isDark) Color(0xFFD4B3DC) else Color(0xFF6E4F76)
                                 )
                             }
                         }
@@ -719,8 +738,8 @@ fun DoctorScheduleScreenContent(
                                 .fillMaxWidth()
                                 .shadow(elevation = 2.dp, shape = RoundedCornerShape(18.dp))
                                 .clip(RoundedCornerShape(18.dp))
-                                .background(Color.White)
-                                .border(1.dp, Color(0xFFEADBEE), RoundedCornerShape(18.dp))
+                                .background(if (isDark) Color(0xFF1F1A24) else Color.White)
+                                .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFEADBEE), RoundedCornerShape(18.dp))
                                 .clickable {
                                     SelectedPatientHolder.selectedPatientId = resolvedNextPatientId
                                     SelectedPatientHolder.selectedPatientName = nextAppt.patientName
@@ -738,19 +757,19 @@ fun DoctorScheduleScreenContent(
                                         modifier = Modifier
                                             .weight(1f, fill = false)
                                             .clip(RoundedCornerShape(8.dp))
-                                            .background(Color(0xFFF1E7F5))
+                                            .background(if (isDark) Color(0xFF2E2435) else Color(0xFFF1E7F5))
                                             .padding(horizontal = 10.dp, vertical = 4.dp)
                                     ) {
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.spacedBy(5.dp)
                                         ) {
-                                            ClockIcon(color = Color(0xFF6E4F76), modifier = Modifier.size(11.dp))
+                                            ClockIcon(color = if (isDark) Color(0xFFD4B3DC) else Color(0xFF6E4F76), modifier = Modifier.size(11.dp))
                                             Text(
                                                 text = "Next Consultation",
                                                 fontSize = 11.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                color = Color(0xFF6E4F76),
+                                                color = if (isDark) Color(0xFFD4B3DC) else Color(0xFF6E4F76),
                                                 maxLines = 1
                                             )
                                         }
@@ -760,14 +779,14 @@ fun DoctorScheduleScreenContent(
                                         Box(
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(8.dp))
-                                                .background(Color(0xFFE2F4EB))
+                                                .background(if (isDark) Color(0xFF1D3328) else Color(0xFFE2F4EB))
                                                 .padding(horizontal = 8.dp, vertical = 4.dp)
                                         ) {
                                             Text(
                                                 text = nextAppt.timeRange.formatDoctorTime().replace(" ", ""),
                                                 fontSize = 11.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                color = Color(0xFF3D7B59),
+                                                color = if (isDark) Color(0xFF88D4A8) else Color(0xFF3D7B59),
                                                 maxLines = 1,
                                                 softWrap = false
                                             )
@@ -791,11 +810,11 @@ fun DoctorScheduleScreenContent(
                                             modifier = Modifier
                                                 .size(42.dp)
                                                 .clip(CircleShape)
-                                                .background(Color(0xFFFAF0F3))
-                                                .border(1.dp, Color(0xFFF5D8E4), CircleShape),
+                                                .background(if (isDark) Color(0xFF3B1E28) else Color(0xFFFAF0F3))
+                                                .border(1.dp, if (isDark) Color(0xFF552838) else Color(0xFFF5D8E4), CircleShape),
                                             contentAlignment = Alignment.Center
                                         ) {
-                                            UserNavIcon(color = Color(0xFF6E4F76), modifier = Modifier.size(19.dp))
+                                            UserNavIcon(color = if (isDark) Color(0xFFD4B3DC) else Color(0xFF6E4F76), modifier = Modifier.size(19.dp))
                                         }
 
                                         Column(modifier = Modifier.weight(1f)) {
@@ -803,13 +822,13 @@ fun DoctorScheduleScreenContent(
                                                 text = nextAppt.patientName.sanitizeDoctorText(),
                                                 fontSize = 15.sp,
                                                 fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.colorScheme.onSurface
+                                                color = if (isDark) Color(0xFFEDE7EF) else MaterialTheme.colorScheme.onSurface
                                             )
                                             Spacer(modifier = Modifier.height(3.dp))
                                             Text(
                                                 text = cleanSubtitle.sanitizeDoctorText(),
                                                 fontSize = 11.5.sp,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                color = if (isDark) Color(0xFFB5ACB9) else MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
                                     }
@@ -818,7 +837,7 @@ fun DoctorScheduleScreenContent(
                                         modifier = Modifier
                                             .size(32.dp)
                                             .clip(CircleShape)
-                                            .background(Color(0xFFF7F2FA))
+                                            .background(if (isDark) Color(0xFF28212F) else Color(0xFFF7F2FA))
                                             .clickable {
                                                 SelectedPatientHolder.selectedPatientId = resolvedNextPatientId
                                                 SelectedPatientHolder.selectedPatientName = nextAppt.patientName
@@ -830,7 +849,7 @@ fun DoctorScheduleScreenContent(
                                             text = "›",
                                             fontSize = 18.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = Color(0xFF6E4F76)
+                                            color = if (isDark) Color(0xFFD4B3DC) else Color(0xFF6E4F76)
                                         )
                                     }
                                 }
@@ -863,7 +882,8 @@ fun DoctorScheduleScreenContent(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(18.dp))
-                            .background(Color(0xFFF4ECF8))
+                            .background(if (isDark) Color(0xFF261F2C) else Color(0xFFF4ECF8))
+                            .border(1.dp, if (isDark) Color(0xFF45364E) else Color.Transparent, RoundedCornerShape(18.dp))
                             .clickable {
                                 SelectedPatientHolder.selectedPatientId = mainPatientId
                                 SelectedPatientHolder.selectedPatientName = mainPatientName
@@ -881,20 +901,20 @@ fun DoctorScheduleScreenContent(
                                     text = (mainAppt?.timeRange ?: "10:30–11:00").formatDoctorTime(),
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = MomoraPurpleDark
+                                    color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
                                 )
 
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(50))
-                                        .background(MomoraMintBadgeBg)
+                                        .background(if (isDark) Color(0xFF1D3328) else MomoraMintBadgeBg)
                                         .padding(horizontal = 12.dp, vertical = 4.dp)
                                 ) {
                                     Text(
                                         text = mainAppt?.statusText ?: "Confirmed",
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = MomoraMintBadgeText
+                                        color = if (isDark) Color(0xFF88D4A8) else MomoraMintBadgeText
                                     )
                                 }
                             }
@@ -914,10 +934,10 @@ fun DoctorScheduleScreenContent(
                                         modifier = Modifier
                                             .size(36.dp)
                                             .clip(CircleShape)
-                                            .background(Color(0xFFEDE4F0)),
+                                            .background(if (isDark) Color(0xFF35263B) else Color(0xFFEDE4F0)),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        UserNavIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp))
+                                        UserNavIcon(color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary, modifier = Modifier.size(16.dp))
                                     }
 
                                     Spacer(modifier = Modifier.width(12.dp))
@@ -927,14 +947,14 @@ fun DoctorScheduleScreenContent(
                                             text = mainPatientName.sanitizeDoctorText(),
                                             fontSize = 14.5.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = MomoraPurpleDark
+                                            color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
                                         )
                                         Spacer(modifier = Modifier.height(2.dp))
                                         Text(
                                             text = (mainAppt?.patientSubtitle?.takeIf { it.isNotBlank() }
                                                 ?: "Routine consultation").sanitizeDoctorText(),
                                             fontSize = 11.5.sp,
-                                            color = MomoraBodyMuted
+                                            color = if (isDark) Color(0xFFB5ACB9) else MomoraBodyMuted
                                         )
                                     }
                                 }
@@ -943,7 +963,7 @@ fun DoctorScheduleScreenContent(
                                     text = "›",
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Medium,
-                                    color = Color(0xFF8C7F92)
+                                    color = if (isDark) Color(0xFFD4B3DC) else Color(0xFF8C7F92)
                                 )
                             }
 
@@ -954,7 +974,7 @@ fun DoctorScheduleScreenContent(
                                     ?: "Routine antenatal check · In person").sanitizeDoctorText(),
                                 fontSize = 11.5.sp,
                                 lineHeight = 15.sp,
-                                color = Color(0xFF4A3F50)
+                                color = if (isDark) Color(0xFFCAC4D0) else Color(0xFF4A3F50)
                             )
 
                             Spacer(modifier = Modifier.height(12.dp))
@@ -968,8 +988,8 @@ fun DoctorScheduleScreenContent(
                                         .weight(1f)
                                         .height(40.dp)
                                         .clip(RoundedCornerShape(50))
-                                        .background(Color.White)
-                                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(50))
+                                        .background(if (isDark) Color(0xFF1F1A24) else Color.White)
+                                        .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFEFE8F4), RoundedCornerShape(50))
                                         .clickable { onRescheduleClick() },
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -977,7 +997,7 @@ fun DoctorScheduleScreenContent(
                                         text = "Reschedule",
                                         fontSize = 13.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = MomoraPurpleDark
+                                        color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
                                     )
                                 }
 
@@ -986,7 +1006,7 @@ fun DoctorScheduleScreenContent(
                                         .weight(1f)
                                         .height(40.dp)
                                         .clip(RoundedCornerShape(50))
-                                        .background(MomoraPurplePrimary)
+                                        .background(if (isDark) Color(0xFF9370A3) else MomoraPurplePrimary)
                                         .clickable {
                                             SelectedPatientHolder.selectedPatientId = mainPatientId
                                             SelectedPatientHolder.selectedPatientName = mainPatientName
@@ -1047,8 +1067,8 @@ fun DoctorScheduleScreenContent(
                             .weight(1f)
                             .shadow(elevation = 1.dp, shape = RoundedCornerShape(16.dp))
                             .clip(RoundedCornerShape(16.dp))
-                            .background(Color(0xFFF4ECF8))
-                            .border(1.dp, Color(0xFFEADBEE), RoundedCornerShape(16.dp))
+                            .background(if (isDark) Color(0xFF261F2C) else Color(0xFFF4ECF8))
+                            .border(1.dp, if (isDark) Color(0xFF45364E) else Color(0xFFEADBEE), RoundedCornerShape(16.dp))
                             .padding(horizontal = 10.dp, vertical = 12.dp)
                     ) {
                         Column {
@@ -1062,16 +1082,16 @@ fun DoctorScheduleScreenContent(
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = 0.5.sp,
-                                    color = Color(0xFF6E4F76)
+                                    color = if (isDark) Color(0xFFD4B3DC) else Color(0xFF6E4F76)
                                 )
                                 Box(
                                     modifier = Modifier
                                         .size(22.dp)
                                         .clip(CircleShape)
-                                        .background(Color.White),
+                                        .background(if (isDark) Color(0xFF35263B) else Color.White),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    CalendarNavIcon(color = Color(0xFF6E4F76), modifier = Modifier.size(11.dp))
+                                    CalendarNavIcon(color = if (isDark) Color(0xFFD4B3DC) else Color(0xFF6E4F76), modifier = Modifier.size(11.dp))
                                 }
                             }
                             Spacer(modifier = Modifier.height(6.dp))
@@ -1079,13 +1099,13 @@ fun DoctorScheduleScreenContent(
                                 text = "$totalVisits",
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF3E2D44)
+                                color = if (isDark) Color(0xFFEDE7EF) else Color(0xFF3E2D44)
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = if (totalVisits == 1) "1 booked" else "$totalVisits booked",
                                 fontSize = 10.5.sp,
-                                color = Color(0xFF7A6882)
+                                color = if (isDark) Color(0xFFB5ACB9) else Color(0xFF7A6882)
                             )
                         }
                     }
@@ -1096,8 +1116,8 @@ fun DoctorScheduleScreenContent(
                             .weight(1f)
                             .shadow(elevation = 1.dp, shape = RoundedCornerShape(16.dp))
                             .clip(RoundedCornerShape(16.dp))
-                            .background(Color(0xFFEBF7F0))
-                            .border(1.dp, Color(0xFFC7EBD7), RoundedCornerShape(16.dp))
+                            .background(if (isDark) Color(0xFF1D3328) else Color(0xFFEBF7F0))
+                            .border(1.dp, if (isDark) Color(0xFF2C4D3D) else Color(0xFFC7EBD7), RoundedCornerShape(16.dp))
                             .padding(horizontal = 10.dp, vertical = 12.dp)
                     ) {
                         Column {
@@ -1111,16 +1131,16 @@ fun DoctorScheduleScreenContent(
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = 0.5.sp,
-                                    color = Color(0xFF26593D)
+                                    color = if (isDark) Color(0xFF88D4A8) else Color(0xFF26593D)
                                 )
                                 Box(
                                     modifier = Modifier
                                         .size(22.dp)
                                         .clip(CircleShape)
-                                        .background(Color.White),
+                                        .background(if (isDark) Color(0xFF264032) else Color.White),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    CheckmarkIcon(color = Color(0xFF26593D), modifier = Modifier.size(11.dp))
+                                    CheckmarkIcon(color = if (isDark) Color(0xFF88D4A8) else Color(0xFF26593D), modifier = Modifier.size(11.dp))
                                 }
                             }
                             Spacer(modifier = Modifier.height(6.dp))
@@ -1128,13 +1148,13 @@ fun DoctorScheduleScreenContent(
                                 text = "$completedVisits",
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF1E4630)
+                                color = if (isDark) Color(0xFFEDE7EF) else Color(0xFF1E4630)
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = if (completedVisits == 1) "1 finished" else "$completedVisits finished",
                                 fontSize = 10.5.sp,
-                                color = Color(0xFF4B8062)
+                                color = if (isDark) Color(0xFF88D4A8) else Color(0xFF4B8062)
                             )
                         }
                     }
@@ -1145,8 +1165,8 @@ fun DoctorScheduleScreenContent(
                             .weight(1f)
                             .shadow(elevation = 1.dp, shape = RoundedCornerShape(16.dp))
                             .clip(RoundedCornerShape(16.dp))
-                            .background(Color(0xFFFAF0F3))
-                            .border(1.dp, Color(0xFFF5D8E4), RoundedCornerShape(16.dp))
+                            .background(if (isDark) Color(0xFF3B1E28) else Color(0xFFFAF0F3))
+                            .border(1.dp, if (isDark) Color(0xFF552838) else Color(0xFFF5D8E4), RoundedCornerShape(16.dp))
                             .padding(horizontal = 10.dp, vertical = 12.dp)
                     ) {
                         Column {
@@ -1160,16 +1180,16 @@ fun DoctorScheduleScreenContent(
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = 0.5.sp,
-                                    color = Color(0xFF8A3358)
+                                    color = if (isDark) Color(0xFFFFB2CB) else Color(0xFF8A3358)
                                 )
                                 Box(
                                     modifier = Modifier
                                         .size(22.dp)
                                         .clip(CircleShape)
-                                        .background(Color.White),
+                                        .background(if (isDark) Color(0xFF4D2232) else Color.White),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    ClockIcon(color = Color(0xFF8A3358), modifier = Modifier.size(11.dp))
+                                    ClockIcon(color = if (isDark) Color(0xFFFFB2CB) else Color(0xFF8A3358), modifier = Modifier.size(11.dp))
                                 }
                             }
                             Spacer(modifier = Modifier.height(6.dp))
@@ -1177,13 +1197,13 @@ fun DoctorScheduleScreenContent(
                                 text = "$upcomingVisits",
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF5A1E37)
+                                color = if (isDark) Color(0xFFEDE7EF) else Color(0xFF5A1E37)
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = if (upcomingVisits == 1) "1 pending" else "$upcomingVisits pending",
                                 fontSize = 10.5.sp,
-                                color = Color(0xFF944B68)
+                                color = if (isDark) Color(0xFFFFB2CB) else Color(0xFF944B68)
                             )
                         }
                     }
@@ -1198,8 +1218,8 @@ fun DoctorScheduleScreenContent(
                         .height(48.dp)
                         .shadow(elevation = 1.dp, shape = RoundedCornerShape(50))
                         .clip(RoundedCornerShape(50))
-                        .background(Color.White)
-                        .border(1.dp, Color(0xFFEADBEE), RoundedCornerShape(50))
+                        .background(if (isDark) Color(0xFF1F1A24) else Color.White)
+                        .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFEADBEE), RoundedCornerShape(50))
                         .clickable { onManageAvailabilityClick() },
                     contentAlignment = Alignment.Center
                 ) {
@@ -1207,12 +1227,12 @@ fun DoctorScheduleScreenContent(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        CalendarNavIcon(color = Color(0xFF6E4F76), modifier = Modifier.size(16.dp))
+                        CalendarNavIcon(color = if (isDark) Color(0xFFD4B3DC) else Color(0xFF6E4F76), modifier = Modifier.size(16.dp))
                         Text(
                             text = "Manage clinic availability",
                             fontSize = 13.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF6E4F76)
+                            color = if (isDark) Color(0xFFD4B3DC) else Color(0xFF6E4F76)
                         )
                     }
                 }
@@ -1234,12 +1254,13 @@ private fun DoctorCompactAppointmentCard(
     item: DoctorCompactAppointment,
     onClick: () -> Unit = {}
 ) {
+    val isDark = ThemeManager.isDarkTheme()
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color.White)
-            .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+            .background(if (isDark) Color(0xFF1F1A24) else Color.White)
+            .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
             .clickable { onClick() }
             .padding(12.dp)
     ) {
@@ -1252,7 +1273,11 @@ private fun DoctorCompactAppointmentCard(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f)
             ) {
-                val iconBg = if (item.isVideo) Color(0xFFEDE4F0) else MomoraMintBadgeBg
+                val iconBg = if (isDark) {
+                    if (item.isVideo) Color(0xFF35263B) else Color(0xFF1D3328)
+                } else {
+                    if (item.isVideo) Color(0xFFEDE4F0) else MomoraMintBadgeBg
+                }
                 Box(
                     modifier = Modifier
                         .size(36.dp)
@@ -1261,9 +1286,9 @@ private fun DoctorCompactAppointmentCard(
                     contentAlignment = Alignment.Center
                 ) {
                     if (item.isVideo) {
-                        VideoIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp))
+                        VideoIcon(color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary, modifier = Modifier.size(16.dp))
                     } else {
-                        ClinicIcon(color = MomoraMintBadgeText, modifier = Modifier.size(16.dp))
+                        ClinicIcon(color = if (isDark) Color(0xFF88D4A8) else MomoraMintBadgeText, modifier = Modifier.size(16.dp))
                     }
                 }
 
@@ -1274,13 +1299,13 @@ private fun DoctorCompactAppointmentCard(
                         text = "${item.patientName.sanitizeDoctorText()} · ${item.timeText.formatDoctorTime()}",
                         fontSize = 13.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MomoraPurpleDark
+                        color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = item.visitTypeAndMode.sanitizeDoctorText(),
                         fontSize = 11.5.sp,
-                        color = MomoraBodyMuted
+                        color = if (isDark) Color(0xFFB5ACB9) else MomoraBodyMuted
                     )
                 }
             }
@@ -1288,14 +1313,24 @@ private fun DoctorCompactAppointmentCard(
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(50))
-                    .background(if (item.isVideo) Color(0xFFF4ECF8) else MomoraMintBadgeBg)
+                    .background(
+                        if (isDark) {
+                            if (item.isVideo) Color(0xFF35263B) else Color(0xFF1D3328)
+                        } else {
+                            if (item.isVideo) Color(0xFFF4ECF8) else MomoraMintBadgeBg
+                        }
+                    )
                     .padding(horizontal = 12.dp, vertical = 4.dp)
             ) {
                 Text(
                     text = item.statusText,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (item.isVideo) MomoraPurplePrimary else MomoraMintBadgeText
+                    color = if (isDark) {
+                        if (item.isVideo) Color(0xFFD4B3DC) else Color(0xFF88D4A8)
+                    } else {
+                        if (item.isVideo) MomoraPurplePrimary else MomoraMintBadgeText
+                    }
                 )
             }
         }
@@ -1310,9 +1345,12 @@ private fun DoctorBottomNavBar(
     selectedIndex: Int,
     onTabSelected: (Int) -> Unit
 ) {
-    val navSurface = MaterialTheme.colorScheme.surface
-    val navBorder = Color(0xFFEFE8F2)
-    val indicatorColor = Color(0xFFDFD5E3)
+    val isDark = ThemeManager.isDarkTheme()
+    val navSurface = if (isDark) Color(0xFF1E1A22) else Color.White
+    val navBorder = if (isDark) Color(0xFF2E2633) else Color(0xFFEFE8F2)
+    val indicatorColor = if (isDark) Color(0xFF483D4F) else Color(0xFFDFD5E3)
+    val activeNavColor = if (isDark) Color(0xFFE0C4E7) else Color(0xFF6E4F76)
+    val inactiveNavColor = if (isDark) Color(0xFF8D8392) else Color(0xFF8E8394)
 
     Column(
         modifier = Modifier
@@ -1332,25 +1370,25 @@ private fun DoctorBottomNavBar(
                 label = "Home",
                 isSelected = selectedIndex == 0,
                 onClick = { onTabSelected(0) },
-                icon = { HomeNavIcon(color = if (selectedIndex == 0) Color(0xFF6E4F76) else Color(0xFF8E8394), modifier = Modifier.size(22.dp)) }
+                icon = { HomeNavIcon(color = if (selectedIndex == 0) activeNavColor else inactiveNavColor, modifier = Modifier.size(22.dp)) }
             )
             NavTabItem(
                 label = "Patients",
                 isSelected = selectedIndex == 1,
                 onClick = { onTabSelected(1) },
-                icon = { PeopleNavIcon(color = if (selectedIndex == 1) Color(0xFF6E4F76) else Color(0xFF8E8394), modifier = Modifier.size(22.dp)) }
+                icon = { PeopleNavIcon(color = if (selectedIndex == 1) activeNavColor else inactiveNavColor, modifier = Modifier.size(22.dp)) }
             )
             NavTabItem(
                 label = "Schedule",
                 isSelected = selectedIndex == 2,
                 onClick = { onTabSelected(2) },
-                icon = { CalendarNavIcon(color = if (selectedIndex == 2) Color(0xFF6E4F76) else Color(0xFF8E8394), modifier = Modifier.size(22.dp)) }
+                icon = { CalendarNavIcon(color = if (selectedIndex == 2) activeNavColor else inactiveNavColor, modifier = Modifier.size(22.dp)) }
             )
             NavTabItem(
                 label = "Advice",
                 isSelected = selectedIndex == 3,
                 onClick = { onTabSelected(3) },
-                icon = { ChatNavIcon(color = if (selectedIndex == 3) Color(0xFF6E4F76) else Color(0xFF8E8394), modifier = Modifier.size(22.dp)) }
+                icon = { ChatNavIcon(color = if (selectedIndex == 3) activeNavColor else inactiveNavColor, modifier = Modifier.size(22.dp)) }
             )
         }
 
@@ -1374,9 +1412,10 @@ private fun NavTabItem(
     onClick: () -> Unit,
     icon: @Composable () -> Unit
 ) {
-    val activeBg = Color(0xFFF1E7F5)
-    val activeColor = Color(0xFF5A3D63)
-    val inactiveColor = Color(0xFF8E8394)
+    val isDark = ThemeManager.isDarkTheme()
+    val activeBg = if (isDark) Color(0xFF35263B) else Color(0xFFF1E7F5)
+    val activeColor = if (isDark) Color(0xFFD4B3DC) else Color(0xFF5A3D63)
+    val inactiveColor = if (isDark) Color(0xFF8D8392) else Color(0xFF8E8394)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -1599,17 +1638,24 @@ private fun formatTabComponents(label: String, selectedDate: String?): Triple<St
     val dayNum = parts.getOrNull(0) ?: ""
     val monthName = parts.getOrNull(1) ?: ""
 
-    val year = if (!selectedDate.isNullOrBlank() && selectedDate.length >= 4) {
-        selectedDate.substring(0, 4)
+    val todayCal = Calendar.getInstance()
+    val baseYear = if (!selectedDate.isNullOrBlank() && selectedDate.length >= 4) {
+        selectedDate.substring(0, 4).toIntOrNull() ?: todayCal.get(Calendar.YEAR)
     } else {
-        Calendar.getInstance().get(Calendar.YEAR).toString()
+        todayCal.get(Calendar.YEAR)
     }
 
     val dayOfWeek = try {
         val sdf = SimpleDateFormat("d MMM yyyy", Locale.ENGLISH)
-        val d = sdf.parse("$dayNum $monthName $year")
+        val d = sdf.parse("$dayNum $monthName $baseYear")
         if (d != null) {
-            SimpleDateFormat("EEE", Locale.ENGLISH).format(d).uppercase(Locale.ENGLISH)
+            val cal = Calendar.getInstance().apply { time = d }
+            val todayMonth = todayCal.get(Calendar.MONTH)
+            val tabMonth = cal.get(Calendar.MONTH)
+            if (todayMonth >= Calendar.NOVEMBER && tabMonth <= Calendar.FEBRUARY) {
+                cal.set(Calendar.YEAR, baseYear + 1)
+            }
+            SimpleDateFormat("EEE", Locale.ENGLISH).format(cal.time).uppercase(Locale.ENGLISH)
         } else ""
     } catch (_: Exception) {
         ""

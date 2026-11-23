@@ -56,6 +56,7 @@ import com.example.SIMATS.ui.theme.MomoraPurpleDark
 import com.example.SIMATS.ui.theme.MomoraPurplePrimary
 import com.example.SIMATS.ui.theme.MomoraPurpleText
 import com.example.SIMATS.ui.theme.MomoraScreenBackground
+import com.example.SIMATS.ui.theme.ThemeManager
 import java.util.Locale
 
 @Composable
@@ -121,11 +122,12 @@ fun DoctorAvailabilityScreenContent(
 ) {
     val scrollState = rememberScrollState()
     val context = LocalContext.current
+    val isDark = ThemeManager.isDarkTheme()
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MomoraScreenBackground)
+            .background(if (isDark) Color(0xFF141218) else MomoraScreenBackground)
             .statusBarsPadding()
             .navigationBarsPadding()
     ) {
@@ -140,6 +142,8 @@ fun DoctorAvailabilityScreenContent(
             Box(
                 modifier = Modifier
                     .size(40.dp)
+                    .clip(CircleShape)
+                    .background(if (isDark) Color(0xFF28212F) else Color(0xFFF7F2FA))
                     .clickable { onBackClick() },
                 contentAlignment = Alignment.Center
             ) {
@@ -147,7 +151,7 @@ fun DoctorAvailabilityScreenContent(
                     text = "←",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Medium,
-                    color = MomoraPurpleText
+                    color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleText
                 )
             }
 
@@ -155,18 +159,19 @@ fun DoctorAvailabilityScreenContent(
                 text = "Clinic Availability",
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Bold,
-                color = MomoraPurpleDark
+                color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
             )
 
             Box(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
+                    .background(if (isDark) Color(0xFF2E2435) else Color(0xFFFAF0F3))
                     .clickable { onNotificationClick() },
                 contentAlignment = Alignment.Center
             ) {
                 BellIcon(
-                    color = MomoraPurplePrimary,
+                    color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary,
                     modifier = Modifier.size(20.dp)
                 )
             }
@@ -235,7 +240,7 @@ fun DoctorAvailabilityScreenContent(
                     text = "Weekly Schedule",
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MomoraPurpleDark
+                    color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -243,7 +248,7 @@ fun DoctorAvailabilityScreenContent(
                 Text(
                     text = "Configure weekly consultation hours and appointment slot duration.",
                     fontSize = 13.sp,
-                    color = MomoraBodyMuted,
+                    color = if (isDark) Color(0xFFB5ACB9) else MomoraBodyMuted,
                     lineHeight = 17.sp
                 )
 
@@ -254,8 +259,8 @@ fun DoctorAvailabilityScreenContent(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(16.dp))
-                        .background(Color.White)
-                        .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                        .background(if (isDark) Color(0xFF1F1A24) else Color.White)
+                        .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
                         .padding(16.dp)
                 ) {
                     Column {
@@ -263,13 +268,13 @@ fun DoctorAvailabilityScreenContent(
                             text = "Appointment Slot Duration",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MomoraPurpleDark
+                            color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "Standard duration for each patient appointment booking.",
                             fontSize = 11.5.sp,
-                            color = MomoraBodyMuted
+                            color = if (isDark) Color(0xFFB5ACB9) else MomoraBodyMuted
                         )
                         Spacer(modifier = Modifier.height(12.dp))
 
@@ -285,7 +290,7 @@ fun DoctorAvailabilityScreenContent(
                                         .weight(1f)
                                         .height(38.dp)
                                         .clip(RoundedCornerShape(10.dp))
-                                        .background(if (isSelected) MomoraPurplePrimary else Color(0xFFF4ECF8))
+                                        .background(if (isSelected) (if (isDark) Color(0xFF9370A3) else MomoraPurplePrimary) else (if (isDark) Color(0xFF2E2435) else Color(0xFFF4ECF8)))
                                         .clickable { onSlotMinutesChanged(mins) },
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -293,7 +298,7 @@ fun DoctorAvailabilityScreenContent(
                                         text = "${mins} min",
                                         fontSize = 12.sp,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                        color = if (isSelected) Color.White else MomoraPurpleDark
+                                        color = if (isSelected) Color.White else (if (isDark) Color(0xFFD4B3DC) else MomoraPurpleDark)
                                     )
                                 }
                             }
@@ -307,7 +312,7 @@ fun DoctorAvailabilityScreenContent(
                     text = "Weekly Hours",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MomoraPurpleDark
+                    color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -453,14 +458,15 @@ private fun AvailabilityDayCard(
     onPickStartTime: () -> Unit,
     onPickEndTime: () -> Unit
 ) {
+    val isDark = ThemeManager.isDarkTheme()
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color.White)
+            .background(if (isDark) Color(0xFF1F1A24) else Color.White)
             .border(
                 1.dp,
-                if (slot.isActive) Color(0xFFEFE8F4) else Color(0xFFF0F0F0),
+                if (isDark) Color(0xFF332A3B) else (if (slot.isActive) Color(0xFFEFE8F4) else Color(0xFFF0F0F0)),
                 RoundedCornerShape(16.dp)
             )
             .padding(14.dp)
@@ -476,7 +482,7 @@ private fun AvailabilityDayCard(
                         text = slot.weekday.sanitizeDoctorText(),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (slot.isActive) MomoraPurpleDark else MomoraPurpleDark.copy(alpha = 0.6f)
+                        color = if (slot.isActive) (if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark) else (if (isDark) Color(0xFF7D7382) else MomoraPurpleDark.copy(alpha = 0.6f))
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))
@@ -485,28 +491,28 @@ private fun AvailabilityDayCard(
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(50))
-                                .background(MomoraMintBadgeBg)
+                                .background(if (isDark) Color(0xFF1D3328) else MomoraMintBadgeBg)
                                 .padding(horizontal = 8.dp, vertical = 2.dp)
                         ) {
                             Text(
                                 text = "Open",
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MomoraMintBadgeText
+                                color = if (isDark) Color(0xFF88D4A8) else MomoraMintBadgeText
                             )
                         }
                     } else {
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(50))
-                                .background(Color(0xFFF0ECF4))
+                                .background(if (isDark) Color(0xFF2E2435) else Color(0xFFF0ECF4))
                                 .padding(horizontal = 8.dp, vertical = 2.dp)
                         ) {
                             Text(
                                 text = "Closed",
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = MomoraBodyMuted
+                                color = if (isDark) Color(0xFFB5ACB9) else MomoraBodyMuted
                             )
                         }
                     }
@@ -517,9 +523,9 @@ private fun AvailabilityDayCard(
                     onCheckedChange = onToggle,
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = Color.White,
-                        checkedTrackColor = MomoraPurplePrimary,
+                        checkedTrackColor = if (isDark) Color(0xFF9370A3) else MomoraPurplePrimary,
                         uncheckedThumbColor = Color.White,
-                        uncheckedTrackColor = Color(0xFFDDD8E2)
+                        uncheckedTrackColor = if (isDark) Color(0xFF43384A) else Color(0xFFDDD8E2)
                     )
                 )
             }
@@ -538,7 +544,7 @@ private fun AvailabilityDayCard(
                         .weight(1f)
                         .height(38.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .background(if (slot.isActive) Color(0xFFF4ECF8) else Color(0xFFF8F6FA))
+                        .background(if (slot.isActive) (if (isDark) Color(0xFF2E2435) else Color(0xFFF4ECF8)) else (if (isDark) Color(0xFF251F2A) else Color(0xFFF8F6FA)))
                         .clickable { onPickStartTime() },
                     contentAlignment = Alignment.Center
                 ) {
@@ -546,7 +552,7 @@ private fun AvailabilityDayCard(
                         text = slot.startTime.formatDoctorTime(),
                         fontSize = 13.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (slot.isActive) MomoraPurpleDark else MomoraPurpleDark.copy(alpha = 0.5f)
+                        color = if (slot.isActive) (if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark) else (if (isDark) Color(0xFF7D7382) else MomoraPurpleDark.copy(alpha = 0.5f))
                     )
                 }
 
@@ -554,7 +560,7 @@ private fun AvailabilityDayCard(
                     text = "to",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
-                    color = if (slot.isActive) MomoraBodyMuted else MomoraBodyMuted.copy(alpha = 0.5f)
+                    color = if (isDark) Color(0xFFB5ACB9) else (if (slot.isActive) MomoraBodyMuted else MomoraBodyMuted.copy(alpha = 0.5f))
                 )
 
                 // End Time Button
@@ -563,7 +569,7 @@ private fun AvailabilityDayCard(
                         .weight(1f)
                         .height(38.dp)
                         .clip(RoundedCornerShape(10.dp))
-                        .background(if (slot.isActive) Color(0xFFF4ECF8) else Color(0xFFF8F6FA))
+                        .background(if (slot.isActive) (if (isDark) Color(0xFF2E2435) else Color(0xFFF4ECF8)) else (if (isDark) Color(0xFF251F2A) else Color(0xFFF8F6FA)))
                         .clickable { onPickEndTime() },
                     contentAlignment = Alignment.Center
                 ) {
@@ -571,7 +577,7 @@ private fun AvailabilityDayCard(
                         text = slot.endTime.formatDoctorTime(),
                         fontSize = 13.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (slot.isActive) MomoraPurpleDark else MomoraPurpleDark.copy(alpha = 0.5f)
+                        color = if (slot.isActive) (if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark) else (if (isDark) Color(0xFF7D7382) else MomoraPurpleDark.copy(alpha = 0.5f))
                     )
                 }
             }
