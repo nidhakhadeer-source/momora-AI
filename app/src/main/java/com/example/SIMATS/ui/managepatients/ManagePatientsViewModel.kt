@@ -5,13 +5,17 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.SIMATS.data.repository.ManagePatientsRepository
 import com.example.SIMATS.data.repository.ManagePatientsRepositoryImpl
+import com.example.SIMATS.data.repository.NotificationRepository
+import com.example.SIMATS.data.repository.NotificationRepositoryImpl
+import com.example.SIMATS.data.repository.NotificationStateManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class ManagePatientsViewModel(
-    private val repository: ManagePatientsRepository = ManagePatientsRepositoryImpl()
+    private val repository: ManagePatientsRepository = ManagePatientsRepositoryImpl(),
+    private val notificationRepository: NotificationRepository = NotificationRepositoryImpl()
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ManagePatientsUiState())
@@ -19,6 +23,7 @@ class ManagePatientsViewModel(
 
     init {
         loadPatients()
+        loadNotifications()
     }
 
     fun onEvent(event: ManagePatientsUiEvent) {
@@ -38,9 +43,52 @@ class ManagePatientsViewModel(
             }
             ManagePatientsUiEvent.OnNextPageClicked -> {}
             ManagePatientsUiEvent.OnBackClicked -> {}
-            ManagePatientsUiEvent.OnNotificationClicked -> {}
+            ManagePatientsUiEvent.OnNotificationClicked -> {
+                _uiState.value = _uiState.value.copy(showNotificationsDialog = true)
+                markNotificationsRead()
+            }
+            ManagePatientsUiEvent.OnDismissNotificationsDialog -> {
+                _uiState.value = _uiState.value.copy(showNotificationsDialog = false)
+            }
             ManagePatientsUiEvent.OnRetryClicked -> {
                 loadPatients()
+                loadNotifications()
+            }
+        }
+    }
+
+    fun loadNotifications() {
+        _uiState.value = _uiState.value.copy(isLoadingNotifications = true)
+        viewModelScope.launch {
+            notificationRepository.getNotifications().collect { result ->
+                result.fold(
+                    onSuccess = { list ->
+                        val unread = list.count { !it.isRead }
+                        NotificationStateManager.setUnreadCount(unread)
+                        _uiState.value = _uiState.value.copy(
+                            isLoadingNotifications = false,
+                            notificationsList = list,
+                            unreadNotificationCount = unread
+                        )
+                    },
+                    onFailure = {
+                        _uiState.value = _uiState.value.copy(isLoadingNotifications = false)
+                    }
+                )
+            }
+        }
+    }
+
+    private fun markNotificationsRead() {
+        viewModelScope.launch {
+            notificationRepository.markAllAsRead().collect { result ->
+                if (result.isSuccess) {
+                    NotificationStateManager.markAllRead()
+                    _uiState.value = _uiState.value.copy(
+                        unreadNotificationCount = 0,
+                        notificationsList = _uiState.value.notificationsList.map { it.copy(isRead = true) }
+                    )
+                }
             }
         }
     }

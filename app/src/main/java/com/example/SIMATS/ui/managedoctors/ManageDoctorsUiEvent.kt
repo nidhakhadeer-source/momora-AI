@@ -10,5 +10,6 @@ sealed interface ManageDoctorsUiEvent {
     data object OnNextPageClicked : ManageDoctorsUiEvent
     data object OnBackClicked : ManageDoctorsUiEvent
     data object OnNotificationClicked : ManageDoctorsUiEvent
+    data object OnDismissNotificationsDialog : ManageDoctorsUiEvent
     data object OnRetryClicked : ManageDoctorsUiEvent
 }

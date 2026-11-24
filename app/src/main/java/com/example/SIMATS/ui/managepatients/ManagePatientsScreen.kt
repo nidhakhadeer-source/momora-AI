@@ -56,6 +56,8 @@ import com.example.SIMATS.ui.theme.MomoraPurplePrimary
 import com.example.SIMATS.ui.theme.MomoraPurpleText
 import com.example.SIMATS.ui.theme.MomoraScreenBackground
 import com.example.SIMATS.ui.theme.ThemeManager
+import com.example.SIMATS.data.repository.NotificationStateManager
+import com.example.SIMATS.ui.admindashboard.AdminNotificationsDialog
 
 @Composable
 fun ManagePatientsScreen(
@@ -63,6 +65,7 @@ fun ManagePatientsScreen(
     modifier: Modifier = Modifier,
     selectedNavIndex: Int = 2,
     onNavigateBack: () -> Unit = {},
+    onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -81,12 +84,24 @@ fun ManagePatientsScreen(
             viewModel.onEvent(ManagePatientsUiEvent.OnBackClicked)
             onNavigateBack()
         },
-        onNotificationClick = { viewModel.onEvent(ManagePatientsUiEvent.OnNotificationClicked) },
+        onNotificationClick = {
+            viewModel.onEvent(ManagePatientsUiEvent.OnNotificationClicked)
+            onNotificationClick()
+        },
         onNavTabSelected = { index ->
             viewModel.onEvent(ManagePatientsUiEvent.OnNavTabSelected(index))
             onNavTabSelected(index)
         }
     )
+
+    // Notifications Dialog
+    if (uiState.showNotificationsDialog) {
+        AdminNotificationsDialog(
+            notifications = uiState.notificationsList,
+            isLoading = uiState.isLoadingNotifications,
+            onDismiss = { viewModel.onEvent(ManagePatientsUiEvent.OnDismissNotificationsDialog) }
+        )
+    }
 }
 
 @Composable
@@ -170,6 +185,7 @@ fun ManagePatientsScreenContent(
                 )
             }
 
+            val unreadCount by NotificationStateManager.unreadCount.collectAsState()
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -181,6 +197,16 @@ fun ManagePatientsScreenContent(
                     color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary,
                     modifier = Modifier.size(20.dp)
                 )
+                if (unreadCount > 0) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(top = 8.dp, end = 8.dp)
+                            .size(7.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFE53935))
+                    )
+                }
             }
         }
 
@@ -457,67 +483,6 @@ fun ManagePatientsScreenContent(
                             onManageAccessClick = { onManageAccessClick(patient.id) }
                         )
                     }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Pagination Controls Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Showing 1-4 of ${uiState.totalCount}",
-                    fontSize = 11.5.sp,
-                    color = MomoraBodyMuted
-                )
-
-                Text(
-                    text = "Next ➔",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MomoraPurplePrimary,
-                    modifier = Modifier.clickable { onNextPageClick() }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Admin Access Restriction Disclaimer Card
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFFF4ECF8))
-                    .padding(horizontal = 14.dp, vertical = 11.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(30.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFEBE0F2)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        ShieldIcon(
-                            color = MomoraPurplePrimary,
-                            modifier = Modifier.size(14.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(10.dp))
-
-                    Text(
-                        text = "Admin access is for account management. Clinical notes and health readings are restricted to authorized care teams.",
-                        fontSize = 11.5.sp,
-                        lineHeight = 15.sp,
-                        color = MomoraPurplePrimary,
-                        modifier = Modifier.weight(1f)
-                    )
                 }
             }
 

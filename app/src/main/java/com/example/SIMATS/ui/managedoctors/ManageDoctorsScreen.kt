@@ -57,6 +57,8 @@ import com.example.SIMATS.ui.theme.MomoraPurplePrimary
 import com.example.SIMATS.ui.theme.MomoraPurpleText
 import com.example.SIMATS.ui.theme.MomoraScreenBackground
 import com.example.SIMATS.ui.theme.ThemeManager
+import com.example.SIMATS.data.repository.NotificationStateManager
+import com.example.SIMATS.ui.admindashboard.AdminNotificationsDialog
 
 @Composable
 fun ManageDoctorsScreen(
@@ -65,6 +67,7 @@ fun ManageDoctorsScreen(
     selectedNavIndex: Int = 1,
     onNavigateBack: () -> Unit = {},
     onAddDoctorClick: () -> Unit = {},
+    onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -87,12 +90,24 @@ fun ManageDoctorsScreen(
             viewModel.onEvent(ManageDoctorsUiEvent.OnBackClicked)
             onNavigateBack()
         },
-        onNotificationClick = { viewModel.onEvent(ManageDoctorsUiEvent.OnNotificationClicked) },
+        onNotificationClick = {
+            viewModel.onEvent(ManageDoctorsUiEvent.OnNotificationClicked)
+            onNotificationClick()
+        },
         onNavTabSelected = { index ->
             viewModel.onEvent(ManageDoctorsUiEvent.OnNavTabSelected(index))
             onNavTabSelected(index)
         }
     )
+
+    // Notifications Dialog
+    if (uiState.showNotificationsDialog) {
+        AdminNotificationsDialog(
+            notifications = uiState.notificationsList,
+            isLoading = uiState.isLoadingNotifications,
+            onDismiss = { viewModel.onEvent(ManageDoctorsUiEvent.OnDismissNotificationsDialog) }
+        )
+    }
 }
 
 @Composable
@@ -167,6 +182,7 @@ fun ManageDoctorsScreenContent(
                 )
             }
 
+            val unreadCount by NotificationStateManager.unreadCount.collectAsState()
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -178,6 +194,16 @@ fun ManageDoctorsScreenContent(
                     color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary,
                     modifier = Modifier.size(20.dp)
                 )
+                if (unreadCount > 0) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(top = 8.dp, end = 8.dp)
+                            .size(7.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFE53935))
+                    )
+                }
             }
         }
 
@@ -456,69 +482,6 @@ fun ManageDoctorsScreenContent(
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Pagination Controls Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Showing 1-3 of ${uiState.totalCount}",
-                    fontSize = 11.5.sp,
-                    color = MomoraBodyMuted
-                )
-
-                Text(
-                    text = "Next ➔",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MomoraPurplePrimary,
-                    modifier = Modifier.clickable { onNextPageClick() }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Add Doctor Primary Button
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .clip(RoundedCornerShape(50))
-                    .background(MomoraPurplePrimary)
-                    .clickable { onAddDoctorClick() },
-                contentAlignment = Alignment.Center
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Add doctor",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "👤+",
-                        fontSize = 15.sp,
-                        color = Color.White
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Deactivation removes access, not clinical records. Reassign patients before confirming.",
-                fontSize = 11.sp,
-                color = MomoraFooterText,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
 
             Spacer(modifier = Modifier.height(16.dp))
         }

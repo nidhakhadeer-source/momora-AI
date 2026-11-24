@@ -740,7 +740,7 @@ private fun AdminTopBarAvatar(
  * Notifications Dialog displaying actual admin notifications.
  */
 @Composable
-private fun AdminNotificationsDialog(
+fun AdminNotificationsDialog(
     notifications: List<NotificationItem>,
     isLoading: Boolean,
     onDismiss: () -> Unit
