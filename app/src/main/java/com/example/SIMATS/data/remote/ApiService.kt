@@ -373,6 +373,17 @@ interface ApiService {
         @Field("doctorId") doctorId: String
     ): BaseResponse
 
+    @FormUrlEncoded
+    @POST("admin/doctors.php?action=update")
+    suspend fun updateDoctorDetails(
+        @Field("doctorId") doctorId: String,
+        @Field("name") name: String,
+        @Field("email") email: String,
+        @Field("specialty") specialty: String,
+        @Field("licenseId") licenseId: String,
+        @Field("clinic") clinic: String
+    ): BaseResponse
+
     @GET("admin/patients.php")
     suspend fun getManagePatients(): DataResponse<List<PatientAccountItem>>
 

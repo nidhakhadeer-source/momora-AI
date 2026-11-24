@@ -34,9 +34,58 @@ class ManagePatientsViewModel(
             is ManagePatientsUiEvent.OnFilterTabSelected -> {
                 _uiState.value = _uiState.value.copy(selectedFilterTab = event.index)
             }
-            is ManagePatientsUiEvent.OnEditAccountClicked -> {}
+            is ManagePatientsUiEvent.OnPatientCardClicked -> {
+                _uiState.value = _uiState.value.copy(
+                    selectedPatient = event.patient,
+                    showPatientDetailsDialog = true
+                )
+            }
+            is ManagePatientsUiEvent.OnDismissPatientDetailsDialog -> {
+                _uiState.value = _uiState.value.copy(
+                    showPatientDetailsDialog = false,
+                    selectedPatient = null
+                )
+            }
+            is ManagePatientsUiEvent.OnRequestToggleAccess -> {
+                _uiState.value = _uiState.value.copy(
+                    patientToToggle = event.patient,
+                    showToggleConfirmDialog = true
+                )
+            }
+            is ManagePatientsUiEvent.OnDismissToggleConfirmDialog -> {
+                _uiState.value = _uiState.value.copy(
+                    showToggleConfirmDialog = false,
+                    patientToToggle = null
+                )
+            }
+            ManagePatientsUiEvent.OnConfirmToggleAccess -> {
+                val patient = _uiState.value.patientToToggle
+                if (patient != null) {
+                    toggleAccess(patient.id)
+                }
+            }
+            ManagePatientsUiEvent.OnDismissFeedbackMessage -> {
+                _uiState.value = _uiState.value.copy(actionFeedbackMessage = null)
+            }
+            is ManagePatientsUiEvent.OnEditAccountClicked -> {
+                val patient = _uiState.value.patients.find { it.id == event.patientId }
+                if (patient != null) {
+                    _uiState.value = _uiState.value.copy(
+                        selectedPatient = patient,
+                        showPatientDetailsDialog = true
+                    )
+                }
+            }
             is ManagePatientsUiEvent.OnManageAccessClicked -> {
-                toggleAccess(event.patientId)
+                val patient = _uiState.value.patients.find { it.id == event.patientId }
+                if (patient != null) {
+                    _uiState.value = _uiState.value.copy(
+                        patientToToggle = patient,
+                        showToggleConfirmDialog = true
+                    )
+                } else {
+                    toggleAccess(event.patientId)
+                }
             }
             is ManagePatientsUiEvent.OnNavTabSelected -> {
                 _uiState.value = _uiState.value.copy(selectedNavIndex = event.index)
@@ -122,26 +171,48 @@ class ManagePatientsViewModel(
     }
 
     private fun toggleAccess(id: String) {
+        _uiState.value = _uiState.value.copy(isTogglingAccess = true)
         viewModelScope.launch {
             repository.togglePatientAccess(id).collect { result ->
-                result.onSuccess {
-                    val updated = _uiState.value.patients.map { p ->
-                        if (p.id == id) {
-                            val newActive = !p.isActive
-                            p.copy(
-                                isActive = newActive,
-                                assignedDoctorText = if (newActive) "Assigned doctor: Dr Amelia Chen" else "Account access disabled"
-                            )
-                        } else p
+                result.fold(
+                    onSuccess = {
+                        val updated = _uiState.value.patients.map { p ->
+                            if (p.id == id) {
+                                val newActive = !p.isActive
+                                val docName = p.assignedDoctor ?: "Dr Amelia Chen"
+                                p.copy(
+                                    isActive = newActive,
+                                    assignedDoctorText = if (newActive) "Assigned doctor: $docName" else "Account access disabled"
+                                )
+                            } else p
+                        }
+                        val active = updated.count { it.isActive }
+                        val inactive = updated.count { !it.isActive }
+                        val targetPatient = updated.find { it.id == id }
+                        val updatedSelected = if (_uiState.value.selectedPatient?.id == id) targetPatient else _uiState.value.selectedPatient
+                        val statusLabel = if (targetPatient?.isActive == true) "activated" else "deactivated"
+
+                        _uiState.value = _uiState.value.copy(
+                            patients = updated,
+                            totalCount = updated.size,
+                            activeCount = active,
+                            inactiveCount = inactive,
+                            selectedPatient = updatedSelected,
+                            isTogglingAccess = false,
+                            showToggleConfirmDialog = false,
+                            patientToToggle = null,
+                            actionFeedbackMessage = "${targetPatient?.name ?: "Patient"} account has been $statusLabel."
+                        )
+                    },
+                    onFailure = { error ->
+                        _uiState.value = _uiState.value.copy(
+                            isTogglingAccess = false,
+                            showToggleConfirmDialog = false,
+                            patientToToggle = null,
+                            errorMessage = error.localizedMessage ?: "Failed to update account access"
+                        )
                     }
-                    val active = updated.count { it.isActive }
-                    val inactive = updated.count { !it.isActive }
-                    _uiState.value = _uiState.value.copy(
-                        patients = updated,
-                        activeCount = active,
-                        inactiveCount = inactive
-                    )
-                }
+                )
             }
         }
     }

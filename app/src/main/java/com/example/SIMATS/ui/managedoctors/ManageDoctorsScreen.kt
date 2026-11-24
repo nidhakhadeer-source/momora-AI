@@ -59,6 +59,8 @@ import com.example.SIMATS.ui.theme.MomoraScreenBackground
 import com.example.SIMATS.ui.theme.ThemeManager
 import com.example.SIMATS.data.repository.NotificationStateManager
 import com.example.SIMATS.ui.admindashboard.AdminNotificationsDialog
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 
 @Composable
 fun ManageDoctorsScreen(
@@ -82,8 +84,10 @@ fun ManageDoctorsScreen(
         selectedNavIndex = selectedNavIndex,
         onSearchQueryChanged = { q -> viewModel.onEvent(ManageDoctorsUiEvent.OnSearchQueryChanged(q)) },
         onFilterTabSelected = { index -> viewModel.onEvent(ManageDoctorsUiEvent.OnFilterTabSelected(index)) },
-        onToggleDoctorStatus = { id -> viewModel.onEvent(ManageDoctorsUiEvent.OnToggleDoctorStatusClicked(id)) },
-        onEditDetailsClick = { id -> viewModel.onEvent(ManageDoctorsUiEvent.OnEditDetailsClicked(id)) },
+        onCardClick = { doc -> viewModel.onEvent(ManageDoctorsUiEvent.OnDoctorCardClicked(doc)) },
+        onToggleDoctorStatus = { doc -> viewModel.onEvent(ManageDoctorsUiEvent.OnRequestToggleStatus(doc)) },
+        onEditDetailsClick = { doc -> viewModel.onEvent(ManageDoctorsUiEvent.OnOpenEditDoctor(doc)) },
+        onDismissFeedback = { viewModel.onEvent(ManageDoctorsUiEvent.OnDismissFeedbackMessage) },
         onRetryClick = { viewModel.onEvent(ManageDoctorsUiEvent.OnRetryClicked) },
         onAddDoctorClick = {
             viewModel.onEvent(ManageDoctorsUiEvent.OnAddDoctorClicked)
@@ -104,6 +108,46 @@ fun ManageDoctorsScreen(
         }
     )
 
+    // Doctor Details Dialog
+    if (uiState.showDoctorDetailsDialog && uiState.selectedDoctor != null) {
+        DoctorDetailsDialog(
+            doctor = uiState.selectedDoctor!!,
+            onDismiss = { viewModel.onEvent(ManageDoctorsUiEvent.OnDismissDoctorDetailsDialog) },
+            onEditClick = { doc ->
+                viewModel.onEvent(ManageDoctorsUiEvent.OnDismissDoctorDetailsDialog)
+                viewModel.onEvent(ManageDoctorsUiEvent.OnOpenEditDoctor(doc))
+            },
+            onToggleStatusClick = { doc ->
+                viewModel.onEvent(ManageDoctorsUiEvent.OnDismissDoctorDetailsDialog)
+                viewModel.onEvent(ManageDoctorsUiEvent.OnRequestToggleStatus(doc))
+            }
+        )
+    }
+
+    // Toggle Confirm Dialog
+    if (uiState.showToggleConfirmDialog && uiState.doctorToToggle != null) {
+        DoctorToggleConfirmDialog(
+            doctor = uiState.doctorToToggle!!,
+            isToggling = uiState.isTogglingStatus,
+            onConfirm = { viewModel.onEvent(ManageDoctorsUiEvent.OnConfirmToggleStatus) },
+            onDismiss = { viewModel.onEvent(ManageDoctorsUiEvent.OnDismissToggleConfirmDialog) }
+        )
+    }
+
+    // Edit Doctor Dialog
+    if (uiState.showEditDoctorDialog && uiState.doctorToEdit != null) {
+        DoctorEditDialog(
+            uiState = uiState,
+            onNameChanged = { viewModel.onEvent(ManageDoctorsUiEvent.OnEditNameChanged(it)) },
+            onEmailChanged = { viewModel.onEvent(ManageDoctorsUiEvent.OnEditEmailChanged(it)) },
+            onSpecialtyChanged = { viewModel.onEvent(ManageDoctorsUiEvent.OnEditSpecialtyChanged(it)) },
+            onLicenseIdChanged = { viewModel.onEvent(ManageDoctorsUiEvent.OnEditLicenseIdChanged(it)) },
+            onClinicChanged = { viewModel.onEvent(ManageDoctorsUiEvent.OnEditClinicChanged(it)) },
+            onSave = { viewModel.onEvent(ManageDoctorsUiEvent.OnSaveDoctorDetails) },
+            onDismiss = { viewModel.onEvent(ManageDoctorsUiEvent.OnDismissEditDoctorDialog) }
+        )
+    }
+
     // Notifications Dialog
     if (uiState.showNotificationsDialog) {
         AdminNotificationsDialog(
@@ -117,34 +161,13 @@ fun ManageDoctorsScreen(
 @Composable
 fun ManageDoctorsScreenContent(
     modifier: Modifier = Modifier,
-    uiState: ManageDoctorsUiState = ManageDoctorsUiState(
-        doctors = listOf(
-            DoctorAccountItem(
-                id = "1",
-                name = "Dr Amelia Chen",
-                specialtyAndPatientsText = "Obstetrics · 18 assigned patients",
-                emailAndLicenseText = "amelia.chen@willow.example · OBS-19382",
-                isActive = true,
-                isHighlighted = true
-            ),
-            DoctorAccountItem(
-                id = "2",
-                name = "Dr Daniel Okafor",
-                specialtyAndPatientsText = "Obstetrics · 14 assigned patients",
-                isActive = true
-            ),
-            DoctorAccountItem(
-                id = "3",
-                name = "Dr Priya Shah",
-                specialtyAndPatientsText = "Maternal medicine · Access disabled",
-                isActive = false
-            )
-        )
-    ),
+    uiState: ManageDoctorsUiState = ManageDoctorsUiState(),
     onSearchQueryChanged: (String) -> Unit = {},
     onFilterTabSelected: (Int) -> Unit = {},
-    onToggleDoctorStatus: (String) -> Unit = {},
-    onEditDetailsClick: (String) -> Unit = {},
+    onCardClick: (DoctorAccountItem) -> Unit = {},
+    onToggleDoctorStatus: (DoctorAccountItem) -> Unit = {},
+    onEditDetailsClick: (DoctorAccountItem) -> Unit = {},
+    onDismissFeedback: () -> Unit = {},
     onAddDoctorClick: () -> Unit = {},
     onRetryClick: () -> Unit = {},
     onNextPageClick: () -> Unit = {},
@@ -235,6 +258,39 @@ fun ManageDoctorsScreenContent(
             )
 
             Spacer(modifier = Modifier.height(14.dp))
+
+            if (!uiState.actionFeedbackMessage.isNullOrBlank()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFEBF7F0))
+                        .border(1.dp, Color(0xFFD4EDDA), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 14.dp, vertical = 10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = uiState.actionFeedbackMessage,
+                            fontSize = 12.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF2E6B47),
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            text = "✕",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF2E6B47),
+                            modifier = Modifier.clickable { onDismissFeedback() }
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
 
             // Search Bar
             Text(
@@ -336,6 +392,18 @@ fun ManageDoctorsScreenContent(
                 1 -> uiState.doctors.filter { it.isActive }
                 2 -> uiState.doctors.filter { !it.isActive }
                 else -> uiState.doctors
+            }.filter { doc ->
+                if (uiState.searchQuery.isBlank()) true
+                else {
+                    val q = uiState.searchQuery.trim()
+                    doc.name.contains(q, ignoreCase = true) ||
+                    (doc.email?.contains(q, ignoreCase = true) == true) ||
+                    (doc.specialty?.contains(q, ignoreCase = true) == true) ||
+                    (doc.licenseId?.contains(q, ignoreCase = true) == true) ||
+                    (doc.clinic?.contains(q, ignoreCase = true) == true) ||
+                    (doc.emailAndLicenseText?.contains(q, ignoreCase = true) == true) ||
+                    doc.specialtyAndPatientsText.contains(q, ignoreCase = true)
+                }
             }
 
             if (uiState.isLoading && uiState.doctors.isEmpty()) {
@@ -480,8 +548,9 @@ fun ManageDoctorsScreenContent(
                     filteredDoctors.forEach { doctor ->
                         DoctorCardItem(
                             item = doctor,
-                            onEditClick = { onEditDetailsClick(doctor.id) },
-                            onToggleStatusClick = { onToggleDoctorStatus(doctor.id) }
+                            onCardClick = { onCardClick(doctor) },
+                            onEditClick = { onEditDetailsClick(doctor) },
+                            onToggleStatusClick = { onToggleDoctorStatus(doctor) }
                         )
                     }
                 }
@@ -504,12 +573,13 @@ fun ManageDoctorsScreenContent(
 @Composable
 private fun DoctorCardItem(
     item: DoctorAccountItem,
+    onCardClick: () -> Unit,
     onEditClick: () -> Unit,
     onToggleStatusClick: () -> Unit
 ) {
     val isDark = ThemeManager.isDarkTheme()
-    val cardBg = if (item.isHighlighted) (if (isDark) Color(0xFF28212F) else Color(0xFFF4ECF8)) else (if (isDark) Color(0xFF1F1A24) else Color.White)
-    val borderColor = if (item.isHighlighted) Color.Transparent else (if (isDark) Color(0xFF332A3B) else Color(0xFFEFE8F4))
+    val cardBg = if (isDark) Color(0xFF1F1A24) else Color.White
+    val borderColor = if (isDark) Color(0xFF332A3B) else Color(0xFFEFE8F4)
 
     Box(
         modifier = Modifier
@@ -521,6 +591,7 @@ private fun DoctorCardItem(
                 borderColor,
                 RoundedCornerShape(18.dp)
             )
+            .clickable { onCardClick() }
             .padding(14.dp)
     ) {
         Column {
@@ -591,50 +662,588 @@ private fun DoctorCardItem(
                 )
             }
 
-            if (item.isHighlighted) {
-                Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(38.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(if (isDark) Color(0xFF28212F) else Color.White)
+                        .border(1.dp, if (isDark) Color(0xFF3D3245) else Color(0xFFEFE8F4), RoundedCornerShape(50))
+                        .clickable { onEditClick() },
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(38.dp)
-                            .clip(RoundedCornerShape(50))
-                            .background(if (isDark) Color(0xFF28212F) else Color.White)
-                            .border(1.dp, if (isDark) Color(0xFF3D3245) else Color(0xFFEFE8F4), RoundedCornerShape(50))
-                            .clickable { onEditClick() },
-                        contentAlignment = Alignment.Center
+                    Text(
+                        text = "Edit details",
+                        fontSize = 12.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isDark) Color(0xFFD4B3DC) else MomoraPurpleDark
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(38.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(if (item.isActive) (if (isDark) Color(0xFF3D2125) else Color(0xFFFFF0F2)) else (if (isDark) Color(0xFF1E3A2B) else Color(0xFFF0FDF4)))
+                        .border(
+                            1.dp,
+                            if (item.isActive) (if (isDark) Color(0xFF5A2A30) else Color(0xFFFFD8DD)) else (if (isDark) Color(0xFF2E5E43) else Color(0xFFBBF7D0)),
+                            RoundedCornerShape(50)
+                        )
+                        .clickable { onToggleStatusClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = if (item.isActive) "Deactivate" else "Activate",
+                        fontSize = 12.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (item.isActive) (if (isDark) Color(0xFFFF8A80) else Color(0xFFD32F2F)) else (if (isDark) Color(0xFF86EFAC) else Color(0xFF166534))
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Detailed view dialog of a doctor.
+ */
+@Composable
+fun DoctorDetailsDialog(
+    doctor: DoctorAccountItem,
+    onDismiss: () -> Unit,
+    onEditClick: (DoctorAccountItem) -> Unit,
+    onToggleStatusClick: (DoctorAccountItem) -> Unit
+) {
+    val isDark = ThemeManager.isDarkTheme()
+    val dialogBg = if (isDark) Color(0xFF1F1A24) else Color.White
+    val email = doctor.email ?: doctor.emailAndLicenseText?.substringBefore(" ·")?.trim() ?: "N/A"
+    val license = doctor.licenseId ?: doctor.emailAndLicenseText?.substringAfter(" ·")?.trim() ?: "N/A"
+    val specialty = doctor.specialty ?: doctor.specialtyAndPatientsText.substringBefore(" ·").trim()
+    val clinic = doctor.clinic ?: "Willow Maternity Clinic"
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable { onDismiss() }
+                .padding(20.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.95f)
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(dialogBg)
+                    .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFEFE8F4), RoundedCornerShape(24.dp))
+                    .clickable(enabled = false) {}
+                    .padding(22.dp)
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Edit details",
-                            fontSize = 12.5.sp,
+                            text = "Doctor Details",
+                            fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = if (isDark) Color(0xFFD4B3DC) else MomoraPurpleDark
+                            color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
                         )
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(if (isDark) Color(0xFF28212F) else Color(0xFFF4ECF8))
+                                .clickable { onDismiss() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "✕",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isDark) Color(0xFFD4B3DC) else MomoraPurpleDark
+                            )
+                        }
                     }
 
-                    Box(
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
-                            .weight(1f)
-                            .height(38.dp)
-                            .clip(RoundedCornerShape(50))
-                            .background(if (isDark) Color(0xFF28212F) else Color.White)
-                            .border(1.dp, if (isDark) Color(0xFF3D3245) else Color(0xFFEFE8F4), RoundedCornerShape(50))
-                            .clickable { onToggleStatusClick() },
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(if (isDark) Color(0xFF28212F) else Color(0xFFF9F5FB))
+                            .padding(14.dp)
                     ) {
-                        Text(
-                            text = if (item.isActive) "Deactivate" else "Activate",
-                            fontSize = 12.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isDark) Color(0xFFD4B3DC) else MomoraPurpleDark
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(50.dp)
+                                .clip(CircleShape)
+                                .background(if (doctor.isActive) (if (isDark) Color(0xFF1E3A2B) else MomoraMintBadgeBg) else (if (isDark) Color(0xFF331A1E) else MomoraPinkCircleBg)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            StethoscopeIcon(
+                                color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(14.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = doctor.name,
+                                fontSize = 16.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
+                            )
+                            Spacer(modifier = Modifier.height(3.dp))
+                            Text(
+                                text = "Clinician · Doctor",
+                                fontSize = 12.sp,
+                                color = if (isDark) Color(0xFFB5ACB9) else MomoraBodyMuted
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(if (doctor.isActive) (if (isDark) Color(0xFF1E3A2B) else MomoraMintBadgeBg) else (if (isDark) Color(0xFF331A1E) else MomoraPinkCircleBg))
+                                .padding(horizontal = 12.dp, vertical = 5.dp)
+                        ) {
+                            Text(
+                                text = if (doctor.isActive) "Active" else "Inactive",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (doctor.isActive) (if (isDark) Color(0xFF86EFAC) else MomoraMintBadgeText) else (if (isDark) Color(0xFFFF8A80) else MomoraPurplePrimary)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(if (isDark) Color(0xFF231D29) else Color(0xFFFCFBFD))
+                            .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFF0E8F4), RoundedCornerShape(16.dp))
+                            .padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        DoctorDetailItem(label = "Full Name", value = doctor.name, isDark = isDark)
+                        DoctorDetailItem(label = "Email Address", value = email, isDark = isDark)
+                        DoctorDetailItem(label = "Medical Specialty", value = specialty, isDark = isDark)
+                        DoctorDetailItem(label = "License ID", value = license, isDark = isDark)
+                        DoctorDetailItem(label = "Registered Clinic", value = clinic, isDark = isDark)
+                        DoctorDetailItem(label = "Assigned Patients", value = "${doctor.assignedPatientCount} patients assigned", isDark = isDark)
+                        DoctorDetailItem(label = "Account Status", value = if (doctor.isActive) "Active · Operational" else "Inactive · Access disabled", isDark = isDark)
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp)
+                                .clip(RoundedCornerShape(50))
+                                .background(if (isDark) Color(0xFF28212F) else Color.White)
+                                .border(1.dp, if (isDark) Color(0xFF3D3245) else MomoraPurplePrimary, RoundedCornerShape(50))
+                                .clickable { onEditClick(doctor) },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Edit details",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp)
+                                .clip(RoundedCornerShape(50))
+                                .background(if (doctor.isActive) Color(0xFFD32F2F) else MomoraPurplePrimary)
+                                .clickable { onToggleStatusClick(doctor) },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = if (doctor.isActive) "Deactivate" else "Activate",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
             }
+        }
+    }
+}
+
+/**
+ * Confirmation dialog before deactivating/activating a doctor.
+ */
+@Composable
+fun DoctorToggleConfirmDialog(
+    doctor: DoctorAccountItem,
+    isToggling: Boolean,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val isDark = ThemeManager.isDarkTheme()
+    val dialogBg = if (isDark) Color(0xFF1F1A24) else Color.White
+    val isDeactivate = doctor.isActive
+
+    Dialog(
+        onDismissRequest = { if (!isToggling) onDismiss() },
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(enabled = !isToggling) { onDismiss() }
+                .padding(24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.92f)
+                    .clip(RoundedCornerShape(22.dp))
+                    .background(dialogBg)
+                    .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFEFE8F4), RoundedCornerShape(22.dp))
+                    .clickable(enabled = false) {}
+                    .padding(22.dp)
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(CircleShape)
+                            .background(if (isDeactivate) (if (isDark) Color(0xFF3D2125) else Color(0xFFFFEBEE)) else (if (isDark) Color(0xFF1E3A2B) else Color(0xFFE8F5E9))),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = if (isDeactivate) "!" else "✓",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isDeactivate) Color(0xFFD32F2F) else Color(0xFF2E7D32)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Text(
+                        text = if (isDeactivate) "Deactivate Doctor Account?" else "Activate Doctor Account?",
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = if (isDeactivate)
+                            "Are you sure you want to deactivate ${doctor.name}? Deactivation removes account access to the portal but preserves clinical records."
+                        else
+                            "Are you sure you want to activate ${doctor.name}? Clinical access and consultations will be restored.",
+                        fontSize = 13.sp,
+                        color = if (isDark) Color(0xFFB5ACB9) else MomoraBodyMuted,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 18.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(42.dp)
+                                .clip(RoundedCornerShape(50))
+                                .background(if (isDark) Color(0xFF28212F) else Color(0xFFF4ECF8))
+                                .clickable(enabled = !isToggling) { onDismiss() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Cancel",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isDark) Color(0xFFB5ACB9) else MomoraBodyMuted
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(42.dp)
+                                .clip(RoundedCornerShape(50))
+                                .background(if (isDeactivate) Color(0xFFD32F2F) else MomoraPurplePrimary)
+                                .clickable(enabled = !isToggling) { onConfirm() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isToggling) {
+                                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                            } else {
+                                Text(
+                                    text = if (isDeactivate) "Deactivate" else "Activate",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Dialog for editing doctor information.
+ */
+@Composable
+fun DoctorEditDialog(
+    uiState: ManageDoctorsUiState,
+    onNameChanged: (String) -> Unit,
+    onEmailChanged: (String) -> Unit,
+    onSpecialtyChanged: (String) -> Unit,
+    onLicenseIdChanged: (String) -> Unit,
+    onClinicChanged: (String) -> Unit,
+    onSave: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    val isDark = ThemeManager.isDarkTheme()
+    val dialogBg = if (isDark) Color(0xFF1F1A24) else Color.White
+    val scrollState = rememberScrollState()
+
+    Dialog(
+        onDismissRequest = { if (!uiState.isUpdatingDoctor) onDismiss() },
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(enabled = !uiState.isUpdatingDoctor) { onDismiss() }
+                .padding(20.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.95f)
+                    .clip(RoundedCornerShape(22.dp))
+                    .background(dialogBg)
+                    .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFEFE8F4), RoundedCornerShape(22.dp))
+                    .clickable(enabled = false) {}
+                    .padding(22.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(scrollState)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Edit Doctor Details",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
+                        )
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                                .background(if (isDark) Color(0xFF28212F) else Color(0xFFF4ECF8))
+                                .clickable(enabled = !uiState.isUpdatingDoctor) { onDismiss() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "✕",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isDark) Color(0xFFD4B3DC) else MomoraPurpleDark
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    if (!uiState.editErrorMessage.isNullOrBlank()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color(0xFFFFEBEE))
+                                .border(1.dp, Color(0xFFFFCDD2), RoundedCornerShape(10.dp))
+                                .padding(10.dp)
+                        ) {
+                            Text(
+                                text = uiState.editErrorMessage,
+                                fontSize = 12.sp,
+                                color = Color(0xFFC62828)
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+
+                    // Field: Full Name
+                    DoctorEditField(label = "Full Name", value = uiState.editNameInput, onValueChange = onNameChanged, isDark = isDark)
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Field: Email
+                    DoctorEditField(label = "Work Email", value = uiState.editEmailInput, onValueChange = onEmailChanged, keyboardType = KeyboardType.Email, isDark = isDark)
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Field: Specialty
+                    DoctorEditField(label = "Specialty", value = uiState.editSpecialtyInput, onValueChange = onSpecialtyChanged, isDark = isDark)
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Field: License ID
+                    DoctorEditField(label = "License ID", value = uiState.editLicenseIdInput, onValueChange = onLicenseIdChanged, isDark = isDark)
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Field: Clinic
+                    DoctorEditField(label = "Clinic", value = uiState.editClinicInput, onValueChange = onClinicChanged, isDark = isDark)
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    // Actions
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp)
+                                .clip(RoundedCornerShape(50))
+                                .background(if (isDark) Color(0xFF28212F) else Color(0xFFF4ECF8))
+                                .clickable(enabled = !uiState.isUpdatingDoctor) { onDismiss() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Cancel",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isDark) Color(0xFFB5ACB9) else MomoraBodyMuted
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp)
+                                .clip(RoundedCornerShape(50))
+                                .background(MomoraPurplePrimary)
+                                .clickable(enabled = !uiState.isUpdatingDoctor) { onSave() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (uiState.isUpdatingDoctor) {
+                                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                            } else {
+                                Text(
+                                    text = "Save changes",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DoctorDetailItem(label: String, value: String, isDark: Boolean) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            color = if (isDark) Color(0xFF8E8394) else Color(0xFF8C7F92)
+        )
+        Text(
+            text = value,
+            fontSize = 12.5.sp,
+            fontWeight = FontWeight.Medium,
+            color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark,
+            textAlign = TextAlign.End,
+            modifier = Modifier.padding(start = 12.dp)
+        )
+    }
+}
+
+@Composable
+private fun DoctorEditField(
+    label: String,
+    value: String,
+    onValueChange: (String) -> Unit,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    isDark: Boolean
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = label,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(if (isDark) Color(0xFF28212F) else Color.White)
+                .border(1.dp, if (isDark) Color(0xFF3D3245) else Color(0xFFEFE8F4), RoundedCornerShape(12.dp))
+                .padding(horizontal = 12.dp, vertical = 10.dp)
+        ) {
+            BasicTextField(
+                value = value,
+                onValueChange = onValueChange,
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+                textStyle = TextStyle(
+                    fontSize = 13.sp,
+                    color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }

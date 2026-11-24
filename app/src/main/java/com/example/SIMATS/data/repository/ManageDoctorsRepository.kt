@@ -10,6 +10,14 @@ import retrofit2.HttpException
 interface ManageDoctorsRepository {
     fun getDoctors(): Flow<Result<List<DoctorAccountItem>>>
     fun toggleDoctorStatus(doctorId: String): Flow<Result<Boolean>>
+    fun updateDoctor(
+        doctorId: String,
+        name: String,
+        email: String,
+        specialty: String,
+        licenseId: String,
+        clinic: String
+    ): Flow<Result<Boolean>>
 }
 
 class ManageDoctorsRepositoryImpl : ManageDoctorsRepository {
@@ -47,6 +55,31 @@ class ManageDoctorsRepositoryImpl : ManageDoctorsRepository {
                 emit(Result.failure(Exception("Session expired. Please log in again.")))
             } else {
                 emit(Result.failure(Exception(e.localizedMessage ?: "Network error toggling doctor status")))
+            }
+        }
+    }
+
+    override fun updateDoctor(
+        doctorId: String,
+        name: String,
+        email: String,
+        specialty: String,
+        licenseId: String,
+        clinic: String
+    ): Flow<Result<Boolean>> = flow {
+        try {
+            val response = apiService.updateDoctorDetails(doctorId, name, email, specialty, licenseId, clinic)
+            if (response.success) {
+                emit(Result.success(true))
+            } else {
+                emit(Result.failure(Exception(response.message ?: "Failed to update doctor details")))
+            }
+        } catch (e: Exception) {
+            if (e is HttpException && e.code() == 401) {
+                SessionManager.notifySessionExpired()
+                emit(Result.failure(Exception("Session expired. Please log in again.")))
+            } else {
+                emit(Result.failure(Exception(e.localizedMessage ?: "Network error updating doctor details")))
             }
         }
     }

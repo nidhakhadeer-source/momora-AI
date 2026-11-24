@@ -7,5 +7,12 @@ data class PatientAccountItem(
     val assignedDoctorText: String,
     val emailText: String? = null,
     val isActive: Boolean,
-    val isHighlighted: Boolean = false
+    val isHighlighted: Boolean = false,
+    val phone: String? = null,
+    val bloodGroup: String? = null,
+    val dueDate: String? = null,
+    val gestationalAge: String? = null,
+    val clinic: String? = null,
+    val assignedDoctor: String? = null,
+    val dateOfBirth: String? = null
 )
