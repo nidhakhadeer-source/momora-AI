@@ -38,10 +38,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.SIMATS.data.local.SessionManager
+import com.example.SIMATS.data.model.UserAuthState
+import com.example.SIMATS.ui.theme.InterFontFamily
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
-import com.example.SIMATS.ui.theme.MomoraDotActive
-import com.example.SIMATS.ui.theme.MomoraDotInactive
-import com.example.SIMATS.ui.theme.MomoraFooterText
 import com.example.SIMATS.ui.theme.MomoraIconBtnBg
 import com.example.SIMATS.ui.theme.MomoraLavenderCircleBg
 import com.example.SIMATS.ui.theme.MomoraMintBadgeBg
@@ -50,16 +50,14 @@ import com.example.SIMATS.ui.theme.MomoraPinkCircleBg
 import com.example.SIMATS.ui.theme.MomoraPurpleDark
 import com.example.SIMATS.ui.theme.MomoraPurplePrimary
 import com.example.SIMATS.ui.theme.MomoraPurpleText
-import com.example.SIMATS.data.local.SessionManager
-import com.example.SIMATS.data.model.UserAuthState
 import com.example.SIMATS.ui.theme.MomoraScreenBackground
-import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(
     viewModel: SplashViewModel,
     modifier: Modifier = Modifier,
-    onNavigateNext: (UserAuthState) -> Unit = {}
+    onNavigateNext: (UserAuthState) -> Unit = {},
+    onUseDifferentAccount: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -67,25 +65,31 @@ fun SplashScreen(
         viewModel.onEvent(SplashUiEvent.OnCheckAuthState)
     }
 
-    LaunchedEffect(uiState) {
-        if (uiState is SplashUiState.Success) {
-            val state = (uiState as SplashUiState.Success).authState
-            delay(500)
-            onNavigateNext(state)
-        }
+    // Never navigate automatically. Wait for user tap.
+    val hasValidSession = if (uiState is SplashUiState.Success) {
+        (uiState as SplashUiState.Success).authState is UserAuthState.Authenticated
+    } else {
+        SessionManager.isLoggedIn()
     }
 
     SplashScreenContent(
         modifier = modifier,
+        hasValidSession = hasValidSession,
         onFavoriteClick = { viewModel.onEvent(SplashUiEvent.OnFavoriteClicked) },
-        onHelpClick = { viewModel.onEvent(SplashUiEvent.OnHelpClicked) },
-        onNextClick = {
-            val state = (uiState as? SplashUiState.Success)?.authState ?: if (SessionManager.isLoggedIn()) {
-                UserAuthState.Authenticated(SessionManager.getUserRole())
+        onContinueClick = {
+            val state = (uiState as? SplashUiState.Success)?.authState
+            val targetState = if (state is UserAuthState.Authenticated) {
+                state
             } else {
-                UserAuthState.Unauthenticated
+                UserAuthState.Authenticated(SessionManager.getUserRole())
             }
-            onNavigateNext(state)
+            onNavigateNext(targetState)
+        },
+        onGetStartedClick = {
+            onNavigateNext(UserAuthState.Unauthenticated)
+        },
+        onUseDifferentAccountClick = {
+            onUseDifferentAccount()
         }
     )
 }
@@ -93,21 +97,22 @@ fun SplashScreen(
 @Composable
 fun SplashScreenContent(
     modifier: Modifier = Modifier,
+    hasValidSession: Boolean = false,
     onFavoriteClick: () -> Unit = {},
-    onHelpClick: () -> Unit = {},
-    onNextClick: () -> Unit = {}
+    onContinueClick: () -> Unit = {},
+    onGetStartedClick: () -> Unit = {},
+    onUseDifferentAccountClick: () -> Unit = {}
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(MomoraScreenBackground)
             .statusBarsPadding()
-            .navigationBarsPadding()
-            .clickable { onNextClick() },
+            .navigationBarsPadding(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        // 1. Top Bar
+        // 1. Top Bar: Left Heart Icon, Help "?" Icon Removed
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -130,20 +135,8 @@ fun SplashScreenContent(
                 )
             }
 
-            // Top Right Help Icon Button
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(MomoraIconBtnBg)
-                    .clickable { onHelpClick() },
-                contentAlignment = Alignment.Center
-            ) {
-                TopBarHelpIcon(
-                    color = MomoraPurplePrimary,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
+            // Balanced spacing placeholder (top right '?' help icon removed)
+            Spacer(modifier = Modifier.size(40.dp))
         }
 
         // 2. Central Graphic & Brand Text Content
@@ -172,7 +165,7 @@ fun SplashScreenContent(
                         .background(MomoraLavenderCircleBg)
                 )
 
-                // Hands Joining Heart Line Art Illustration
+                // Hands Joining Heart Line Art Illustration (Exact original from git commit)
                 HandsHeartIllustration(
                     color = MomoraPurplePrimary,
                     modifier = Modifier.size(120.dp)
@@ -200,6 +193,7 @@ fun SplashScreenContent(
             // App Title
             Text(
                 text = "momora AI",
+                fontFamily = InterFontFamily,
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 color = MomoraPurpleDark,
@@ -211,6 +205,7 @@ fun SplashScreenContent(
             // Main Subtitle
             Text(
                 text = "A little care. Every day.",
+                fontFamily = InterFontFamily,
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Bold,
                 color = MomoraPurpleText
@@ -221,6 +216,7 @@ fun SplashScreenContent(
             // Body Description
             Text(
                 text = "Personalized pregnancy monitoring and gentle\nguidance, together.",
+                fontFamily = InterFontFamily,
                 fontSize = 13.sp,
                 lineHeight = 18.sp,
                 color = MomoraBodyMuted,
@@ -229,7 +225,7 @@ fun SplashScreenContent(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Badge Pill Tag
+            // Badge Pill Tag: "YOUR JOURNEY, SUPPORTED"
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(50))
@@ -238,6 +234,7 @@ fun SplashScreenContent(
             ) {
                 Text(
                     text = "YOUR JOURNEY, SUPPORTED",
+                    fontFamily = InterFontFamily,
                     fontSize = 10.5.sp,
                     fontWeight = FontWeight.Bold,
                     color = MomoraMintBadgeText,
@@ -246,47 +243,97 @@ fun SplashScreenContent(
             }
         }
 
-        // 3. Bottom Section (Dots, Footer, Home Bar)
+        // 3. Bottom Section (Page dots removed, No automatic navigation, Buttons wait for tap)
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(bottom = 12.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp)
         ) {
-            // Carousel Dots
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            if (hasValidSession) {
+                // Continue Button for valid saved session
                 Box(
                     modifier = Modifier
-                        .size(7.dp)
-                        .clip(CircleShape)
-                        .background(MomoraDotActive)
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .height(52.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(MomoraPurplePrimary)
+                        .clickable { onContinueClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "Continue",
+                            fontFamily = InterFontFamily,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "➔",
+                            fontFamily = InterFontFamily,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Small text link to switch accounts
+                Text(
+                    text = "Use a different account",
+                    fontFamily = InterFontFamily,
+                    fontSize = 12.5.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MomoraPurplePrimary,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(6.dp))
+                        .clickable { onUseDifferentAccountClick() }
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
                 )
+            } else {
+                // Get Started Button when no saved session exists
                 Box(
                     modifier = Modifier
-                        .size(6.dp)
-                        .clip(CircleShape)
-                        .background(MomoraDotInactive)
-                )
-                Box(
-                    modifier = Modifier
-                        .size(6.dp)
-                        .clip(CircleShape)
-                        .background(MomoraDotInactive)
-                )
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .height(52.dp)
+                        .clip(RoundedCornerShape(50))
+                        .background(MomoraPurplePrimary)
+                        .clickable { onGetStartedClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "Get started",
+                            fontFamily = InterFontFamily,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "➔",
+                            fontFamily = InterFontFamily,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Footer Text
-            Text(
-                text = "Private by design. Made with compassion.",
-                fontSize = 11.5.sp,
-                color = MomoraFooterText,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
 
             // Bottom Navigation Bar Line Indicator
             Box(
@@ -302,6 +349,7 @@ fun SplashScreenContent(
 
 /**
  * Custom Canvas drawing for the central hand-holding heart line art illustration.
+ * Preserved exactly as in the original git commit.
  */
 @Composable
 private fun HandsHeartIllustration(
@@ -373,6 +421,10 @@ private fun HandsHeartIllustration(
     }
 }
 
+/**
+ * Top bar / badge Heart outline icon canvas drawing.
+ * Preserved exactly as in the original git commit.
+ */
 @Composable
 private fun TopBarHeartIcon(
     color: Color,
@@ -411,49 +463,6 @@ private fun TopBarHeartIcon(
             path = heartPath,
             color = color,
             style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round)
-        )
-    }
-}
-
-@Composable
-private fun TopBarHelpIcon(
-    color: Color,
-    modifier: Modifier = Modifier
-) {
-    Canvas(modifier = modifier) {
-        val w = size.width
-        val h = size.height
-        val strokeWidth = 1.8.dp.toPx()
-
-        drawCircle(
-            color = color,
-            radius = size.minDimension * 0.45f,
-            style = Stroke(width = strokeWidth)
-        )
-
-        val qPath = Path().apply {
-            moveTo(w * 0.38f, h * 0.38f)
-            cubicTo(
-                w * 0.38f, h * 0.28f,
-                w * 0.62f, h * 0.28f,
-                w * 0.62f, h * 0.42f
-            )
-            cubicTo(
-                w * 0.62f, h * 0.52f,
-                w * 0.50f, h * 0.52f,
-                w * 0.50f, h * 0.62f
-            )
-        }
-        drawPath(
-            path = qPath,
-            color = color,
-            style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
-        )
-
-        drawCircle(
-            color = color,
-            radius = strokeWidth * 0.8f,
-            center = Offset(w * 0.50f, h * 0.72f)
         )
     }
 }

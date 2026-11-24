@@ -239,6 +239,13 @@ fun AppNavHost() {
                             }
                         }
                     }
+                },
+                onUseDifferentAccount = {
+                    SessionManager.clearSession()
+                    SelectedPatientHolder.clear()
+                    selectedPatientId = null
+                    selectedPatientName = null
+                    currentScreen = Screen.RoleSelect
                 }
             )
         }

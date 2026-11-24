@@ -1,5 +1,6 @@
 package com.example.SIMATS.ui.signup
 
+import android.app.DatePickerDialog
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -39,6 +40,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -49,12 +51,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.SIMATS.ui.components.formatErrorMessage
 import androidx.compose.ui.unit.sp
+import com.example.SIMATS.ui.theme.InterFontFamily
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraIconBtnBg
 import com.example.SIMATS.ui.theme.MomoraPurpleDark
 import com.example.SIMATS.ui.theme.MomoraPurplePrimary
 import com.example.SIMATS.ui.theme.MomoraPurpleText
 import com.example.SIMATS.ui.theme.MomoraScreenBackground
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 @Composable
 fun SignUpScreen(
@@ -112,6 +118,34 @@ fun SignUpScreenContent(
     onHelpClick: () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
+
+    val showDatePicker = {
+        val cal = Calendar.getInstance()
+        try {
+            if (uiState.dateOfBirth.isNotBlank()) {
+                val sdf = SimpleDateFormat("d MMMM yyyy", Locale.ENGLISH)
+                sdf.parse(uiState.dateOfBirth)?.let { cal.time = it }
+            } else {
+                cal.add(Calendar.YEAR, -25)
+            }
+        } catch (_: Exception) {}
+
+        val dpd = DatePickerDialog(
+            context,
+            { _, year, month, dayOfMonth ->
+                val pickedCal = Calendar.getInstance()
+                pickedCal.set(year, month, dayOfMonth)
+                val formatted = SimpleDateFormat("d MMMM yyyy", Locale.ENGLISH).format(pickedCal.time)
+                onDateOfBirthChanged(formatted)
+            },
+            cal.get(Calendar.YEAR),
+            cal.get(Calendar.MONTH),
+            cal.get(Calendar.DAY_OF_MONTH)
+        )
+        dpd.datePicker.maxDate = System.currentTimeMillis()
+        dpd.show()
+    }
 
     Column(
         modifier = modifier
@@ -144,19 +178,8 @@ fun SignUpScreenContent(
                 )
             }
 
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(MomoraIconBtnBg)
-                    .clickable { onHelpClick() },
-                contentAlignment = Alignment.Center
-            ) {
-                TopBarHelpIcon(
-                    color = MomoraPurplePrimary,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
+            // Balanced spacing placeholder ('?' help icon removed)
+            Spacer(modifier = Modifier.size(40.dp))
         }
 
         // 2. Scrollable Body Content
@@ -169,6 +192,7 @@ fun SignUpScreenContent(
         ) {
             Text(
                 text = "Begin your journey",
+                fontFamily = InterFontFamily,
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
                 color = MomoraPurpleDark
@@ -178,6 +202,7 @@ fun SignUpScreenContent(
 
             Text(
                 text = "Create your personal patient account.",
+                fontFamily = InterFontFamily,
                 fontSize = 13.sp,
                 color = MomoraBodyMuted
             )
@@ -212,7 +237,16 @@ fun SignUpScreenContent(
                 value = uiState.dateOfBirth,
                 onValueChange = onDateOfBirthChanged,
                 placeholder = "DD Month YYYY",
-                trailingIcon = { CalendarIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp)) }
+                onClick = showDatePicker,
+                trailingIcon = {
+                    Box(
+                        modifier = Modifier
+                            .clickable { showDatePicker() }
+                            .padding(4.dp)
+                    ) {
+                        CalendarIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp))
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -226,14 +260,23 @@ fun SignUpScreenContent(
                 keyboardType = KeyboardType.Password,
                 visualTransformation = if (uiState.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
-                    Box(modifier = Modifier.clickable { onTogglePasswordVisibility() }) {
-                        EyeSlashIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp))
+                    Box(
+                        modifier = Modifier
+                            .clickable { onTogglePasswordVisibility() }
+                            .padding(4.dp)
+                    ) {
+                        if (uiState.isPasswordVisible) {
+                            EyeIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp))
+                        } else {
+                            EyeSlashIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp))
+                        }
                     }
                 }
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = "12+ characters, with a number and symbol.",
+                fontFamily = InterFontFamily,
                 fontSize = 11.sp,
                 color = MomoraBodyMuted
             )
@@ -249,8 +292,16 @@ fun SignUpScreenContent(
                 keyboardType = KeyboardType.Password,
                 visualTransformation = if (uiState.isConfirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
-                    Box(modifier = Modifier.clickable { onToggleConfirmPasswordVisibility() }) {
-                        EyeSlashIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp))
+                    Box(
+                        modifier = Modifier
+                            .clickable { onToggleConfirmPasswordVisibility() }
+                            .padding(4.dp)
+                    ) {
+                        if (uiState.isConfirmPasswordVisible) {
+                            EyeIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp))
+                        } else {
+                            EyeSlashIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp))
+                        }
                     }
                 }
             )
@@ -287,48 +338,11 @@ fun SignUpScreenContent(
 
                 Text(
                     text = "I agree to the Terms and Privacy Notice, including processing sensitive health data for my pregnancy care.",
+                    fontFamily = InterFontFamily,
                     fontSize = 11.5.sp,
                     lineHeight = 15.sp,
                     color = Color(0xFF43524E)
                 )
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Care Team Privacy Pill Card
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFFF4ECF8))
-                    .padding(horizontal = 14.dp, vertical = 10.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(30.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFEBE0F2)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        ShieldIcon(
-                            color = MomoraPurplePrimary,
-                            modifier = Modifier.size(14.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(10.dp))
-
-                    Text(
-                        text = "Sharing with your care team is optional and can be managed in your profile.",
-                        fontSize = 11.5.sp,
-                        lineHeight = 15.sp,
-                        color = MomoraPurplePrimary,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -336,6 +350,7 @@ fun SignUpScreenContent(
             if (uiState.errorMessage != null) {
                 Text(
                     text = formatErrorMessage(uiState.errorMessage),
+                    fontFamily = InterFontFamily,
                     fontSize = 12.sp,
                     color = Color.Red,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -360,6 +375,7 @@ fun SignUpScreenContent(
             ) {
                 Text(
                     text = if (uiState.isLoading) "Creating account..." else "Create patient account",
+                    fontFamily = InterFontFamily,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -374,11 +390,13 @@ fun SignUpScreenContent(
             ) {
                 Text(
                     text = "Already registered? ",
+                    fontFamily = InterFontFamily,
                     fontSize = 12.5.sp,
                     color = MomoraBodyMuted
                 )
                 Text(
                     text = "Log in",
+                    fontFamily = InterFontFamily,
                     fontSize = 12.5.sp,
                     fontWeight = FontWeight.Bold,
                     color = MomoraPurplePrimary,
@@ -404,6 +422,7 @@ fun SignUpScreenContent(
 private fun FormFieldLabel(text: String) {
     Text(
         text = text,
+        fontFamily = InterFontFamily,
         fontSize = 13.sp,
         fontWeight = FontWeight.Bold,
         color = MomoraPurpleText
@@ -418,7 +437,8 @@ private fun CustomInputField(
     placeholder: String,
     keyboardType: KeyboardType = KeyboardType.Text,
     visualTransformation: VisualTransformation = VisualTransformation.None,
-    trailingIcon: @Composable () -> Unit = {}
+    trailingIcon: @Composable () -> Unit = {},
+    onClick: (() -> Unit)? = null
 ) {
     Box(
         modifier = Modifier
@@ -427,6 +447,7 @@ private fun CustomInputField(
             .clip(RoundedCornerShape(14.dp))
             .background(Color.White)
             .border(1.dp, Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
+            .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
             .padding(horizontal = 14.dp),
         contentAlignment = Alignment.CenterStart
     ) {
@@ -439,6 +460,7 @@ private fun CustomInputField(
                 if (value.isEmpty()) {
                     Text(
                         text = placeholder,
+                        fontFamily = InterFontFamily,
                         fontSize = 13.5.sp,
                         color = Color(0xFFA098A6)
                     )
@@ -447,9 +469,12 @@ private fun CustomInputField(
                     value = value,
                     onValueChange = onValueChange,
                     singleLine = true,
+                    readOnly = onClick != null,
+                    enabled = onClick == null,
                     keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
                     visualTransformation = visualTransformation,
                     textStyle = TextStyle(
+                        fontFamily = InterFontFamily,
                         fontSize = 13.5.sp,
                         fontWeight = FontWeight.Normal,
                         color = MomoraPurpleText
@@ -526,6 +551,27 @@ private fun MailIcon(
             lineTo(w * 0.88f, h * 0.25f)
         }
         drawPath(flapPath, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round))
+    }
+}
+
+@Composable
+private fun EyeIcon(
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val strokeWidth = 1.8.dp.toPx()
+
+        val eyePath = Path().apply {
+            moveTo(w * 0.15f, h * 0.50f)
+            cubicTo(w * 0.30f, h * 0.25f, w * 0.70f, h * 0.25f, w * 0.85f, h * 0.50f)
+            cubicTo(w * 0.70f, h * 0.75f, w * 0.30f, h * 0.75f, w * 0.15f, h * 0.50f)
+        }
+        drawPath(eyePath, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round))
+
+        drawCircle(color = color, radius = w * 0.12f, center = Offset(w * 0.50f, h * 0.50f))
     }
 }
 

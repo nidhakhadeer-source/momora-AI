@@ -55,6 +55,22 @@ class SignUpViewModel(
 
     private fun performRegistration() {
         val state = _uiState.value
+        if (state.fullName.isBlank()) {
+            _uiState.value = state.copy(errorMessage = "Please enter your full name.")
+            return
+        }
+        if (state.email.isBlank()) {
+            _uiState.value = state.copy(errorMessage = "Please enter your email address.")
+            return
+        }
+        if (state.password.isBlank()) {
+            _uiState.value = state.copy(errorMessage = "Please enter a password.")
+            return
+        }
+        if (state.password != state.confirmPassword) {
+            _uiState.value = state.copy(errorMessage = "Passwords do not match.")
+            return
+        }
         if (!state.isTermsAgreed) {
             _uiState.value = state.copy(errorMessage = "Please agree to the Terms and Privacy Notice.")
             return
