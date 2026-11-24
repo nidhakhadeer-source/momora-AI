@@ -26,6 +26,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -49,13 +50,16 @@ import com.example.SIMATS.ui.components.formatErrorMessage
 import com.example.SIMATS.data.model.AddDoctorData
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraFooterText
-import com.example.SIMATS.ui.theme.MomoraMintBadgeBg
-import com.example.SIMATS.ui.theme.MomoraMintBadgeText
 import com.example.SIMATS.ui.theme.MomoraPurpleDark
 import com.example.SIMATS.ui.theme.MomoraPurplePrimary
 import com.example.SIMATS.ui.theme.MomoraPurpleText
 import com.example.SIMATS.ui.theme.MomoraScreenBackground
 import com.example.SIMATS.ui.theme.ThemeManager
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import com.example.SIMATS.data.repository.NotificationStateManager
+import com.example.SIMATS.ui.admindashboard.AdminNotificationsDialog
+import kotlinx.coroutines.delay
 
 @Composable
 fun AddDoctorScreen(
@@ -63,9 +67,25 @@ fun AddDoctorScreen(
     modifier: Modifier = Modifier,
     selectedNavIndex: Int = 1,
     onNavigateBack: () -> Unit = {},
+    onDoctorCreated: () -> Unit = {},
+    onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+
+    // Reset previous submission state whenever Add Doctor screen is opened
+    LaunchedEffect(Unit) {
+        viewModel.onEvent(AddDoctorUiEvent.OnResetForm)
+    }
+
+    // Only trigger navigation when doctor creation has freshly succeeded
+    LaunchedEffect(uiState.isCreatedSuccess) {
+        if (uiState.isCreatedSuccess) {
+            delay(1200)
+            viewModel.onEvent(AddDoctorUiEvent.OnSuccessNavigationConsumed)
+            onDoctorCreated()
+        }
+    }
 
     AddDoctorScreenContent(
         modifier = modifier,
@@ -76,6 +96,7 @@ fun AddDoctorScreen(
         onSpecialtyChanged = { s -> viewModel.onEvent(AddDoctorUiEvent.OnSpecialtyChanged(s)) },
         onLicenseIdChanged = { l -> viewModel.onEvent(AddDoctorUiEvent.OnLicenseIdChanged(l)) },
         onClinicChanged = { c -> viewModel.onEvent(AddDoctorUiEvent.OnClinicChanged(c)) },
+        onClinicDropdownToggled = { exp -> viewModel.onEvent(AddDoctorUiEvent.OnClinicDropdownToggled(exp)) },
         onSendActivationToggled = { a -> viewModel.onEvent(AddDoctorUiEvent.OnSendActivationToggled(a)) },
         onCreateAccountClick = { viewModel.onEvent(AddDoctorUiEvent.OnCreateAccountClicked) },
         onRetryClick = { viewModel.onEvent(AddDoctorUiEvent.OnRetryClicked) },
@@ -83,32 +104,36 @@ fun AddDoctorScreen(
             viewModel.onEvent(AddDoctorUiEvent.OnBackClicked)
             onNavigateBack()
         },
-        onNotificationClick = { viewModel.onEvent(AddDoctorUiEvent.OnNotificationClicked) },
+        onNotificationClick = {
+            viewModel.onEvent(AddDoctorUiEvent.OnNotificationClicked)
+            onNotificationClick()
+        },
         onNavTabSelected = { index ->
             viewModel.onEvent(AddDoctorUiEvent.OnNavTabSelected(index))
             onNavTabSelected(index)
         }
     )
+
+    // Notifications Dialog
+    if (uiState.showNotificationsDialog) {
+        AdminNotificationsDialog(
+            notifications = uiState.notificationsList,
+            isLoading = uiState.isLoadingNotifications,
+            onDismiss = { viewModel.onEvent(AddDoctorUiEvent.OnDismissNotificationsDialog) }
+        )
+    }
 }
 
 @Composable
 fun AddDoctorScreenContent(
     modifier: Modifier = Modifier,
-    uiState: AddDoctorUiState = AddDoctorUiState(
-        formData = AddDoctorData(
-            defaultName = "Dr Olivia Bennett",
-            defaultEmail = "olivia.bennett@willow.example",
-            defaultSpecialty = "Obstetrics",
-            defaultLicenseId = "OBS-28482",
-            defaultClinic = "Willow Maternity Clinic",
-            availableClinics = listOf("Willow Maternity Clinic", "SIMATS Women's Care")
-        )
-    ),
+    uiState: AddDoctorUiState = AddDoctorUiState(),
     onNameChanged: (String) -> Unit = {},
     onEmailChanged: (String) -> Unit = {},
     onSpecialtyChanged: (String) -> Unit = {},
     onLicenseIdChanged: (String) -> Unit = {},
     onClinicChanged: (String) -> Unit = {},
+    onClinicDropdownToggled: (Boolean) -> Unit = {},
     onSendActivationToggled: (Boolean) -> Unit = {},
     onCreateAccountClick: () -> Unit = {},
     onRetryClick: () -> Unit = {},
@@ -150,6 +175,7 @@ fun AddDoctorScreenContent(
                 )
             }
 
+            val unreadCount by NotificationStateManager.unreadCount.collectAsState()
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -161,6 +187,16 @@ fun AddDoctorScreenContent(
                     color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary,
                     modifier = Modifier.size(20.dp)
                 )
+                if (unreadCount > 0) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(top = 8.dp, end = 8.dp)
+                            .size(7.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFE53935))
+                    )
+                }
             }
         }
 
@@ -177,14 +213,6 @@ fun AddDoctorScreenContent(
                 fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
                 color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = "Admin / Doctor management / New account",
-                fontSize = 12.sp,
-                color = if (isDark) Color(0xFFB5ACB9) else MomoraBodyMuted
             )
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -272,6 +300,13 @@ fun AddDoctorScreenContent(
                     .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
                     .padding(horizontal = 14.dp, vertical = 12.dp)
             ) {
+                if (uiState.nameInput.isEmpty()) {
+                    Text(
+                        text = "e.g. Dr Sarah Jenkins",
+                        fontSize = 13.sp,
+                        color = if (isDark) Color(0xFF7D7382) else Color(0xFFA098A6)
+                    )
+                }
                 BasicTextField(
                     value = uiState.nameInput,
                     onValueChange = onNameChanged,
@@ -312,6 +347,13 @@ fun AddDoctorScreenContent(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Box(modifier = Modifier.weight(1f)) {
+                        if (uiState.emailInput.isEmpty()) {
+                            Text(
+                                text = "e.g. s.jenkins@clinic.example",
+                                fontSize = 13.sp,
+                                color = if (isDark) Color(0xFF7D7382) else Color(0xFFA098A6)
+                            )
+                        }
                         BasicTextField(
                             value = uiState.emailInput,
                             onValueChange = onEmailChanged,
@@ -358,6 +400,13 @@ fun AddDoctorScreenContent(
                             .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
                             .padding(horizontal = 14.dp, vertical = 12.dp)
                     ) {
+                        if (uiState.specialtyInput.isEmpty()) {
+                            Text(
+                                text = "e.g. Obstetrics",
+                                fontSize = 13.sp,
+                                color = if (isDark) Color(0xFF7D7382) else Color(0xFFA098A6)
+                            )
+                        }
                         BasicTextField(
                             value = uiState.specialtyInput,
                             onValueChange = onSpecialtyChanged,
@@ -392,6 +441,13 @@ fun AddDoctorScreenContent(
                             .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
                             .padding(horizontal = 14.dp, vertical = 12.dp)
                     ) {
+                        if (uiState.licenseIdInput.isEmpty()) {
+                            Text(
+                                text = "e.g. OBS-12345",
+                                fontSize = 13.sp,
+                                color = if (isDark) Color(0xFF7D7382) else Color(0xFFA098A6)
+                            )
+                        }
                         BasicTextField(
                             value = uiState.licenseIdInput,
                             onValueChange = onLicenseIdChanged,
@@ -421,133 +477,120 @@ fun AddDoctorScreenContent(
             Spacer(modifier = Modifier.height(6.dp))
 
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(if (isDark) Color(0xFF1F1A24) else Color.White)
-                    .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
-                    .padding(horizontal = 14.dp, vertical = 12.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = uiState.clinicInput,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
-                    )
-
-                    Text(
-                        text = "∨",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Pending Activation Status Badge
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(50))
-                    .background(MomoraMintBadgeBg)
-                    .padding(horizontal = 12.dp, vertical = 5.dp)
-            ) {
-                Text(
-                    text = "INITIAL STATUS · PENDING ACTIVATION",
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MomoraMintBadgeText,
-                    letterSpacing = 0.5.sp
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Activation Checkbox Row
-            Row(
-                verticalAlignment = Alignment.Top,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onSendActivationToggled(!uiState.isSendActivationChecked) }
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Box(
                     modifier = Modifier
-                        .padding(top = 2.dp)
-                        .size(18.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(if (uiState.isSendActivationChecked) MomoraPurplePrimary else Color.Transparent)
-                        .border(
-                            1.dp,
-                            if (uiState.isSendActivationChecked) MomoraPurplePrimary else Color(0xFF8C7F92),
-                            RoundedCornerShape(4.dp)
-                        ),
-                    contentAlignment = Alignment.Center
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(if (isDark) Color(0xFF1F1A24) else Color.White)
+                        .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFEFE8F4), RoundedCornerShape(14.dp))
+                        .clickable { onClinicDropdownToggled(!uiState.isClinicDropdownExpanded) }
+                        .padding(horizontal = 14.dp, vertical = 12.dp)
                 ) {
-                    if (uiState.isSendActivationChecked) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
                         Text(
-                            text = "✓",
-                            fontSize = 12.sp,
+                            text = uiState.clinicInput.ifBlank { "Select clinic" },
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = if (uiState.clinicInput.isBlank()) MomoraBodyMuted else (if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark)
+                        )
+
+                        Text(
+                            text = if (uiState.isClinicDropdownExpanded) "∧" else "∨",
+                            fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.width(10.dp))
-
-                Text(
-                    text = "Send a secure, time-limited activation invitation. Requires password setup and MFA.",
-                    fontSize = 11.5.sp,
-                    lineHeight = 15.sp,
-                    color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
-                )
+                DropdownMenu(
+                    expanded = uiState.isClinicDropdownExpanded,
+                    onDismissRequest = { onClinicDropdownToggled(false) },
+                    modifier = Modifier
+                        .fillMaxWidth(0.85f)
+                        .background(if (isDark) Color(0xFF1F1A24) else Color.White)
+                ) {
+                    val clinics = uiState.formData?.availableClinics ?: emptyList()
+                    if (clinics.isEmpty()) {
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = "No registered clinics available",
+                                    fontSize = 13.sp,
+                                    color = MomoraBodyMuted
+                                )
+                            },
+                            onClick = { onClinicDropdownToggled(false) }
+                        )
+                    } else {
+                        clinics.forEach { clinicName ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = clinicName,
+                                        fontSize = 13.sp,
+                                        fontWeight = if (clinicName == uiState.clinicInput) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
+                                    )
+                                },
+                                onClick = {
+                                    onClinicChanged(clinicName)
+                                    onClinicDropdownToggled(false)
+                                }
+                            )
+                        }
+                    }
+                }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
-            // Identity Verification Info Banner
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(if (isDark) Color(0xFF241C2A) else Color(0xFFF4ECF8))
-                    .padding(horizontal = 14.dp, vertical = 11.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
+            // Error Message Alert Box
+            if (!uiState.errorMessage.isNullOrBlank()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFFDF2F2))
+                        .border(1.dp, Color(0xFFF2DEDE), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 14.dp, vertical = 10.dp)
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(28.dp)
-                            .clip(CircleShape)
-                            .background(if (isDark) Color(0xFF3B2745) else Color(0xFFEBE0F2)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        ShieldIcon(
-                            color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary,
-                            modifier = Modifier.size(13.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(10.dp))
-
                     Text(
-                        text = "Verify identity and license before creating access. No patient records are assigned by default.",
-                        fontSize = 11.5.sp,
-                        lineHeight = 15.sp,
-                        color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary,
-                        modifier = Modifier.weight(1f)
+                        text = uiState.errorMessage,
+                        fontSize = 12.5.sp,
+                        color = Color(0xFFA94442),
+                        lineHeight = 16.sp
                     )
                 }
+                Spacer(modifier = Modifier.height(12.dp))
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            // Success Message Alert Box
+            if (!uiState.successMessage.isNullOrBlank() || uiState.isCreatedSuccess) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFEBF7F0))
+                        .border(1.dp, Color(0xFFD4EDDA), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 14.dp, vertical = 10.dp)
+                ) {
+                    Text(
+                        text = uiState.successMessage ?: "Doctor account created successfully",
+                        fontSize = 12.5.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color(0xFF2E6B47),
+                        lineHeight = 16.sp
+                    )
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
 
             // Create account & send invitation Primary Button
             Box(
@@ -555,33 +598,51 @@ fun AddDoctorScreenContent(
                     .fillMaxWidth()
                     .height(50.dp)
                     .clip(RoundedCornerShape(50))
-                    .background(MomoraPurplePrimary)
-                    .clickable { if (!uiState.isCreating) onCreateAccountClick() },
+                    .background(
+                        if (uiState.isCreatedSuccess) Color(0xFF3D7B59)
+                        else if (uiState.isCreating) MomoraPurplePrimary.copy(alpha = 0.7f)
+                        else MomoraPurplePrimary
+                    )
+                    .clickable(enabled = !uiState.isCreating && !uiState.isCreatedSuccess) {
+                        onCreateAccountClick()
+                    },
                 contentAlignment = Alignment.Center
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = if (uiState.isCreating) "Creating Account..." else if (uiState.isCreatedSuccess) "Account Created ✓" else "Create account & send invitation",
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    MailIcon(color = Color.White, modifier = Modifier.size(16.dp))
+                    if (uiState.isCreating) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Creating account...",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    } else if (uiState.isCreatedSuccess) {
+                        Text(
+                            text = "Account Created ✓",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    } else {
+                        Text(
+                            text = "Create account & send invitation",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        MailIcon(color = Color.White, modifier = Modifier.size(16.dp))
+                    }
                 }
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Draft only · No account created yet. Creation is audited.",
-                fontSize = 11.sp,
-                color = MomoraFooterText,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
 
             Spacer(modifier = Modifier.height(16.dp))
         }

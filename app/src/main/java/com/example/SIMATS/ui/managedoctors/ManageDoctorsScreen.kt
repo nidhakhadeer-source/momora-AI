@@ -72,6 +72,10 @@ fun ManageDoctorsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        viewModel.loadDoctors()
+    }
+
     ManageDoctorsScreenContent(
         modifier = modifier,
         uiState = uiState,

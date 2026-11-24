@@ -8,6 +8,11 @@ sealed interface AddDoctorUiEvent {
     data class OnClinicChanged(val clinic: String) : AddDoctorUiEvent
     data class OnSendActivationToggled(val isChecked: Boolean) : AddDoctorUiEvent
     data class OnNavTabSelected(val index: Int) : AddDoctorUiEvent
+    data class OnClinicDropdownToggled(val expanded: Boolean) : AddDoctorUiEvent
+    data object OnDismissNotificationsDialog : AddDoctorUiEvent
+    data object OnDismissSuccessMessage : AddDoctorUiEvent
+    data object OnSuccessNavigationConsumed : AddDoctorUiEvent
+    data object OnResetForm : AddDoctorUiEvent
     data object OnCreateAccountClicked : AddDoctorUiEvent
     data object OnBackClicked : AddDoctorUiEvent
     data object OnNotificationClicked : AddDoctorUiEvent

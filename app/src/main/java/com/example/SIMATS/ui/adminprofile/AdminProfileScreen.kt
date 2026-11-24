@@ -84,7 +84,7 @@ import java.net.URL
 fun AdminProfileScreen(
     viewModel: AdminProfileViewModel,
     modifier: Modifier = Modifier,
-    selectedNavIndex: Int = 0,
+    selectedNavIndex: Int = 3,
     onNavigateBack: () -> Unit = {},
     onLogoutSuccess: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
@@ -144,7 +144,7 @@ fun AdminProfileScreen(
 fun AdminProfileScreenContent(
     modifier: Modifier = Modifier,
     uiState: AdminProfileUiState,
-    selectedNavIndex: Int = 0,
+    selectedNavIndex: Int = 3,
     onBackClick: () -> Unit = {},
     onToggleEditClick: () -> Unit = {},
     onFullNameChanged: (String) -> Unit = {},

@@ -139,10 +139,10 @@ fun getSelectedNavIndexForScreen(screen: Screen): Int = when (screen) {
     Screen.Profile -> 4
 
     // Admin
-    Screen.AdminDashboard, Screen.AdminProfile -> 0
+    Screen.AdminDashboard -> 0
     Screen.ManageDoctors, Screen.AddDoctor -> 1
     Screen.ManagePatients -> 2
-    Screen.AdminSettings -> 3
+    Screen.AdminSettings, Screen.AdminProfile -> 3
 
     else -> 0
 }
@@ -936,6 +936,9 @@ fun AppNavHost() {
                 viewModel = addDoctorViewModel,
                 selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
+                    currentScreen = Screen.ManageDoctors
+                },
+                onDoctorCreated = {
                     currentScreen = Screen.ManageDoctors
                 },
                 onNavTabSelected = { index ->
