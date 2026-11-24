@@ -43,6 +43,8 @@ respond(200, [
         'isMfaEnabled' => $isMfa,
         'mfaStatusText' => 'Authenticator app connected',
         'sessionTimeoutText' => "Automatically sign out after {$timeout} minutes",
+        'sessionTimeoutMinutes' => (int)$timeout,
+        'session_timeout_minutes' => (int)$timeout,
         'activeSessionsText' => '1 device · This Android device',
         'appVersionText' => 'Momora AI · v1.0.0 · Ends your session on this device.'
     ]
