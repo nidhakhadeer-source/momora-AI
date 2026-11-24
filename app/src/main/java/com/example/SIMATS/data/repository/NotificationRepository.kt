@@ -1,5 +1,6 @@
 package com.example.SIMATS.data.repository
 
+import com.example.SIMATS.data.local.LocalNotificationHelper
 import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.NotificationItem
 import com.example.SIMATS.data.remote.RetrofitClient
@@ -36,7 +37,11 @@ class NotificationRepositoryImpl : NotificationRepository {
         try {
             val response = apiService.getNotifications(SessionManager.getUserId())
             if (response.success && response.data != null) {
-                emit(Result.success(response.data))
+                val list = response.data
+                val unread = list.count { !it.isRead }
+                NotificationStateManager.setUnreadCount(unread)
+                LocalNotificationHelper.postAdminAlertIfNeeded(list)
+                emit(Result.success(list))
             } else {
                 emit(Result.failure(Exception(response.message ?: "Failed to load notifications")))
             }

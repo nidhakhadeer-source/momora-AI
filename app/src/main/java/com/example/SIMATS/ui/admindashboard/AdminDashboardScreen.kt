@@ -81,6 +81,7 @@ fun AdminDashboardScreen(
     onManagePatientsClick: () -> Unit = {},
     onAddDoctorClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
+    onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -103,7 +104,10 @@ fun AdminDashboardScreen(
         },
         onProfileClick = onProfileClick,
         onRetryClick = { viewModel.onEvent(AdminDashboardUiEvent.OnRetryClicked) },
-        onNotificationClick = { viewModel.onEvent(AdminDashboardUiEvent.OnNotificationClicked) },
+        onNotificationClick = {
+            viewModel.onEvent(AdminDashboardUiEvent.OnNotificationClicked)
+            onNotificationClick()
+        },
         onDismissNotificationsDialog = { viewModel.onEvent(AdminDashboardUiEvent.OnDismissNotificationsDialog) },
         onNavTabSelected = { index ->
             viewModel.onEvent(AdminDashboardUiEvent.OnNavTabSelected(index))

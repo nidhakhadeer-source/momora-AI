@@ -36,6 +36,8 @@ object SessionManager {
     private const val KEY_REMINDER_APPOINTMENTS = "key_reminder_appointments"
     private const val KEY_REMINDER_WEEKLY_UPDATES = "key_reminder_weekly_updates"
     private const val KEY_APP_THEME = "key_app_theme" // "SYSTEM", "LIGHT", "DARK"
+    private const val KEY_ADMIN_NOTIFICATIONS_ENABLED = "key_admin_notifications_enabled"
+    private const val KEY_LAST_SHOWN_NOTIFICATION_ID = "key_last_shown_notification_id"
 
     @Volatile
     private var sharedPreferences: SharedPreferences? = null
@@ -385,6 +387,30 @@ object SessionManager {
         sharedPreferences?.let { prefs ->
             prefs.edit()
                 .putString(KEY_APP_THEME, theme)
+                .commit()
+        }
+    }
+
+    fun isAdminNotificationsEnabled(): Boolean {
+        return sharedPreferences?.getBoolean(KEY_ADMIN_NOTIFICATIONS_ENABLED, false) ?: false
+    }
+
+    fun setAdminNotificationsEnabled(enabled: Boolean) {
+        sharedPreferences?.let { prefs ->
+            prefs.edit()
+                .putBoolean(KEY_ADMIN_NOTIFICATIONS_ENABLED, enabled)
+                .commit()
+        }
+    }
+
+    fun getLastShownNotificationId(): Int {
+        return sharedPreferences?.getInt(KEY_LAST_SHOWN_NOTIFICATION_ID, 0) ?: 0
+    }
+
+    fun setLastShownNotificationId(id: Int) {
+        sharedPreferences?.let { prefs ->
+            prefs.edit()
+                .putInt(KEY_LAST_SHOWN_NOTIFICATION_ID, id)
                 .commit()
         }
     }

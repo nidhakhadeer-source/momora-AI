@@ -1,5 +1,10 @@
 package com.example.SIMATS.ui.adminsettings
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -27,11 +32,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +52,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -51,10 +62,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import com.example.SIMATS.data.local.LocalNotificationHelper
+import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.AdminAuditEvent
 import com.example.SIMATS.data.model.AdminProfileData
 import com.example.SIMATS.data.model.AdminSessionItem
 import com.example.SIMATS.data.model.AdminSettingsData
+import com.example.SIMATS.data.repository.NotificationStateManager
 import com.example.SIMATS.ui.components.formatErrorMessage
 import com.example.SIMATS.ui.theme.InterFontFamily
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
@@ -74,6 +89,7 @@ fun AdminSettingsScreen(
     selectedNavIndex: Int = 3,
     onNavigateBack: () -> Unit = {},
     onProfileClick: () -> Unit = {},
+    onNotificationClick: () -> Unit = {},
     onLogoutSuccess: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
@@ -99,7 +115,10 @@ fun AdminSettingsScreen(
             viewModel.onEvent(AdminSettingsUiEvent.OnBackClicked)
             onNavigateBack()
         },
-        onNotificationClick = { viewModel.onEvent(AdminSettingsUiEvent.OnNotificationClicked) },
+        onNotificationClick = {
+            viewModel.onEvent(AdminSettingsUiEvent.OnNotificationClicked)
+            onNotificationClick()
+        },
         onNavTabSelected = { index ->
             viewModel.onEvent(AdminSettingsUiEvent.OnNavTabSelected(index))
             onNavTabSelected(index)
@@ -198,6 +217,23 @@ fun AdminSettingsScreenContent(
     val scrollState = rememberScrollState()
     val data = uiState.settingsData
     val isDark = ThemeManager.isDarkTheme()
+    val context = LocalContext.current
+    var notificationsEnabled by remember { mutableStateOf(SessionManager.isAdminNotificationsEnabled()) }
+    var showPermissionDeniedMessage by remember { mutableStateOf(false) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            notificationsEnabled = true
+            SessionManager.setAdminNotificationsEnabled(true)
+            showPermissionDeniedMessage = false
+        } else {
+            notificationsEnabled = false
+            SessionManager.setAdminNotificationsEnabled(false)
+            showPermissionDeniedMessage = true
+        }
+    }
 
     Column(
         modifier = modifier
@@ -229,6 +265,7 @@ fun AdminSettingsScreenContent(
                 )
             }
 
+            val unreadCount by NotificationStateManager.unreadCount.collectAsState()
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -240,6 +277,16 @@ fun AdminSettingsScreenContent(
                     color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary,
                     modifier = Modifier.size(20.dp)
                 )
+                if (unreadCount > 0) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(top = 8.dp, end = 8.dp)
+                            .size(7.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFE53935))
+                    )
+                }
             }
         }
 
@@ -310,6 +357,145 @@ fun AdminSettingsScreenContent(
                 }
                 Spacer(modifier = Modifier.height(14.dp))
             }
+
+            // "Notifications" Section
+            Text(
+                text = "Notifications",
+                fontFamily = InterFontFamily,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(if (isDark) Color(0xFF1F1A24) else Color.White)
+                    .border(1.dp, if (isDark) Color(0xFF332A3B) else Color(0xFFEFE8F4), RoundedCornerShape(16.dp))
+                    .padding(horizontal = 14.dp, vertical = 12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(if (isDark) Color(0xFF28212F) else Color(0xFFF4ECF8)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            BellIcon(color = if (isDark) Color(0xFFD4B3DC) else MomoraPurplePrimary, modifier = Modifier.size(16.dp))
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column {
+                            Text(
+                                text = "Enable notifications",
+                                fontFamily = InterFontFamily,
+                                fontSize = 13.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (isDark) Color(0xFFEDE7EF) else MomoraPurpleDark
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Alerts for new doctors, patients and account activity",
+                                fontFamily = InterFontFamily,
+                                fontSize = 11.sp,
+                                color = if (isDark) Color(0xFFB5ACB9) else MomoraBodyMuted
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    Switch(
+                        checked = notificationsEnabled,
+                        onCheckedChange = { isChecked ->
+                            if (isChecked) {
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    val isGranted = ContextCompat.checkSelfPermission(
+                                        context,
+                                        Manifest.permission.POST_NOTIFICATIONS
+                                    ) == PackageManager.PERMISSION_GRANTED
+
+                                    if (isGranted) {
+                                        notificationsEnabled = true
+                                        SessionManager.setAdminNotificationsEnabled(true)
+                                        showPermissionDeniedMessage = false
+                                    } else {
+                                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                    }
+                                } else {
+                                    notificationsEnabled = true
+                                    SessionManager.setAdminNotificationsEnabled(true)
+                                    showPermissionDeniedMessage = false
+                                }
+                            } else {
+                                notificationsEnabled = false
+                                SessionManager.setAdminNotificationsEnabled(false)
+                                showPermissionDeniedMessage = false
+                            }
+                        },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = MomoraPurplePrimary,
+                            uncheckedThumbColor = if (isDark) Color(0xFFB5ACB9) else Color.White,
+                            uncheckedTrackColor = if (isDark) Color(0xFF332A3B) else Color(0xFFE0E0E0)
+                        )
+                    )
+                }
+
+                if (showPermissionDeniedMessage) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (isDark) Color(0xFF331A1E) else Color(0xFFFFF0F2))
+                            .border(1.dp, if (isDark) Color(0xFF5A2A30) else Color(0xFFFFD8DD), RoundedCornerShape(12.dp))
+                            .padding(12.dp)
+                    ) {
+                        Column {
+                            Text(
+                                text = "Allow notifications in phone settings",
+                                fontFamily = InterFontFamily,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = if (isDark) Color(0xFFFF8A80) else Color(0xFFD32F2F)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(MomoraPurplePrimary)
+                                    .clickable { LocalNotificationHelper.openAppNotificationSettings(context) }
+                                    .padding(horizontal = 14.dp, vertical = 6.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "Open settings",
+                                    fontFamily = InterFontFamily,
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(18.dp))
 
             // "Security" Section
             Text(

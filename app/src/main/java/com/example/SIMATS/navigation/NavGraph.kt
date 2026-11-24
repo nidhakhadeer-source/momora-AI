@@ -15,6 +15,7 @@ import com.example.SIMATS.ui.adddoctor.AddDoctorScreen
 import com.example.SIMATS.ui.adddoctor.AddDoctorViewModel
 import com.example.SIMATS.ui.admindashboard.AdminDashboardScreen
 import com.example.SIMATS.ui.admindashboard.AdminDashboardViewModel
+import com.example.SIMATS.ui.adminnotifications.AdminNotificationsScreen
 import com.example.SIMATS.ui.adminprofile.AdminProfileScreen
 import com.example.SIMATS.ui.adminprofile.AdminProfileViewModel
 import com.example.SIMATS.ui.adminsettings.AdminSettingsScreen
@@ -118,7 +119,8 @@ private val AdminScreens: Set<Screen> = setOf(
     Screen.ManageDoctors,
     Screen.ManagePatients,
     Screen.AdminSettings,
-    Screen.AdminProfile
+    Screen.AdminProfile,
+    Screen.AdminNotifications
 )
 
 /**
@@ -139,7 +141,7 @@ fun getSelectedNavIndexForScreen(screen: Screen): Int = when (screen) {
     Screen.Profile -> 4
 
     // Admin
-    Screen.AdminDashboard -> 0
+    Screen.AdminDashboard, Screen.AdminNotifications -> 0
     Screen.ManageDoctors, Screen.AddDoctor -> 1
     Screen.ManagePatients -> 2
     Screen.AdminSettings, Screen.AdminProfile -> 3
@@ -174,6 +176,7 @@ private fun sanitizeScreenForRole(target: Screen): Screen {
         }
         UserRole.ADMIN -> {
             when {
+                target == Screen.Notifications -> Screen.AdminNotifications
                 target in PatientScreens -> Screen.AdminDashboard
                 target in DoctorScreens -> Screen.AdminDashboard
                 else -> target
@@ -920,6 +923,9 @@ fun AppNavHost() {
                 onProfileClick = {
                     currentScreen = Screen.AdminProfile
                 },
+                onNotificationClick = {
+                    currentScreen = Screen.AdminNotifications
+                },
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.AdminDashboard
@@ -940,6 +946,9 @@ fun AppNavHost() {
                 },
                 onDoctorCreated = {
                     currentScreen = Screen.ManageDoctors
+                },
+                onNotificationClick = {
+                    currentScreen = Screen.AdminNotifications
                 },
                 onNavTabSelected = { index ->
                     when (index) {
@@ -962,6 +971,9 @@ fun AppNavHost() {
                 onAddDoctorClick = {
                     currentScreen = Screen.AddDoctor
                 },
+                onNotificationClick = {
+                    currentScreen = Screen.AdminNotifications
+                },
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.AdminDashboard
@@ -979,6 +991,9 @@ fun AppNavHost() {
                 selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
                     currentScreen = Screen.AdminDashboard
+                },
+                onNotificationClick = {
+                    currentScreen = Screen.AdminNotifications
                 },
                 onNavTabSelected = { index ->
                     when (index) {
@@ -1000,6 +1015,9 @@ fun AppNavHost() {
                 },
                 onProfileClick = {
                     currentScreen = Screen.AdminProfile
+                },
+                onNotificationClick = {
+                    currentScreen = Screen.AdminNotifications
                 },
                 onLogoutSuccess = {
                     currentScreen = Screen.RoleSelect
@@ -1024,6 +1042,24 @@ fun AppNavHost() {
                 },
                 onLogoutSuccess = {
                     currentScreen = Screen.RoleSelect
+                },
+                onNavTabSelected = { index ->
+                    when (index) {
+                        0 -> currentScreen = Screen.AdminDashboard
+                        1 -> currentScreen = Screen.ManageDoctors
+                        2 -> currentScreen = Screen.ManagePatients
+                        3 -> currentScreen = Screen.AdminSettings
+                    }
+                }
+            )
+        }
+        Screen.AdminNotifications -> {
+            val notificationsViewModel: NotificationsViewModel = viewModel()
+            AdminNotificationsScreen(
+                viewModel = notificationsViewModel,
+                selectedNavIndex = 0,
+                onNavigateBack = {
+                    currentScreen = Screen.AdminDashboard
                 },
                 onNavTabSelected = { index ->
                     when (index) {
