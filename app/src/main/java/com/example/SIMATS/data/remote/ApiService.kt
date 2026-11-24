@@ -3,6 +3,10 @@ package com.example.SIMATS.data.remote
 import com.example.SIMATS.data.model.AddDoctorData
 import com.example.SIMATS.data.model.AdminDashboardData
 import com.example.SIMATS.data.model.AdminSettingsData
+import com.example.SIMATS.data.model.AdminSessionTimeoutData
+import com.example.SIMATS.data.model.AdminSessionItem
+import com.example.SIMATS.data.model.AdminProfileData
+import com.example.SIMATS.data.model.AdminAuditEvent
 import com.example.SIMATS.data.model.AppointmentBookingData
 import com.example.SIMATS.data.model.AssignedPatientItem
 import com.example.SIMATS.data.model.BabyDevelopmentData
@@ -398,4 +402,37 @@ interface ApiService {
 
     @POST("admin/settings.php")
     suspend fun adminLogout(): BaseResponse
+
+    @FormUrlEncoded
+    @POST("admin/change_password.php")
+    suspend fun adminChangePassword(
+        @Field("currentPassword") currentPassword: String,
+        @Field("newPassword") newPassword: String,
+        @Field("confirmPassword") confirmPassword: String
+    ): BaseResponse
+
+    @GET("admin/session_timeout.php")
+    suspend fun getAdminSessionTimeout(): DataResponse<AdminSessionTimeoutData>
+
+    @FormUrlEncoded
+    @POST("admin/session_timeout.php")
+    suspend fun setAdminSessionTimeout(
+        @Field("minutes") minutes: Int
+    ): BaseResponse
+
+    @GET("admin/sessions.php")
+    suspend fun getAdminSessions(): DataResponse<List<AdminSessionItem>>
+
+    @FormUrlEncoded
+    @POST("admin/sessions.php")
+    suspend fun revokeAdminSession(
+        @Field("action") action: String = "revoke",
+        @Field("sessionId") sessionId: Int
+    ): BaseResponse
+
+    @GET("admin/profile.php")
+    suspend fun getAdminProfile(): DataResponse<AdminProfileData>
+
+    @GET("admin/audit.php")
+    suspend fun getAdminAuditTrail(): DataResponse<List<AdminAuditEvent>>
 }

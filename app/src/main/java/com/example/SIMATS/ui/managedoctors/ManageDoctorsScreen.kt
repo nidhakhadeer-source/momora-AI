@@ -76,6 +76,7 @@ fun ManageDoctorsScreen(
 
     androidx.compose.runtime.LaunchedEffect(Unit) {
         viewModel.loadDoctors()
+        viewModel.loadNotifications()
     }
 
     ManageDoctorsScreenContent(
