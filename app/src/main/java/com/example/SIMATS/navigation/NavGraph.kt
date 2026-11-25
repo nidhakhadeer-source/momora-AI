@@ -232,11 +232,7 @@ fun AppNavHost() {
                             }
                         }
                         else -> {
-                            if (SessionManager.isOnboardingCompleted()) {
-                                currentScreen = Screen.RoleSelect
-                            } else {
-                                currentScreen = Screen.Onboarding
-                            }
+                            currentScreen = Screen.Onboarding
                         }
                     }
                 },
@@ -259,7 +255,7 @@ fun AppNavHost() {
                 },
                 onGetStartedComplete = {
                     SessionManager.setOnboardingCompleted(true)
-                    currentScreen = Screen.SignUp
+                    currentScreen = Screen.RoleSelect
                 }
             )
         }

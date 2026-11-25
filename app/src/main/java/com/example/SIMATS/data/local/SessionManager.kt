@@ -329,6 +329,7 @@ object SessionManager {
                 .remove(KEY_PATIENT_CODE)
                 .remove(KEY_DOCTOR_NAME)
                 .remove(KEY_EXPIRES_AT)
+                .remove(KEY_ONBOARDING_COMPLETED)
                 .remove(KEY_PHONE)
                 .remove(KEY_GENDER)
                 .remove(KEY_DOB)

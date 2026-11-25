@@ -262,7 +262,7 @@ private fun OnboardingWelcomeStep(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "Continue",
+                        text = "Get started",
                         fontFamily = InterFontFamily,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
