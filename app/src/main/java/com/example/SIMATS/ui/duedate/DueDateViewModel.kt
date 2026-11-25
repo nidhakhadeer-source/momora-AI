@@ -85,9 +85,7 @@ class DueDateViewModel(
     }
 
     private fun applyLoadedData(data: PregnancyDetailsData) {
-        val lmp = data.lastMenstrualPeriod.ifBlank { "09 May 2026" }
-        val edd = data.estimatedDueDate.ifBlank { "13 Feb 2027" }
-        val metrics = calculateMetrics(lmpStr = lmp, eddStr = edd)
+        val metrics = PregnancyDataHolder.updatePregnancyData(data)
 
         _uiState.value = _uiState.value.copy(
             pregnancyData = data,
@@ -112,7 +110,8 @@ class DueDateViewModel(
         if (parsedEdd != null) {
             val lmpDate = PregnancyCalculator.calculateLmpFromEdd(parsedEdd)
             val lmpFormatted = PregnancyCalculator.formatDate(lmpDate)
-            val metrics = calculateMetrics(lmpStr = lmpFormatted, eddStr = newEddStr)
+            val metrics = PregnancyCalculator.calculateMetrics(lmpStr = lmpFormatted, eddStr = newEddStr)
+            PregnancyDataHolder.updateMetrics(metrics)
             _uiState.value = _uiState.value.copy(
                 estimatedDueDate = newEddStr,
                 lastMenstrualPeriod = lmpFormatted,
@@ -135,7 +134,8 @@ class DueDateViewModel(
         if (parsedLmp != null) {
             val eddDate = PregnancyCalculator.calculateEddFromLmp(parsedLmp)
             val eddFormatted = PregnancyCalculator.formatDate(eddDate)
-            val metrics = calculateMetrics(lmpStr = newLmpStr, eddStr = eddFormatted)
+            val metrics = PregnancyCalculator.calculateMetrics(lmpStr = newLmpStr, eddStr = eddFormatted)
+            PregnancyDataHolder.updateMetrics(metrics)
             _uiState.value = _uiState.value.copy(
                 lastMenstrualPeriod = newLmpStr,
                 estimatedDueDate = eddFormatted,
@@ -178,6 +178,7 @@ class DueDateViewModel(
             repository.savePregnancyDetails(updated).collect { result ->
                 result.fold(
                     onSuccess = {
+                        PregnancyDataHolder.updatePregnancyData(updated)
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             isSavedSuccess = true,
@@ -196,64 +197,8 @@ class DueDateViewModel(
     }
 
     private fun calculateMetrics(lmpStr: String, eddStr: String): PregnancyMetrics {
-        val today = Date()
-        var lmpDate = PregnancyCalculator.parseDate(lmpStr)
-        var eddDate = PregnancyCalculator.parseDate(eddStr)
-
-        if (lmpDate == null && eddDate != null) {
-            lmpDate = PregnancyCalculator.calculateLmpFromEdd(eddDate)
-        } else if (eddDate == null && lmpDate != null) {
-            eddDate = PregnancyCalculator.calculateEddFromLmp(lmpDate)
-        } else if (lmpDate == null && eddDate == null) {
-            val cal = Calendar.getInstance()
-            cal.add(Calendar.DAY_OF_YEAR, -171)
-            lmpDate = cal.time
-            eddDate = PregnancyCalculator.calculateEddFromLmp(lmpDate)
-        }
-
-        val nonNullLmp = lmpDate!!
-        val nonNullEdd = eddDate!!
-
-        val (weeks, days) = PregnancyCalculator.calculateGestationalAge(nonNullLmp, today)
-        val remainingDays = PregnancyCalculator.calculateRemainingDays(nonNullEdd, today)
-        val remWeeks = remainingDays / 7
-        val remDays = remainingDays % 7
-        val trimester = PregnancyCalculator.determineTrimester(weeks)
-        val trimesterText = when (trimester) {
-            1 -> "FIRST TRIMESTER"
-            3 -> "THIRD TRIMESTER"
-            else -> "SECOND TRIMESTER"
-        }
-        val countdownText = "$remWeeks weeks, $remDays days until your estimated due date."
-        val gestationalAgeText = "$weeks weeks, $days days"
-        val progress = (weeks.toFloat() / 40f).coerceIn(0f, 1f)
-
-        return PregnancyMetrics(
-            weeks = weeks,
-            days = days,
-            trimester = trimester,
-            trimesterText = trimesterText,
-            remainingDays = remainingDays,
-            countdownText = countdownText,
-            gestationalAgeText = gestationalAgeText,
-            progress = progress,
-            lmpFormatted = PregnancyCalculator.formatDate(nonNullLmp),
-            eddFormatted = PregnancyCalculator.formatDate(nonNullEdd)
-        )
+        return PregnancyCalculator.calculateMetrics(lmpStr = lmpStr, eddStr = eddStr)
     }
-
-    data class PregnancyMetrics(
-        val weeks: Int,
-        val days: Int,
-        val trimester: Int,
-        val trimesterText: String,
-        val remainingDays: Int,
-        val countdownText: String,
-        val gestationalAgeText: String,
-        val progress: Float,
-        val lmpFormatted: String,
-        val eddFormatted: String
-    )
 
     class Factory(private val repository: PregnancyRepository) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")

@@ -72,8 +72,11 @@ respond(200, [
         'patientId' => $patientCode,
         'fullName' => $profile['full_name'],
         'email' => $profile['email'],
+        'phone' => $profile['phone'] ?? null,
         'dateOfBirth' => $dobFormatted,
+        'gender' => $profile['gender'] ?? null,
         'bloodGroup' => $profile['blood_group'] ?: 'O positive',
+        'address' => $profile['address'] ?? null,
         'isCareTeamSharingOn' => (bool)($profile['is_care_team_sharing_on'] ?? true),
         'careTeamDoctorName' => $doctorName,
         'reminderSummary' => $profile['reminder_summary'] ?: 'Medication and appointment alerts'

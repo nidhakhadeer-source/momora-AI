@@ -26,11 +26,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->execute([$doctorId, $patientId, $subject, $adviceText, $saveCopy]);
 
     // Send notification to the patient
+    $notifTitle = "Doctor advice received";
+    $notifSubtitle = "{$user['name']} replied: \"{$subject}\"";
+    $notifDetail = "View guidance from " . ($user['name'] ?: 'your doctor');
+
     $notifStmt = $pdo->prepare(
         'INSERT INTO notifications (user_id, title, subtitle, detail_text, type, is_new, is_read)
-         VALUES (?, "Doctor advice received", ?, "View guidance from Dr Amelia Chen", "REPORT_REVIEW", 1, 0)'
+         VALUES (?, ?, ?, ?, "REPORT_REVIEW", 1, 0)'
     );
-    $notifStmt->execute([$patientId, "{$user['name']} replied: \"{$subject}\""]);
+    $notifStmt->execute([$patientId, $notifTitle, $notifSubtitle, $notifDetail]);
+    $notifId = (int)$pdo->lastInsertId();
+
+    // Trigger real-time FCM notification to patient
+    require_once __DIR__ . '/../notifications/fcm_service.php';
+    sendFcmNotificationToUser(
+        $pdo,
+        $patientId,
+        $notifTitle,
+        $notifSubtitle,
+        $notifDetail,
+        'REPORT_REVIEW',
+        $notifId,
+        'doctor_advice'
+    );
 
     respond(201, [
         'success' => true,

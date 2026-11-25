@@ -1,5 +1,11 @@
 package com.example.SIMATS.ui.symptom
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -29,6 +35,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +47,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -63,6 +73,7 @@ fun SymptomLoggerScreen(
     modifier: Modifier = Modifier,
     selectedNavIndex: Int = 1,
     onNavigateBack: () -> Unit = {},
+    onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -82,7 +93,10 @@ fun SymptomLoggerScreen(
             viewModel.onEvent(SymptomLoggerUiEvent.OnBackClicked)
             onNavigateBack()
         },
-        onNotificationClick = { viewModel.onEvent(SymptomLoggerUiEvent.OnNotificationClicked) },
+        onNotificationClick = {
+            viewModel.onEvent(SymptomLoggerUiEvent.OnNotificationClicked)
+            onNotificationClick()
+        },
         onNavTabSelected = { index ->
             viewModel.onEvent(SymptomLoggerUiEvent.OnNavTabSelected(index))
             onNavTabSelected(index)
@@ -107,6 +121,7 @@ fun SymptomLoggerScreenContent(
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
+    var isUrgentCareExpanded by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
@@ -425,79 +440,66 @@ fun SymptomLoggerScreenContent(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // AI Educational Guidance Card
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MomoraMintBadgeBg)
-                    .padding(14.dp)
-            ) {
-                Column {
-                    Text(
-                        text = "AI EDUCATIONAL GUIDANCE",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MomoraMintBadgeText,
-                        letterSpacing = 0.5.sp
-                    )
+            // Expandable Urgent Care Guidance Row
+            val urgentRotation by animateFloatAsState(
+                targetValue = if (isUrgentCareExpanded) 90f else 0f,
+                label = "urgentRotation"
+            )
 
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = "Gentle steps to consider",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1E2C28)
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = uiState.entryData?.aiGuidanceText
-                            ?: "Smaller meals and sitting upright after eating may help. Speak with your maternity team if it persists, worsens, or worries you.",
-                        fontSize = 12.5.sp,
-                        lineHeight = 17.sp,
-                        color = Color(0xFF43524E)
-                    )
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    Text(
-                        text = "Not a diagnosis. Your doctor can assess symptoms in context.",
-                        fontSize = 10.5.sp,
-                        color = Color(0xFF7A8984)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Emergency Care Alert Banner
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(14.dp))
-                    .background(Color(0xFFFFF4EC))
+                    .background(Color(0xFFFFF7F2))
                     .border(1.dp, Color(0xFFFDE0CE), RoundedCornerShape(14.dp))
-                    .padding(horizontal = 14.dp, vertical = 11.dp)
+                    .clickable { isUrgentCareExpanded = !isUrgentCareExpanded }
+                    .padding(horizontal = 14.dp, vertical = 12.dp)
             ) {
-                Row(verticalAlignment = Alignment.Top) {
-                    Text(
-                        text = "⚠️",
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(top = 1.dp)
-                    )
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "⚠️",
+                                fontSize = 14.sp
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = "When to seek urgent care",
+                                fontSize = 13.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF8D4213)
+                            )
+                        }
+                        Text(
+                            text = "›",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF8D4213),
+                            modifier = Modifier.graphicsLayer { rotationZ = urgentRotation }
+                        )
+                    }
 
-                    Spacer(modifier = Modifier.width(10.dp))
-
-                    Text(
-                        text = "Severe headache, vision changes, severe abdominal pain, bleeding, fluid leakage or reduced movements: contact maternity care now. For severe symptoms, use local emergency services.",
-                        fontSize = 11.5.sp,
-                        lineHeight = 15.sp,
-                        color = Color(0xFF8D4213),
-                        modifier = Modifier.weight(1f)
-                    )
+                    AnimatedVisibility(
+                        visible = isUrgentCareExpanded,
+                        enter = expandVertically() + fadeIn(),
+                        exit = shrinkVertically() + fadeOut()
+                    ) {
+                        Column(modifier = Modifier.padding(top = 10.dp, start = 24.dp)) {
+                            Text(
+                                text = "Severe headache, vision changes, severe abdominal pain, bleeding, fluid leakage or reduced movements: contact maternity care now. For severe symptoms, use local emergency services.",
+                                fontSize = 11.5.sp,
+                                lineHeight = 16.sp,
+                                color = Color(0xFF8D4213)
+                            )
+                        }
+                    }
                 }
             }
 

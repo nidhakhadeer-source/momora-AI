@@ -2,7 +2,12 @@ package com.example.SIMATS.ui.duedate
 
 import android.app.DatePickerDialog
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -21,6 +26,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -36,6 +42,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,6 +57,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -75,6 +85,7 @@ fun DueDateScreen(
     onNextVisitClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
     onBabyDevelopmentClick: () -> Unit = {},
+    onLogSymptomsClick: () -> Unit = {},
     selectedNavIndex: Int = 1,
     onNavTabSelected: (Int) -> Unit = {}
 ) {
@@ -111,6 +122,7 @@ fun DueDateScreen(
         onDismissAppointmentDetail = { viewModel.onEvent(DueDateUiEvent.OnDismissAppointmentDetail) },
         onCancelAppointmentClick = { viewModel.onEvent(DueDateUiEvent.OnCancelAppointmentClicked) },
         onBabyDevelopmentClick = onBabyDevelopmentClick,
+        onLogSymptomsClick = onLogSymptomsClick,
         onRetryClick = { viewModel.onEvent(DueDateUiEvent.OnRetryClicked) },
         onNavTabSelected = { index ->
             viewModel.onEvent(DueDateUiEvent.OnNavTabSelected(index))
@@ -137,6 +149,7 @@ fun DueDateScreenContent(
     onDismissAppointmentDetail: () -> Unit = {},
     onCancelAppointmentClick: () -> Unit = {},
     onBabyDevelopmentClick: () -> Unit = {},
+    onLogSymptomsClick: () -> Unit = {},
     onRetryClick: () -> Unit = {},
     selectedNavIndex: Int = 1,
     onNavTabSelected: (Int) -> Unit = {}
@@ -144,6 +157,11 @@ fun DueDateScreenContent(
     val scrollState = rememberScrollState()
     val data = uiState.pregnancyData
     val context = LocalContext.current
+
+    var isTrimesterOverviewExpanded by remember { mutableStateOf(false) }
+    var isBabyDevExpanded by remember { mutableStateOf(false) }
+    var isMotherBodyExpanded by remember { mutableStateOf(false) }
+    var isCareTipExpanded by remember { mutableStateOf(false) }
 
     // Date Picker for Estimated Due Date
     val showEddDatePicker = {
@@ -613,89 +631,116 @@ fun DueDateScreenContent(
 
                         Spacer(modifier = Modifier.height(14.dp))
 
-                        // Interactive Trimester Pills Row
+                        // Preserved Current Trimester Indicator
+                        val currentTrimesterLabel = when (uiState.currentTrimester) {
+                            1 -> "1st · 1-13w"
+                            2 -> "2nd · 14-27w"
+                            else -> "3rd · 28-40w"
+                        }
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.Start
                         ) {
                             TrimesterPill(
-                                label = "1st · 1-13w",
-                                isSelected = uiState.selectedTrimesterView == 1,
-                                isCurrent = uiState.currentTrimester == 1,
-                                onClick = { onTrimesterTabSelected(1) },
-                                modifier = Modifier.weight(1f)
-                            )
-                            TrimesterPill(
-                                label = "2nd · 14-27w",
-                                isSelected = uiState.selectedTrimesterView == 2,
-                                isCurrent = uiState.currentTrimester == 2,
-                                onClick = { onTrimesterTabSelected(2) },
-                                modifier = Modifier.weight(1f)
-                            )
-                            TrimesterPill(
-                                label = "3rd · 28-40w",
-                                isSelected = uiState.selectedTrimesterView == 3,
-                                isCurrent = uiState.currentTrimester == 3,
-                                onClick = { onTrimesterTabSelected(3) },
-                                modifier = Modifier.weight(1f)
+                                label = currentTrimesterLabel,
+                                isSelected = true,
+                                isCurrent = true,
+                                onClick = {},
+                                modifier = Modifier.wrapContentWidth()
                             )
                         }
 
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        // Selected Trimester Information Preview
-                        val triInfo = when (uiState.selectedTrimesterView) {
-                            1 -> "Weeks 1–13: Vital organogenesis, early heartbeat, and cellular division. Focus on gentle folate intake, hydration, and restful sleep."
-                            3 -> "Weeks 28–40: Rapid weight gain, lung maturation, and preparing for delivery. Practice pelvic floor relaxation, nesting, and hospital prep."
-                            else -> "Weeks 14–27: Distinct baby movements (quickening), sensory sharpening, and bone hardening. Focus on dietary iron, calcium, and side-sleeping comfort."
+                        // Trimester Overview - Expandable Accordion
+                        val triTitle = when (uiState.currentTrimester) {
+                            1 -> "Trimester 1 Overview"
+                            2 -> "Trimester 2 Overview"
+                            else -> "Trimester 3 Overview"
                         }
+                        val triInfo = when (uiState.currentTrimester) {
+                            1 -> "Weeks 1–13: Vital organogenesis, early heartbeat, and cellular division. Focus on gentle folate intake, hydration, and restful sleep."
+                            2 -> "Weeks 14–27: Distinct baby movements (quickening), sensory sharpening, and bone hardening. Focus on dietary iron, calcium, and side-sleeping comfort."
+                            else -> "Weeks 28–40: Rapid weight gain, lung maturation, and preparing for delivery. Practice pelvic floor relaxation, nesting, and hospital prep."
+                        }
+                        val triChevronRotation by animateFloatAsState(
+                            targetValue = if (isTrimesterOverviewExpanded) 90f else 0f,
+                            label = "triChevronRotation"
+                        )
 
-                        Box(
+                        Card(
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            border = CardDefaults.outlinedCardBorder().copy(
+                                brush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.outlineVariant)
+                            ),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(MaterialTheme.colorScheme.surface)
-                                .padding(10.dp)
+                                .clickable { isTrimesterOverviewExpanded = !isTrimesterOverviewExpanded }
                         ) {
-                            Column {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp)
+                                    .animateContentSize()
+                            ) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Text(
-                                        text = when (uiState.selectedTrimesterView) {
-                                            1 -> "Trimester 1 Overview"
-                                            3 -> "Trimester 3 Overview"
-                                            else -> "Trimester 2 Overview"
-                                        },
-                                        fontSize = 11.5.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-
-                                    if (uiState.selectedTrimesterView == uiState.currentTrimester) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
                                         Text(
-                                            text = "Your Current Stage",
-                                            fontSize = 9.5.sp,
+                                            text = triTitle,
+                                            fontSize = 12.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = MomoraMintBadgeText
+                                            color = MaterialTheme.colorScheme.onSurface
                                         )
-                                    } else {
+
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(50))
+                                                .background(MomoraMintBadgeBg)
+                                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = "Your Current Stage",
+                                                fontSize = 9.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MomoraMintBadgeText
+                                            )
+                                        }
+                                    }
+
+                                    Text(
+                                        text = "›",
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.graphicsLayer { rotationZ = triChevronRotation }
+                                    )
+                                }
+
+                                AnimatedVisibility(
+                                    visible = isTrimesterOverviewExpanded,
+                                    enter = expandVertically() + fadeIn(),
+                                    exit = shrinkVertically() + fadeOut()
+                                ) {
+                                    Column {
+                                        Spacer(modifier = Modifier.height(8.dp))
                                         Text(
-                                            text = "Preview · Current: T${uiState.currentTrimester}",
-                                            fontSize = 9.5.sp,
+                                            text = triInfo,
+                                            fontSize = 11.5.sp,
+                                            lineHeight = 16.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = triInfo,
-                                    fontSize = 11.sp,
-                                    lineHeight = 15.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
                             }
                         }
                     }
@@ -767,14 +812,6 @@ fun DueDateScreenContent(
                     color = MaterialTheme.colorScheme.onBackground
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = "Tailored insights for your baby's growth and your changing body.",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Card(
@@ -785,146 +822,300 @@ fun DueDateScreenContent(
                         .fillMaxWidth()
                         .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
                 ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        // Baby Development Row
-                        Row(verticalAlignment = Alignment.Top) {
-                            Box(
-                                modifier = Modifier
-                                    .size(34.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                                contentAlignment = Alignment.Center
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp)
+                            .animateContentSize()
+                    ) {
+                        // Section A: Baby Development
+                        val babyDevRotation by animateFloatAsState(
+                            targetValue = if (isBabyDevExpanded) 90f else 0f,
+                            label = "babyDevRotation"
+                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .clickable { isBabyDevExpanded = !isBabyDevExpanded }
+                                .padding(vertical = 4.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(text = "👶", fontSize = 16.sp)
-                            }
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column(modifier = Modifier.weight(1f)) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(text = "👶", fontSize = 16.sp)
+                                }
+
+                                Spacer(modifier = Modifier.width(10.dp))
+
                                 Row(
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier.weight(1f),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                        modifier = Modifier.weight(1f, fill = false)
+                                    ) {
+                                        Text(
+                                            text = "Baby Development",
+                                            fontSize = 13.5.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(50))
+                                                .background(MomoraMintBadgeBg)
+                                                .padding(horizontal = 7.dp, vertical = 2.dp)
+                                        ) {
+                                            Text(
+                                                text = weeklyInfo.babySizeComparison,
+                                                fontSize = 9.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = MomoraMintBadgeText
+                                            )
+                                        }
+                                    }
+
+                                    Text(
+                                        text = "›",
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.graphicsLayer { rotationZ = babyDevRotation }
+                                    )
+                                }
+                            }
+
+                            AnimatedVisibility(
+                                visible = isBabyDevExpanded,
+                                enter = expandVertically() + fadeIn(),
+                                exit = shrinkVertically() + fadeOut()
+                            ) {
+                                Column(modifier = Modifier.padding(start = 44.dp, top = 8.dp, bottom = 4.dp)) {
+                                    Text(
+                                        text = weeklyInfo.babyDevelopment,
+                                        fontSize = 12.sp,
+                                        lineHeight = 17.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outlineVariant))
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Section B: Mother's Body
+                        val motherBodyRotation by animateFloatAsState(
+                            targetValue = if (isMotherBodyExpanded) 90f else 0f,
+                            label = "motherBodyRotation"
+                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .clickable { isMotherBodyExpanded = !isMotherBodyExpanded }
+                                .padding(vertical = 4.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(text = "🤰", fontSize = 16.sp)
+                                }
+
+                                Spacer(modifier = Modifier.width(10.dp))
+
+                                Row(
+                                    modifier = Modifier.weight(1f),
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        text = "Baby Development",
+                                        text = "Mother's Body",
                                         fontSize = 13.5.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(50))
-                                            .background(MomoraMintBadgeBg)
-                                            .padding(horizontal = 8.dp, vertical = 2.dp)
-                                    ) {
-                                        Text(
-                                            text = weeklyInfo.babySizeComparison,
-                                            fontSize = 10.sp,
-                                            fontWeight = FontWeight.Bold,
-                                            color = MomoraMintBadgeText
-                                        )
-                                    }
+
+                                    Text(
+                                        text = "›",
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.graphicsLayer { rotationZ = motherBodyRotation }
+                                    )
                                 }
-                                Spacer(modifier = Modifier.height(3.dp))
-                                Text(
-                                    text = weeklyInfo.babyDevelopment,
-                                    fontSize = 12.sp,
-                                    lineHeight = 17.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                            }
+
+                            AnimatedVisibility(
+                                visible = isMotherBodyExpanded,
+                                enter = expandVertically() + fadeIn(),
+                                exit = shrinkVertically() + fadeOut()
+                            ) {
+                                Column(modifier = Modifier.padding(start = 44.dp, top = 8.dp, bottom = 4.dp)) {
+                                    Text(
+                                        text = weeklyInfo.motherBodyChanges,
+                                        fontSize = 12.sp,
+                                        lineHeight = 17.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
                         Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outlineVariant))
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
-                        // Mother's Body Changes Row
-                        Row(verticalAlignment = Alignment.Top) {
+                        // Section C: Care & Comfort Tip
+                        val careTipRotation by animateFloatAsState(
+                            targetValue = if (isCareTipExpanded) 90f else 0f,
+                            label = "careTipRotation"
+                        )
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .clickable { isCareTipExpanded = !isCareTipExpanded }
+                                .padding(vertical = 4.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .clip(CircleShape)
+                                        .background(MomoraMintBadgeBg),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(text = "💡", fontSize = 16.sp)
+                                }
+
+                                Spacer(modifier = Modifier.width(10.dp))
+
+                                Row(
+                                    modifier = Modifier.weight(1f),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Care & Comfort Tip",
+                                        fontSize = 13.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+
+                                    Text(
+                                        text = "›",
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.graphicsLayer { rotationZ = careTipRotation }
+                                    )
+                                }
+                            }
+
+                            AnimatedVisibility(
+                                visible = isCareTipExpanded,
+                                enter = expandVertically() + fadeIn(),
+                                exit = shrinkVertically() + fadeOut()
+                            ) {
+                                Column(modifier = Modifier.padding(start = 44.dp, top = 8.dp, bottom = 4.dp)) {
+                                    Text(
+                                        text = weeklyInfo.careTip,
+                                        fontSize = 12.sp,
+                                        lineHeight = 17.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Log Symptoms Card
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
+                        .clickable { onLogSymptomsClick() }
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
                             Box(
                                 modifier = Modifier
-                                    .size(34.dp)
+                                    .size(40.dp)
                                     .clip(CircleShape)
                                     .background(MaterialTheme.colorScheme.surfaceVariant),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(text = "🤰", fontSize = 16.sp)
+                                Text(text = "🩺", fontSize = 18.sp)
                             }
-                            Spacer(modifier = Modifier.width(10.dp))
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "Mother's Body",
-                                    fontSize = 13.5.sp,
+                                    text = "Log Symptoms",
+                                    fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Spacer(modifier = Modifier.height(3.dp))
                                 Text(
-                                    text = weeklyInfo.motherBodyChanges,
+                                    text = "Record how you're feeling and share symptoms with your doctor.",
                                     fontSize = 12.sp,
-                                    lineHeight = 17.sp,
+                                    lineHeight = 16.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outlineVariant))
-                        Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
 
-                        // Care & Comfort Tip Row
-                        Row(verticalAlignment = Alignment.Top) {
-                            Box(
-                                modifier = Modifier
-                                    .size(34.dp)
-                                    .clip(CircleShape)
-                                    .background(MomoraMintBadgeBg),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(text = "💡", fontSize = 16.sp)
-                            }
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = "Care & Comfort Tip",
-                                    fontSize = 13.5.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Spacer(modifier = Modifier.height(3.dp))
-                                Text(
-                                    text = weeklyInfo.careTip,
-                                    fontSize = 12.sp,
-                                    lineHeight = 17.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // Link to full timeline
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable { onBabyDevelopmentClick() }
-                                .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Explore full pregnancy timeline (Weeks 1 to 40)",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                text = "›",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
+                        Text(
+                            text = "›",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
 
@@ -973,43 +1164,6 @@ fun DueDateScreenContent(
                             tag = uiState.appointmentStatus,
                             icon = { CalendarIcon(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp)) },
                             onClick = onNextVisitClick
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                // Disclaimer Card
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
-                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(14.dp))
-                        .padding(horizontal = 14.dp, vertical = 11.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(30.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.surface),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            ShieldIcon(
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(14.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.width(10.dp))
-
-                        Text(
-                            text = "Dates are estimates. Your maternity team may adjust your due date after clinical ultrasound assessments.",
-                            fontSize = 11.5.sp,
-                            lineHeight = 15.sp,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.weight(1f)
                         )
                     }
                 }
@@ -1088,23 +1242,34 @@ private fun TrimesterPill(
                 shape = RoundedCornerShape(50)
             )
             .clickable { onClick() }
-            .padding(vertical = 7.dp, horizontal = 2.dp),
+            .padding(vertical = 6.dp, horizontal = 14.dp),
         contentAlignment = Alignment.Center
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
             Text(
                 text = label,
-                fontSize = 10.5.sp,
-                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
             )
             if (isCurrent) {
-                Text(
-                    text = "● Current",
-                    fontSize = 8.5.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = if (isSelected) MaterialTheme.colorScheme.primary else MomoraMintBadgeText
-                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(50))
+                        .background(MomoraMintBadgeBg)
+                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = "Current Stage",
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraMintBadgeText
+                    )
+                }
             }
         }
     }

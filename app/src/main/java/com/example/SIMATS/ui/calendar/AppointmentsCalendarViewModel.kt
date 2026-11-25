@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.SIMATS.data.model.AppointmentBookingData
+import com.example.SIMATS.data.model.CalendarDateItem
 import com.example.SIMATS.data.repository.AppointmentRepository
 import com.example.SIMATS.data.repository.AppointmentRepositoryImpl
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,6 +15,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 class AppointmentsCalendarViewModel(
     private val repository: AppointmentRepository = AppointmentRepositoryImpl()
@@ -22,36 +24,23 @@ class AppointmentsCalendarViewModel(
     private val _uiState = MutableStateFlow(AppointmentsCalendarUiState())
     val uiState: StateFlow<AppointmentsCalendarUiState> = _uiState.asStateFlow()
 
+    private var baseTimeSlots: List<String> = listOf("09:00", "10:30", "14:00")
+
     init {
         loadData()
+    }
+
+    private fun getClinicCalendar(): Calendar {
+        return Calendar.getInstance(TimeZone.getDefault())
     }
 
     fun onEvent(event: AppointmentsCalendarUiEvent) {
         when (event) {
             is AppointmentsCalendarUiEvent.OnVisitTypeToggled -> {
-                // Video visit option removed; always maintain in-person appointment mode
                 _uiState.value = _uiState.value.copy(isInPerson = true)
             }
             is AppointmentsCalendarUiEvent.OnDateSelected -> {
-                val selectedDateItem = _uiState.value.bookingData?.availableDates?.find { it.dayOfMonth == event.dayOfMonth }
-                val monthTitle = _uiState.value.selectedMonthTitle
-                    ?: _uiState.value.bookingData?.monthTitle
-                    ?: SimpleDateFormat("MMMM yyyy", Locale.US).format(Date())
-                val availableSlots = _uiState.value.bookingData?.availableTimeSlots ?: listOf("09:00", "10:30", "14:00")
-                val validSlots = getValidTimeSlotsForDay(event.dayOfMonth, monthTitle, availableSlots)
-
-                val currentSlot = _uiState.value.selectedTimeSlot
-                val newSlot = if (currentSlot != null && validSlots.contains(currentSlot)) {
-                    currentSlot
-                } else {
-                    validSlots.firstOrNull() ?: currentSlot ?: "10:30"
-                }
-
-                _uiState.value = _uiState.value.copy(
-                    selectedDayOfMonth = event.dayOfMonth,
-                    selectedDayOfWeek = selectedDateItem?.dayOfWeek,
-                    selectedTimeSlot = newSlot
-                )
+                handleDateSelected(event.dayOfMonth)
             }
             is AppointmentsCalendarUiEvent.OnTimeSlotSelected -> {
                 _uiState.value = _uiState.value.copy(selectedTimeSlot = event.timeSlot)
@@ -65,7 +54,11 @@ class AppointmentsCalendarViewModel(
             AppointmentsCalendarUiEvent.OnDismissConfirmationDialog -> {
                 _uiState.value = _uiState.value.copy(isConfirmedSuccess = false, confirmationMessage = null)
             }
-            AppointmentsCalendarUiEvent.OnNextMonthClicked -> {}
+            AppointmentsCalendarUiEvent.OnNextMonthClicked -> {
+                val newOffset = if (_uiState.value.monthOffset == 0) 1 else 0
+                _uiState.value = _uiState.value.copy(monthOffset = newOffset)
+                applyDynamicDates(newOffset)
+            }
             AppointmentsCalendarUiEvent.OnBackClicked -> {}
             AppointmentsCalendarUiEvent.OnNotificationClicked -> {}
             AppointmentsCalendarUiEvent.OnRetryClicked -> {
@@ -74,37 +67,89 @@ class AppointmentsCalendarViewModel(
         }
     }
 
+    private fun handleDateSelected(dayOfMonth: Int) {
+        val state = _uiState.value
+        val allSlots = baseTimeSlots
+        val selectedDateItem = state.bookingData?.availableDates?.find { it.dayOfMonth == dayOfMonth }
+        val monthTitle = state.selectedMonthTitle
+            ?: state.bookingData?.monthTitle
+            ?: SimpleDateFormat("MMMM yyyy", Locale.US).format(getClinicCalendar().time)
+
+        val validSlots = getValidTimeSlotsForDay(dayOfMonth, monthTitle, allSlots)
+        val currentSlot = state.selectedTimeSlot
+        val newSlot = if (currentSlot != null && validSlots.contains(currentSlot)) {
+            currentSlot
+        } else {
+            validSlots.firstOrNull() ?: currentSlot ?: "10:30"
+        }
+
+        val updatedDates = state.bookingData?.availableDates?.map {
+            it.copy(isSelected = it.dayOfMonth == dayOfMonth)
+        } ?: emptyList()
+
+        _uiState.value = state.copy(
+            bookingData = state.bookingData?.copy(availableDates = updatedDates),
+            selectedDayOfMonth = dayOfMonth,
+            selectedDayOfWeek = selectedDateItem?.dayOfWeek,
+            selectedTimeSlot = newSlot,
+            availableTimeSlotsForSelectedDate = validSlots
+        )
+    }
+
     private fun loadData() {
         _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
             repository.getBookingData().collect { result ->
                 result.fold(
                     onSuccess = { data ->
-                        val defaultDate = data.availableDates.find { it.isSelected }
-                            ?: data.availableDates.firstOrNull()
-                        val selectedDay = defaultDate?.dayOfMonth
-                        val selectedDow = defaultDate?.dayOfWeek
-                        val monthTitle = data.monthTitle.ifBlank {
-                            SimpleDateFormat("MMMM yyyy", Locale.US).format(Date())
+                        if (data.availableTimeSlots.isNotEmpty()) {
+                            baseTimeSlots = data.availableTimeSlots
                         }
+                        val plan = buildDynamicDatePlan(
+                            todayCal = getClinicCalendar(),
+                            allSlots = baseTimeSlots,
+                            monthOffset = _uiState.value.monthOffset
+                        )
 
-                        val validSlots = getValidTimeSlotsForDay(selectedDay, monthTitle, data.availableTimeSlots)
-                        val defaultSlot = validSlots.firstOrNull()
-                            ?: data.availableTimeSlots.firstOrNull()
-                            ?: "10:30"
+                        val updatedBookingData = data.copy(
+                            monthTitle = plan.monthTitle,
+                            availableDates = plan.dates,
+                            availableTimeSlots = baseTimeSlots
+                        )
 
                         _uiState.value = _uiState.value.copy(
-                            bookingData = data,
-                            selectedDayOfMonth = selectedDay,
-                            selectedDayOfWeek = selectedDow,
-                            selectedMonthTitle = monthTitle,
-                            selectedTimeSlot = defaultSlot,
+                            bookingData = updatedBookingData,
+                            selectedDayOfMonth = plan.selectedDayOfMonth,
+                            selectedDayOfWeek = plan.selectedDayOfWeek,
+                            selectedMonthTitle = plan.selectedMonthTitle,
+                            selectedTimeSlot = plan.selectedTimeSlot,
+                            availableTimeSlotsForSelectedDate = plan.validSlotsForSelectedDate,
                             isLoading = false,
                             errorMessage = null
                         )
                     },
                     onFailure = { err ->
+                        val plan = buildDynamicDatePlan(
+                            todayCal = getClinicCalendar(),
+                            allSlots = baseTimeSlots,
+                            monthOffset = _uiState.value.monthOffset
+                        )
+                        val fallbackBookingData = AppointmentBookingData(
+                            doctorName = "Dr Amelia Chen",
+                            doctorSpecialty = "Obstetrician · Willow Maternity Clinic",
+                            monthTitle = plan.monthTitle,
+                            availableDates = plan.dates,
+                            availableTimeSlots = baseTimeSlots,
+                            defaultType = "Routine antenatal check",
+                            defaultLocationNotes = "Willow Maternity Clinic · Room 3"
+                        )
                         _uiState.value = _uiState.value.copy(
+                            bookingData = fallbackBookingData,
+                            selectedDayOfMonth = plan.selectedDayOfMonth,
+                            selectedDayOfWeek = plan.selectedDayOfWeek,
+                            selectedMonthTitle = plan.selectedMonthTitle,
+                            selectedTimeSlot = plan.selectedTimeSlot,
+                            availableTimeSlotsForSelectedDate = plan.validSlotsForSelectedDate,
                             isLoading = false,
                             errorMessage = err.message ?: "Failed to load appointments"
                         )
@@ -114,16 +159,117 @@ class AppointmentsCalendarViewModel(
         }
     }
 
+    private fun applyDynamicDates(monthOffset: Int) {
+        val state = _uiState.value
+        val plan = buildDynamicDatePlan(
+            todayCal = getClinicCalendar(),
+            allSlots = baseTimeSlots,
+            monthOffset = monthOffset
+        )
+
+        val updatedBookingData = state.bookingData?.copy(
+            monthTitle = plan.monthTitle,
+            availableDates = plan.dates
+        )
+
+        _uiState.value = state.copy(
+            bookingData = updatedBookingData,
+            selectedDayOfMonth = plan.selectedDayOfMonth,
+            selectedDayOfWeek = plan.selectedDayOfWeek,
+            selectedMonthTitle = plan.selectedMonthTitle,
+            selectedTimeSlot = plan.selectedTimeSlot,
+            availableTimeSlotsForSelectedDate = plan.validSlotsForSelectedDate
+        )
+    }
+
+    private data class DynamicDatePlan(
+        val dates: List<CalendarDateItem>,
+        val monthTitle: String,
+        val selectedDayOfMonth: Int,
+        val selectedDayOfWeek: String,
+        val selectedMonthTitle: String,
+        val selectedTimeSlot: String,
+        val validSlotsForSelectedDate: List<String>
+    )
+
+    private fun buildDynamicDatePlan(
+        todayCal: Calendar,
+        allSlots: List<String>,
+        monthOffset: Int
+    ): DynamicDatePlan {
+        val startCal = (todayCal.clone() as Calendar).apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+
+        if (monthOffset > 0) {
+            startCal.add(Calendar.MONTH, monthOffset)
+            startCal.set(Calendar.DAY_OF_MONTH, 1)
+        }
+
+        val dates = mutableListOf<CalendarDateItem>()
+        val calList = mutableListOf<Calendar>()
+
+        for (i in 0 until 5) {
+            val c = (startCal.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, i) }
+            val dow = SimpleDateFormat("EEE", Locale.US).format(c.time)
+            val dom = c.get(Calendar.DAY_OF_MONTH)
+            dates.add(CalendarDateItem(dayOfWeek = dow, dayOfMonth = dom, isSelected = false))
+            calList.add(c)
+        }
+
+        val primaryMonthTitle = SimpleDateFormat("MMMM yyyy", Locale.US).format(calList.first().time)
+
+        val todayDom = todayCal.get(Calendar.DAY_OF_MONTH)
+        val todayMonthYear = SimpleDateFormat("MMMM yyyy", Locale.US).format(todayCal.time)
+
+        var selectedIndex = 0
+        if (monthOffset == 0) {
+            val todaySlots = getValidTimeSlotsForDay(todayDom, todayMonthYear, allSlots)
+            if (todaySlots.isEmpty() && dates.size > 1) {
+                // If today has no available slots, select the next available date on or after today (tomorrow)
+                selectedIndex = 1
+            } else {
+                selectedIndex = 0
+            }
+        } else {
+            selectedIndex = 0
+        }
+
+        val selectedCal = calList[selectedIndex]
+        val selectedDateItem = dates[selectedIndex]
+        val finalDates = dates.mapIndexed { idx, item ->
+            item.copy(isSelected = idx == selectedIndex)
+        }
+
+        val selectedMonth = SimpleDateFormat("MMMM yyyy", Locale.US).format(selectedCal.time)
+        val validSlots = getValidTimeSlotsForDay(selectedDateItem.dayOfMonth, selectedMonth, allSlots)
+        val defaultSlot = validSlots.firstOrNull() ?: allSlots.firstOrNull() ?: "10:30"
+
+        return DynamicDatePlan(
+            dates = finalDates,
+            monthTitle = primaryMonthTitle,
+            selectedDayOfMonth = selectedDateItem.dayOfMonth,
+            selectedDayOfWeek = selectedDateItem.dayOfWeek,
+            selectedMonthTitle = selectedMonth,
+            selectedTimeSlot = defaultSlot,
+            validSlotsForSelectedDate = validSlots
+        )
+    }
+
     private fun getValidTimeSlotsForDay(
         dayOfMonth: Int?,
         monthTitle: String,
         allSlots: List<String>
     ): List<String> {
         if (dayOfMonth == null) return allSlots
-        val now = Calendar.getInstance()
+        val now = getClinicCalendar()
         val currentDay = now.get(Calendar.DAY_OF_MONTH)
         val currentMonthYear = SimpleDateFormat("MMMM yyyy", Locale.US).format(now.time)
 
+        // Only filter past hours when looking at TODAY in the current month & year
         if (dayOfMonth == currentDay && monthTitle.equals(currentMonthYear, ignoreCase = true)) {
             val currentMinutes = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)
             val futureSlots = allSlots.filter { slot ->
@@ -133,7 +279,7 @@ class AppointmentsCalendarViewModel(
                     slotMinutes > currentMinutes
                 } else true
             }
-            return if (futureSlots.isNotEmpty()) futureSlots else allSlots
+            return futureSlots
         }
         return allSlots
     }
@@ -141,10 +287,11 @@ class AppointmentsCalendarViewModel(
     private fun confirmBooking() {
         val state = _uiState.value
         val doctor = state.bookingData?.doctorName ?: "Dr Amelia Chen"
-        val day = state.selectedDayOfMonth ?: 19
+        val todayCal = getClinicCalendar()
+        val day = state.selectedDayOfMonth ?: todayCal.get(Calendar.DAY_OF_MONTH)
         val monthTitle = state.selectedMonthTitle
             ?: state.bookingData?.monthTitle
-            ?: SimpleDateFormat("MMMM yyyy", Locale.US).format(Date())
+            ?: SimpleDateFormat("MMMM yyyy", Locale.US).format(todayCal.time)
         val dateText = "$day $monthTitle"
         val timeText = state.selectedTimeSlot ?: "10:30"
         val isInPerson = true

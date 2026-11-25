@@ -9,6 +9,8 @@ data class AppointmentsCalendarUiState(
     val selectedDayOfWeek: String? = null,
     val selectedMonthTitle: String? = null,
     val selectedTimeSlot: String? = null,
+    val availableTimeSlotsForSelectedDate: List<String> = emptyList(),
+    val monthOffset: Int = 0,
     val selectedNavIndex: Int = 3,
     val isLoading: Boolean = false,
     val isConfirmedSuccess: Boolean = false,

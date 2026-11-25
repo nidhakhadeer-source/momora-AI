@@ -263,6 +263,20 @@ interface ApiService {
         @Field("notification_id") notificationId: Int
     ): BaseResponse
 
+    @FormUrlEncoded
+    @POST("notifications/register_token.php")
+    suspend fun registerDeviceToken(
+        @Field("fcm_token") fcmToken: String,
+        @Field("device_type") deviceType: String = "android",
+        @Field("device_model") deviceModel: String? = null
+    ): BaseResponse
+
+    @FormUrlEncoded
+    @POST("notifications/unregister_token.php")
+    suspend fun unregisterDeviceToken(
+        @Field("fcm_token") fcmToken: String
+    ): BaseResponse
+
     // -------------------------------------------------------------------------
     // AI Chat
     // -------------------------------------------------------------------------

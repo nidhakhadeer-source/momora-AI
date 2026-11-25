@@ -28,6 +28,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import androidx.compose.runtime.Composable
@@ -63,6 +64,7 @@ fun AppointmentsCalendarScreen(
     modifier: Modifier = Modifier,
     selectedNavIndex: Int = 3,
     onNavigateBack: () -> Unit = {},
+    onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -81,7 +83,10 @@ fun AppointmentsCalendarScreen(
             viewModel.onEvent(AppointmentsCalendarUiEvent.OnBackClicked)
             onNavigateBack()
         },
-        onNotificationClick = { viewModel.onEvent(AppointmentsCalendarUiEvent.OnNotificationClicked) },
+        onNotificationClick = {
+            viewModel.onEvent(AppointmentsCalendarUiEvent.OnNotificationClicked)
+            onNotificationClick()
+        },
         onRetryClick = { viewModel.onEvent(AppointmentsCalendarUiEvent.OnRetryClicked) },
         onNavTabSelected = { index ->
             viewModel.onEvent(AppointmentsCalendarUiEvent.OnNavTabSelected(index))
@@ -93,27 +98,7 @@ fun AppointmentsCalendarScreen(
 @Composable
 fun AppointmentsCalendarScreenContent(
     modifier: Modifier = Modifier,
-    uiState: AppointmentsCalendarUiState = AppointmentsCalendarUiState(
-        bookingData = AppointmentBookingData(
-            doctorName = "Dr Amelia Chen",
-            doctorSpecialty = "Obstetrician · Willow Maternity Clinic",
-            monthTitle = "November 2026",
-            availableDates = listOf(
-                CalendarDateItem("Thu", 19, false),
-                CalendarDateItem("Fri", 20, false),
-                CalendarDateItem("Sat", 21, true),
-                CalendarDateItem("Sun", 22, false),
-                CalendarDateItem("Mon", 23, false)
-            ),
-            availableTimeSlots = listOf("09:00", "10:30", "14:00"),
-            defaultType = "Routine antenatal check",
-            defaultLocationNotes = "Willow Maternity Clinic · Room 3. Bring your pregnancy notes and recent reports."
-        ),
-        selectedDayOfMonth = 21,
-        selectedDayOfWeek = "Sat",
-        selectedMonthTitle = "November 2026",
-        selectedTimeSlot = "10:30"
-    ),
+    uiState: AppointmentsCalendarUiState = AppointmentsCalendarUiState(),
     onVisitTypeToggled: (Boolean) -> Unit = {},
     onDateSelected: (Int) -> Unit = {},
     onTimeSlotSelected: (String) -> Unit = {},
@@ -363,7 +348,9 @@ fun AppointmentsCalendarScreenContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = data?.monthTitle ?: "October 2026",
+                    text = uiState.selectedMonthTitle
+                        ?: data?.monthTitle
+                        ?: SimpleDateFormat("MMMM yyyy", Locale.US).format(Calendar.getInstance().time),
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -453,7 +440,13 @@ fun AppointmentsCalendarScreenContent(
             Spacer(modifier = Modifier.height(8.dp))
 
             // Time Slots Row
-            if (data?.availableTimeSlots.isNullOrEmpty()) {
+            val displayedSlots = if (uiState.availableTimeSlotsForSelectedDate.isNotEmpty()) {
+                uiState.availableTimeSlotsForSelectedDate
+            } else {
+                data?.availableTimeSlots ?: emptyList()
+            }
+
+            if (displayedSlots.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -474,7 +467,7 @@ fun AppointmentsCalendarScreenContent(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    data?.availableTimeSlots?.forEach { slot ->
+                    displayedSlots.forEach { slot ->
                         val isSelected = uiState.selectedTimeSlot == slot
                         val slotBg = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant
                         val slotBorder = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
@@ -511,36 +504,14 @@ fun AppointmentsCalendarScreenContent(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = data?.defaultType ?: "Routine antenatal check",
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
+                    Text(
+                        text = data?.defaultType ?: "Routine antenatal check",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
 
-                        // Mode Badge
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(50))
-                                .background(MaterialTheme.colorScheme.surface)
-                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(50))
-                                .padding(horizontal = 10.dp, vertical = 4.dp)
-                        ) {
-                            Text(
-                                text = "In-person visit",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
                         text = "Assigned Doctor: ${data?.doctorName ?: "Dr Amelia Chen"}",
@@ -556,10 +527,10 @@ fun AppointmentsCalendarScreenContent(
                         ?: "Selected Day"
                     val dayOfMonthVal = uiState.selectedDayOfMonth
                         ?: data?.availableDates?.firstOrNull()?.dayOfMonth
-                        ?: 19
+                        ?: Calendar.getInstance().get(Calendar.DAY_OF_MONTH)
                     val monthTitleStr = uiState.selectedMonthTitle
                         ?: data?.monthTitle
-                        ?: SimpleDateFormat("MMMM yyyy", Locale.US).format(Date())
+                        ?: SimpleDateFormat("MMMM yyyy", Locale.US).format(Calendar.getInstance().time)
                     val timeSlotStr = uiState.selectedTimeSlot ?: "10:30"
 
                     Text(
@@ -571,8 +542,15 @@ fun AppointmentsCalendarScreenContent(
 
                     Spacer(modifier = Modifier.height(6.dp))
 
+                    val rawLocation = data?.defaultLocationNotes ?: "Willow Maternity Clinic · Room 3"
+                    val cleanLocation = rawLocation
+                        .replace(". Bring your pregnancy notes and recent reports.", "")
+                        .replace("Bring your pregnancy notes and recent reports.", "")
+                        .trim()
+                        .ifBlank { "Willow Maternity Clinic · Room 3" }
+
                     Text(
-                        text = data?.defaultLocationNotes ?: "Willow Maternity Clinic · Room 3. Bring your pregnancy notes and recent reports.",
+                        text = cleanLocation,
                         fontSize = 11.5.sp,
                         lineHeight = 16.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -609,44 +587,6 @@ fun AppointmentsCalendarScreenContent(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimary
                 )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Urgent Care Disclaimer Card
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(horizontal = 14.dp, vertical = 11.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(28.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        ShieldIcon(
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(13.dp)
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(10.dp))
-
-                    Text(
-                        text = "For urgent symptoms, contact maternity care directly; do not wait for an appointment.",
-                        fontSize = 11.5.sp,
-                        lineHeight = 15.sp,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))

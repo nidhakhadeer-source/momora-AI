@@ -211,7 +211,11 @@ fun LoginScreenContent(
                 visualTransformation = if (uiState.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
                     Box(
-                        modifier = Modifier.clickable { onTogglePasswordVisibility() }
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .clickable { onTogglePasswordVisibility() },
+                        contentAlignment = Alignment.Center
                     ) {
                         if (uiState.isPasswordVisible) {
                             EyeIcon(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))

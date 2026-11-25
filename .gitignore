@@ -7,6 +7,10 @@ gradle/libs.versions.toml
 .env.local
 backend/.env
 backend/.env.local
+*service_account*.json
+*firebase*.json
+backend/config/*firebase*.json
+backend/config/*service_account*.json
 /.idea/caches
 /.idea/libraries
 /.idea/modules.xml
@@ -25,3 +29,7 @@ local.properties
 .env.local
 backend/.env
 backend/.env.local
+*service_account*.json
+*firebase*.json
+backend/config/*firebase*.json
+backend/config/*service_account*.json

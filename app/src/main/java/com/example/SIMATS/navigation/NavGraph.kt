@@ -188,6 +188,7 @@ private fun sanitizeScreenForRole(target: Screen): Screen {
 @Composable
 fun AppNavHost() {
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Splash) }
+    var notificationBackScreen by remember { mutableStateOf<Screen>(Screen.Home) }
     var selectedLoginRole by remember { mutableStateOf(UserRole.PATIENT) }
     var selectedPatientId by remember { mutableStateOf<String?>(SelectedPatientHolder.selectedPatientId) }
     var selectedPatientName by remember { mutableStateOf<String?>(SelectedPatientHolder.selectedPatientName) }
@@ -198,6 +199,47 @@ fun AppNavHost() {
             selectedPatientId = null
             selectedPatientName = null
             currentScreen = Screen.RoleSelect
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        NotificationNavigationHolder.pendingRoute.collect { target ->
+            if (SessionManager.isLoggedIn()) {
+                val role = SessionManager.getUserRole()
+                when (target.lowercase().trim()) {
+                    "appointments", "appointment" -> {
+                        currentScreen = if (role == UserRole.DOCTOR) Screen.DoctorSchedule else Screen.AppointmentsCalendar
+                    }
+                    "doctor_advice", "advice", "report_review" -> {
+                        currentScreen = if (role == UserRole.DOCTOR) Screen.DoctorAdvice else Screen.PatientDoctorAdvice
+                    }
+                    "doctor_schedule" -> {
+                        if (role == UserRole.DOCTOR) currentScreen = Screen.DoctorSchedule
+                    }
+                    "baby_development", "discovery" -> {
+                        if (role == UserRole.PATIENT) currentScreen = Screen.BabyDevelopment
+                    }
+                    "medication", "reminder" -> {
+                        if (role == UserRole.PATIENT) currentScreen = Screen.Medication
+                    }
+                    "medical_reports" -> {
+                        if (role == UserRole.PATIENT) currentScreen = Screen.MedicalReports
+                    }
+                    "admin_notifications" -> {
+                        if (role == UserRole.ADMIN) currentScreen = Screen.AdminNotifications
+                    }
+                    "doctor_notifications" -> {
+                        if (role == UserRole.DOCTOR) currentScreen = Screen.DoctorNotifications
+                    }
+                    else -> {
+                        currentScreen = when (role) {
+                            UserRole.PATIENT -> Screen.Notifications
+                            UserRole.DOCTOR -> Screen.DoctorNotifications
+                            UserRole.ADMIN -> Screen.AdminNotifications
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -309,7 +351,7 @@ fun AppNavHost() {
         }
         Screen.Home -> {
             val homeViewModel: HomeViewModel = viewModel()
-            LaunchedEffect(Unit) {
+            LaunchedEffect(currentScreen) {
                 homeViewModel.onEvent(HomeUiEvent.OnRetryClicked)
             }
             HomeScreen(
@@ -321,7 +363,10 @@ fun AppNavHost() {
                 onAskAiClick = { currentScreen = Screen.AiChat },
                 onBabyGrowthClick = { currentScreen = Screen.BabyDevelopment },
                 onNutritionClick = { currentScreen = Screen.Nutrition },
-                onNotificationClick = { currentScreen = Screen.Notifications },
+                onNotificationClick = {
+                    notificationBackScreen = Screen.Home
+                    currentScreen = Screen.Notifications
+                },
                 onViewAllDailyCareClick = { currentScreen = Screen.Medication },
                 onMedicationClick = { currentScreen = Screen.Medication },
                 onAppointmentClick = { currentScreen = Screen.AppointmentsCalendar },
@@ -352,7 +397,7 @@ fun AppNavHost() {
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.Symptom
+                        1 -> currentScreen = Screen.DueDate
                         2 -> currentScreen = Screen.AiChat
                         3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile
@@ -375,10 +420,14 @@ fun AppNavHost() {
                     currentScreen = Screen.AppointmentsCalendar
                 },
                 onNotificationClick = {
+                    notificationBackScreen = Screen.DueDate
                     currentScreen = Screen.Notifications
                 },
                 onBabyDevelopmentClick = {
                     currentScreen = Screen.BabyDevelopment
+                },
+                onLogSymptomsClick = {
+                    currentScreen = Screen.Symptom
                 },
                 onNavTabSelected = { index ->
                     when (index) {
@@ -402,7 +451,7 @@ fun AppNavHost() {
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.Symptom
+                        1 -> currentScreen = Screen.DueDate
                         2 -> currentScreen = Screen.AiChat
                         3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile
@@ -424,7 +473,7 @@ fun AppNavHost() {
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.Symptom
+                        1 -> currentScreen = Screen.DueDate
                         2 -> currentScreen = Screen.AiChat
                         3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile
@@ -446,7 +495,7 @@ fun AppNavHost() {
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.Symptom
+                        1 -> currentScreen = Screen.DueDate
                         2 -> currentScreen = Screen.AiChat
                         3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile
@@ -462,10 +511,14 @@ fun AppNavHost() {
                 onNavigateBack = {
                     currentScreen = Screen.Home
                 },
+                onNotificationClick = {
+                    notificationBackScreen = Screen.BabyDevelopment
+                    currentScreen = Screen.Notifications
+                },
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.Symptom
+                        1 -> currentScreen = Screen.DueDate
                         2 -> currentScreen = Screen.AiChat
                         3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile
@@ -484,7 +537,7 @@ fun AppNavHost() {
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.Symptom
+                        1 -> currentScreen = Screen.DueDate
                         2 -> currentScreen = Screen.AiChat
                         3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile
@@ -498,12 +551,16 @@ fun AppNavHost() {
                 viewModel = symptomViewModel,
                 selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
-                    currentScreen = Screen.Home
+                    currentScreen = Screen.DueDate
+                },
+                onNotificationClick = {
+                    notificationBackScreen = Screen.Symptom
+                    currentScreen = Screen.Notifications
                 },
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.Symptom
+                        1 -> currentScreen = Screen.DueDate
                         2 -> currentScreen = Screen.AiChat
                         3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile
@@ -519,10 +576,14 @@ fun AppNavHost() {
                 onNavigateBack = {
                     currentScreen = Screen.Home
                 },
+                onNotificationClick = {
+                    notificationBackScreen = Screen.Nutrition
+                    currentScreen = Screen.Notifications
+                },
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.Symptom
+                        1 -> currentScreen = Screen.DueDate
                         2 -> currentScreen = Screen.AiChat
                         3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile
@@ -541,7 +602,7 @@ fun AppNavHost() {
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.Symptom
+                        1 -> currentScreen = Screen.DueDate
                         2 -> currentScreen = Screen.AiChat
                         3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile
@@ -557,10 +618,14 @@ fun AppNavHost() {
                 onNavigateBack = {
                     currentScreen = Screen.Home
                 },
+                onNotificationClick = {
+                    notificationBackScreen = Screen.AppointmentsCalendar
+                    currentScreen = Screen.Notifications
+                },
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.Symptom
+                        1 -> currentScreen = Screen.DueDate
                         2 -> currentScreen = Screen.AiChat
                         3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile
@@ -579,7 +644,7 @@ fun AppNavHost() {
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.Symptom
+                        1 -> currentScreen = Screen.DueDate
                         2 -> currentScreen = Screen.AiChat
                         3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile
@@ -593,7 +658,7 @@ fun AppNavHost() {
                 viewModel = notificationsViewModel,
                 selectedNavIndex = getSelectedNavIndexForScreen(activeScreen),
                 onNavigateBack = {
-                    currentScreen = Screen.Home
+                    currentScreen = notificationBackScreen
                 },
                 onNotificationClick = { item ->
                     when (item.type) {
@@ -620,7 +685,7 @@ fun AppNavHost() {
                 onNavTabSelected = { index ->
                     when (index) {
                         0 -> currentScreen = Screen.Home
-                        1 -> currentScreen = Screen.Symptom
+                        1 -> currentScreen = Screen.DueDate
                         2 -> currentScreen = Screen.AiChat
                         3 -> currentScreen = Screen.AppointmentsCalendar
                         4 -> currentScreen = Screen.Profile
@@ -640,12 +705,13 @@ fun AppNavHost() {
                         currentScreen = Screen.Home
                     },
                     onNotificationClick = {
+                        notificationBackScreen = Screen.PatientDoctorAdvice
                         currentScreen = Screen.Notifications
                     },
                     onNavTabSelected = { index ->
                         when (index) {
                             0 -> currentScreen = Screen.Home
-                            1 -> currentScreen = Screen.Symptom
+                            1 -> currentScreen = Screen.DueDate
                             2 -> currentScreen = Screen.AiChat
                             3 -> currentScreen = Screen.PatientDoctorAdvice
                             4 -> currentScreen = Screen.Profile

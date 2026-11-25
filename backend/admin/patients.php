@@ -18,6 +18,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt = $pdo->prepare('UPDATE users SET is_active = NOT is_active WHERE id = ? AND role = "patient"');
     $stmt->execute([$patientId]);
 
+    // Insert notification & dispatch FCM alert
+    $checkStmt = $pdo->prepare('SELECT is_active FROM users WHERE id = ?');
+    $checkStmt->execute([$patientId]);
+    $updatedRow = $checkStmt->fetch();
+    $isActive = (bool)($updatedRow['is_active'] ?? false);
+
+    $notifTitle = "Account status updated";
+    $notifSubtitle = $isActive ? "Your patient account access is active" : "Your account access was modified by administrator";
+    $notifDetail = "Admin update applied to your profile permissions.";
+
+    $notifStmt = $pdo->prepare(
+        'INSERT INTO notifications (user_id, title, subtitle, detail_text, type, is_new, is_read)
+         VALUES (?, ?, ?, ?, "REMINDER", 1, 0)'
+    );
+    $notifStmt->execute([$patientId, $notifTitle, $notifSubtitle, $notifDetail]);
+    $notifId = (int)$pdo->lastInsertId();
+
+    require_once __DIR__ . '/../notifications/fcm_service.php';
+    sendFcmNotificationToUser(
+        $pdo,
+        $patientId,
+        $notifTitle,
+        $notifSubtitle,
+        $notifDetail,
+        'REMINDER',
+        $notifId,
+        'notifications'
+    );
+
     respond(200, [
         'success' => true,
         'message' => 'Patient account access updated successfully'

@@ -144,10 +144,10 @@ fun HomeScreenContent(
         data = PatientDashboardData(
             patientName = "Maya",
             dateText = "Tuesday, 27 Oct 2026 · A little care, every day.",
-            trimesterText = "SECOND TRIMESTER",
-            gestationalAgeText = "24 weeks, 3 days",
+            trimesterText = "THIRD TRIMESTER",
+            gestationalAgeText = "28 weeks, 4 days",
             dueDateText = "Due 13 Feb 2027 · Pregnancy details ➔",
-            progressPercent = 0.60f,
+            progressPercent = 0.70f,
             bloodPressureValue = "112/72",
             bloodPressureTime = "mmHg · Today, 08:15",
             weightValue = "64.2",
@@ -363,7 +363,7 @@ fun HomeScreenContent(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = data?.trimesterText ?: "SECOND TRIMESTER",
+                                    text = data?.trimesterText ?: "",
                                     fontSize = 10.5.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary,
@@ -373,7 +373,7 @@ fun HomeScreenContent(
                                 Spacer(modifier = Modifier.height(4.dp))
 
                                 Text(
-                                    text = data?.gestationalAgeText ?: "24 weeks, 3 days",
+                                    text = data?.gestationalAgeText ?: "",
                                     fontSize = 23.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
@@ -389,7 +389,7 @@ fun HomeScreenContent(
                                         .clickable { onPregnancyDetailsClick() }
                                         .padding(vertical = 2.dp)
                                 ) {
-                                    val cleanedDueText = (data?.dueDateText ?: "Due 13 Feb 2027 · Pregnancy details ➔")
+                                    val cleanedDueText = (data?.dueDateText ?: "")
                                         .replace("➔", "")
                                         .replace("->", "")
                                         .trim()
@@ -438,7 +438,7 @@ fun HomeScreenContent(
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .fillMaxWidth((data?.progressPercent ?: 0.60f).coerceIn(0.05f, 1f))
+                                    .fillMaxWidth((data?.progressPercent ?: 0f).coerceIn(0.05f, 1f))
                                     .height(6.dp)
                                     .clip(RoundedCornerShape(50))
                                     .background(MaterialTheme.colorScheme.primary)

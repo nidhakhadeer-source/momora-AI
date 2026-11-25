@@ -130,6 +130,7 @@ object SessionManager {
                 .putBoolean(KEY_ONBOARDING_COMPLETED, true)
                 .commit()
         }
+        FcmTokenManager.syncTokenWithBackend()
     }
 
     fun getToken(): String? {
@@ -305,6 +306,8 @@ object SessionManager {
     }
 
     fun clearSession() {
+        FcmTokenManager.unregisterToken()
+        com.example.SIMATS.ui.duedate.PregnancyDataHolder.clear()
         memToken = null
         memUserId = 0
         memName = ""

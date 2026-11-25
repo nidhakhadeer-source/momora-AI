@@ -73,6 +73,7 @@ fun NutritionPlanScreen(
     modifier: Modifier = Modifier,
     selectedNavIndex: Int = 3,
     onNavigateBack: () -> Unit = {},
+    onNotificationClick: () -> Unit = {},
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -91,7 +92,10 @@ fun NutritionPlanScreen(
             viewModel.onEvent(NutritionPlanUiEvent.OnBackClicked)
             onNavigateBack()
         },
-        onNotificationClick = { viewModel.onEvent(NutritionPlanUiEvent.OnNotificationClicked) },
+        onNotificationClick = {
+            viewModel.onEvent(NutritionPlanUiEvent.OnNotificationClicked)
+            onNotificationClick()
+        },
         onNavTabSelected = { index ->
             viewModel.onEvent(NutritionPlanUiEvent.OnNavTabSelected(index))
             onNavTabSelected(index)
@@ -606,42 +610,6 @@ fun NutritionPlanScreenContent(
                                     )
                                 }
                             }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(18.dp))
-
-                    // Food Safety & Guidance Card
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(Color(0xFFF4ECF8))
-                            .padding(horizontal = 14.dp, vertical = 11.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(30.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFFEBE0F2)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                ShieldIcon(
-                                    color = MomoraPurplePrimary,
-                                    modifier = Modifier.size(14.dp)
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.width(10.dp))
-
-                            Text(
-                                text = "Wash produce and avoid unpasteurized foods. Meal ideas are educational; ask your care team about individual needs and allergies.",
-                                fontSize = 11.5.sp,
-                                lineHeight = 15.sp,
-                                color = MomoraPurplePrimary,
-                                modifier = Modifier.weight(1f)
-                            )
                         }
                     }
 

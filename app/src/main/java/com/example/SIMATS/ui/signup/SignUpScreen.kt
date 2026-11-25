@@ -239,13 +239,7 @@ fun SignUpScreenContent(
                 placeholder = "DD Month YYYY",
                 onClick = showDatePicker,
                 trailingIcon = {
-                    Box(
-                        modifier = Modifier
-                            .clickable { showDatePicker() }
-                            .padding(4.dp)
-                    ) {
-                        CalendarIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp))
-                    }
+                    CalendarIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp))
                 }
             )
 
@@ -262,8 +256,10 @@ fun SignUpScreenContent(
                 trailingIcon = {
                     Box(
                         modifier = Modifier
-                            .clickable { onTogglePasswordVisibility() }
-                            .padding(4.dp)
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .clickable { onTogglePasswordVisibility() },
+                        contentAlignment = Alignment.Center
                     ) {
                         if (uiState.isPasswordVisible) {
                             EyeIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp))
@@ -294,8 +290,10 @@ fun SignUpScreenContent(
                 trailingIcon = {
                     Box(
                         modifier = Modifier
-                            .clickable { onToggleConfirmPasswordVisibility() }
-                            .padding(4.dp)
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .clickable { onToggleConfirmPasswordVisibility() },
+                        contentAlignment = Alignment.Center
                     ) {
                         if (uiState.isConfirmPasswordVisible) {
                             EyeIcon(color = MomoraPurplePrimary, modifier = Modifier.size(18.dp))
@@ -465,22 +463,32 @@ private fun CustomInputField(
                         color = Color(0xFFA098A6)
                     )
                 }
-                BasicTextField(
-                    value = value,
-                    onValueChange = onValueChange,
-                    singleLine = true,
-                    readOnly = onClick != null,
-                    enabled = onClick == null,
-                    keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-                    visualTransformation = visualTransformation,
-                    textStyle = TextStyle(
-                        fontFamily = InterFontFamily,
-                        fontSize = 13.5.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = MomoraPurpleText
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
+                if (onClick != null) {
+                    if (value.isNotEmpty()) {
+                        Text(
+                            text = value,
+                            fontFamily = InterFontFamily,
+                            fontSize = 13.5.sp,
+                            fontWeight = FontWeight.Normal,
+                            color = MomoraPurpleText
+                        )
+                    }
+                } else {
+                    BasicTextField(
+                        value = value,
+                        onValueChange = onValueChange,
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+                        visualTransformation = visualTransformation,
+                        textStyle = TextStyle(
+                            fontFamily = InterFontFamily,
+                            fontSize = 13.5.sp,
+                            fontWeight = FontWeight.Normal,
+                            color = MomoraPurpleText
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.width(8.dp))

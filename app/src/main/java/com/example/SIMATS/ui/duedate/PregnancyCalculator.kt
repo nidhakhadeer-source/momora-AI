@@ -1,9 +1,28 @@
 package com.example.SIMATS.ui.duedate
 
+import com.example.SIMATS.data.model.PatientDashboardData
+import com.example.SIMATS.data.model.PregnancyDetailsData
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
+
+data class PregnancyMetrics(
+    val weeks: Int,
+    val days: Int,
+    val trimester: Int,
+    val trimesterText: String,
+    val remainingDays: Int,
+    val countdownText: String,
+    val gestationalAgeText: String,
+    val progress: Float,
+    val lmpFormatted: String,
+    val eddFormatted: String
+)
 
 object PregnancyCalculator {
     private val dateFormats = listOf(
@@ -19,7 +38,10 @@ object PregnancyCalculator {
         val trimmed = dateStr.trim()
         for (pattern in dateFormats) {
             try {
-                val format = SimpleDateFormat(pattern, Locale.ENGLISH).apply { isLenient = false }
+                val format = SimpleDateFormat(pattern, Locale.ENGLISH).apply {
+                    isLenient = false
+                    timeZone = TimeZone.getDefault()
+                }
                 val parsed = format.parse(trimmed)
                 if (parsed != null) return parsed
             } catch (_: Exception) {}
@@ -28,29 +50,55 @@ object PregnancyCalculator {
     }
 
     fun formatDate(date: Date): String {
-        val format = SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH)
+        val format = SimpleDateFormat("dd MMM yyyy", Locale.ENGLISH).apply {
+            timeZone = TimeZone.getDefault()
+        }
         return format.format(date)
     }
 
     // EDD = LMP + 280 days (40 weeks)
     fun calculateEddFromLmp(lmp: Date): Date {
-        val cal = Calendar.getInstance()
-        cal.time = lmp
-        cal.add(Calendar.DAY_OF_YEAR, 280)
+        val cal = Calendar.getInstance().apply {
+            time = lmp
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            add(Calendar.DAY_OF_YEAR, 280)
+        }
         return cal.time
     }
 
     // LMP = EDD - 280 days
     fun calculateLmpFromEdd(edd: Date): Date {
-        val cal = Calendar.getInstance()
-        cal.time = edd
-        cal.add(Calendar.DAY_OF_YEAR, -280)
+        val cal = Calendar.getInstance().apply {
+            time = edd
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            add(Calendar.DAY_OF_YEAR, -280)
+        }
         return cal.time
     }
 
     fun calculateGestationalAge(lmp: Date, targetDate: Date = Date()): Pair<Int, Int> {
-        val diffMillis = targetDate.time - lmp.time
-        val elapsedDays = (diffMillis / (1000L * 60 * 60 * 24)).toInt()
+        val calLmp = Calendar.getInstance().apply {
+            time = lmp
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val calTarget = Calendar.getInstance().apply {
+            time = targetDate
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val diffMillis = calTarget.timeInMillis - calLmp.timeInMillis
+        val elapsedDays = Math.round(diffMillis.toDouble() / (1000.0 * 60 * 60 * 24)).toInt()
         val clampedDays = elapsedDays.coerceIn(0, 294) // up to 42 weeks
         val weeks = clampedDays / 7
         val days = clampedDays % 7
@@ -58,8 +106,22 @@ object PregnancyCalculator {
     }
 
     fun calculateRemainingDays(edd: Date, targetDate: Date = Date()): Int {
-        val diffMillis = edd.time - targetDate.time
-        val diffDays = (diffMillis / (1000L * 60 * 60 * 24)).toInt()
+        val calEdd = Calendar.getInstance().apply {
+            time = edd
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val calTarget = Calendar.getInstance().apply {
+            time = targetDate
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        val diffMillis = calEdd.timeInMillis - calTarget.timeInMillis
+        val diffDays = Math.round(diffMillis.toDouble() / (1000.0 * 60 * 60 * 24)).toInt()
         return maxOf(0, diffDays)
     }
 
@@ -69,6 +131,111 @@ object PregnancyCalculator {
             weeks in 14..27 -> 2
             else -> 3
         }
+    }
+
+    fun determineTrimesterText(trimester: Int): String {
+        return when (trimester) {
+            1 -> "FIRST TRIMESTER"
+            3 -> "THIRD TRIMESTER"
+            else -> "SECOND TRIMESTER"
+        }
+    }
+
+    fun calculateMetrics(lmpStr: String, eddStr: String, targetDate: Date = Date()): PregnancyMetrics {
+        var lmpDate = parseDate(lmpStr)
+        var eddDate = parseDate(eddStr)
+
+        if (lmpDate == null && eddDate != null) {
+            lmpDate = calculateLmpFromEdd(eddDate)
+        } else if (eddDate == null && lmpDate != null) {
+            eddDate = calculateEddFromLmp(lmpDate)
+        } else if (lmpDate == null && eddDate == null) {
+            val cal = Calendar.getInstance().apply {
+                time = targetDate
+                add(Calendar.DAY_OF_YEAR, -171)
+            }
+            lmpDate = cal.time
+            eddDate = calculateEddFromLmp(lmpDate)
+        }
+
+        val nonNullLmp = lmpDate!!
+        val nonNullEdd = eddDate!!
+
+        val (weeks, days) = calculateGestationalAge(nonNullLmp, targetDate)
+        val remainingDays = calculateRemainingDays(nonNullEdd, targetDate)
+        val remWeeks = remainingDays / 7
+        val remDays = remainingDays % 7
+        val trimester = determineTrimester(weeks)
+        val trimesterText = determineTrimesterText(trimester)
+        val countdownText = "$remWeeks weeks, $remDays days until your estimated due date."
+        val gestationalAgeText = "$weeks weeks, $days days"
+        val progress = (weeks.toFloat() / 40f).coerceIn(0f, 1f)
+
+        return PregnancyMetrics(
+            weeks = weeks,
+            days = days,
+            trimester = trimester,
+            trimesterText = trimesterText,
+            remainingDays = remainingDays,
+            countdownText = countdownText,
+            gestationalAgeText = gestationalAgeText,
+            progress = progress,
+            lmpFormatted = formatDate(nonNullLmp),
+            eddFormatted = formatDate(nonNullEdd)
+        )
+    }
+
+    fun extractDateFromDueDateText(text: String): String? {
+        val regex = Regex("""\b(\d{1,2}\s+[A-Za-z]{3,}\s+\d{4})\b""")
+        return regex.find(text)?.groupValues?.get(1)
+    }
+
+    fun computeFromDashboardData(dashboardData: PatientDashboardData, targetDate: Date = Date()): PregnancyMetrics? {
+        val extractedDueDate = extractDateFromDueDateText(dashboardData.dueDateText) ?: return null
+        return calculateMetrics(lmpStr = "", eddStr = extractedDueDate, targetDate = targetDate)
+    }
+}
+
+object PregnancyDataHolder {
+    private val _pregnancyData = MutableStateFlow<PregnancyDetailsData?>(null)
+    val pregnancyData: StateFlow<PregnancyDetailsData?> = _pregnancyData.asStateFlow()
+
+    private val _pregnancyMetrics = MutableStateFlow<PregnancyMetrics?>(null)
+    val pregnancyMetrics: StateFlow<PregnancyMetrics?> = _pregnancyMetrics.asStateFlow()
+
+    fun updatePregnancyData(data: PregnancyDetailsData, targetDate: Date = Date()): PregnancyMetrics {
+        _pregnancyData.value = data
+        val lmp = data.lastMenstrualPeriod.ifBlank { "09 May 2026" }
+        val edd = data.estimatedDueDate.ifBlank { "13 Feb 2027" }
+        val metrics = PregnancyCalculator.calculateMetrics(lmp, edd, targetDate)
+        _pregnancyMetrics.value = metrics
+        return metrics
+    }
+
+    fun updateMetrics(metrics: PregnancyMetrics) {
+        _pregnancyMetrics.value = metrics
+        _pregnancyData.value = _pregnancyData.value?.copy(
+            estimatedDueDate = metrics.eddFormatted,
+            lastMenstrualPeriod = metrics.lmpFormatted,
+            gestationalAgeText = metrics.gestationalAgeText,
+            trimesterText = metrics.trimesterText,
+            countdownText = metrics.countdownText
+        )
+    }
+
+    fun getOrComputeMetrics(targetDate: Date = Date()): PregnancyMetrics? {
+        val current = _pregnancyMetrics.value
+        if (current != null) return current
+        val data = _pregnancyData.value
+        if (data != null) {
+            return updatePregnancyData(data, targetDate)
+        }
+        return null
+    }
+
+    fun clear() {
+        _pregnancyData.value = null
+        _pregnancyMetrics.value = null
     }
 }
 

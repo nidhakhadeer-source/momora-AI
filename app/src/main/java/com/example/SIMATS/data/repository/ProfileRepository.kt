@@ -90,9 +90,9 @@ class ProfileRepositoryImpl : ProfileRepository {
                 "bloodGroup" to profile.bloodGroup,
                 "isCareTeamSharingOn" to if (profile.isCareTeamSharingOn) "1" else "0"
             )
-            profile.phone?.let { if (it.isNotBlank()) fields["phone"] = it }
-            profile.gender?.let { if (it.isNotBlank()) fields["gender"] = it }
-            profile.address?.let { if (it.isNotBlank()) fields["address"] = it }
+            profile.phone?.let { fields["phone"] = it.trim() }
+            profile.gender?.let { fields["gender"] = it.trim() }
+            profile.address?.let { fields["address"] = it.trim() }
 
             val response = apiService.updateProfile(fields)
             if (response.success) {
