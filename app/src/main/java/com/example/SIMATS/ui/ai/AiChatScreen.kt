@@ -10,21 +10,26 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -34,18 +39,22 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
@@ -62,6 +71,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -70,13 +80,13 @@ import com.example.SIMATS.data.model.MessageSender
 import com.example.SIMATS.ui.components.formatErrorMessage
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraFooterText
-import com.example.SIMATS.ui.theme.MomoraPinkCircleBg
 import com.example.SIMATS.ui.theme.MomoraPurpleDark
 import com.example.SIMATS.ui.theme.MomoraPurplePrimary
 import com.example.SIMATS.ui.theme.MomoraPurpleText
 import com.example.SIMATS.ui.theme.MomoraScreenBackground
 import com.example.SIMATS.ui.theme.MomoraSubTitleText
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -104,6 +114,13 @@ fun AiChatScreen(
             onNavigateBack()
         },
         onNotificationClick = { viewModel.onEvent(AiChatUiEvent.OnNotificationClicked) },
+        onNewChatClick = { viewModel.onEvent(AiChatUiEvent.OnNewChatClicked) },
+        onOpenHistoryClick = { viewModel.onEvent(AiChatUiEvent.OnOpenHistoryClicked) },
+        onDismissHistory = { viewModel.onEvent(AiChatUiEvent.OnDismissHistoryClicked) },
+        onSelectSession = { id -> viewModel.onEvent(AiChatUiEvent.OnSelectSession(id)) },
+        onClearChatClick = { viewModel.onEvent(AiChatUiEvent.OnClearChatClicked) },
+        onConfirmClear = { viewModel.onEvent(AiChatUiEvent.OnConfirmClearChat) },
+        onDismissClearDialog = { viewModel.onEvent(AiChatUiEvent.OnDismissClearDialog) },
         onNavTabSelected = { index ->
             viewModel.onEvent(AiChatUiEvent.OnNavTabSelected(index))
             onNavTabSelected(index)
@@ -111,45 +128,34 @@ fun AiChatScreen(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AiChatScreenContent(
     modifier: Modifier = Modifier,
-    uiState: AiChatUiState = AiChatUiState(
-        messages = listOf(
-            ChatMessage(
-                id = "1",
-                sender = MessageSender.USER,
-                text = "What can I try for heartburn after lunch?",
-                timestampText = "You · 08:20"
-            ),
-            ChatMessage(
-                id = "2",
-                sender = MessageSender.AI,
-                text = "That sounds uncomfortable, Mama. Here are a few gentle things that can help relieve heartburn:",
-                bulletPoints = listOf(
-                    "Eat smaller, more frequent meals rather than large portions.",
-                    "Stay upright for at least 30–60 minutes after eating.",
-                    "Sip a little warm water or cold milk to soothe acidity."
-                ),
-                footerNote = "Momora AI educational guidance · Consult your doctor for clinical advice.",
-                timestampText = "Momora AI · 08:20"
-            )
-        )
-    ),
+    uiState: AiChatUiState = AiChatUiState(),
     onRetryClick: () -> Unit = {},
     onInputQueryChanged: (String) -> Unit = {},
     onSendMessageClick: () -> Unit = {},
     onSuggestionClick: (String) -> Unit = {},
     onBackClick: () -> Unit = {},
     onNotificationClick: () -> Unit = {},
+    onNewChatClick: () -> Unit = {},
+    onOpenHistoryClick: () -> Unit = {},
+    onDismissHistory: () -> Unit = {},
+    onSelectSession: (String) -> Unit = {},
+    onClearChatClick: () -> Unit = {},
+    onConfirmClear: () -> Unit = {},
+    onDismissClearDialog: () -> Unit = {},
     selectedNavIndex: Int = 2,
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
+    val isKeyboardOpen = WindowInsets.isImeVisible
 
-    // Smooth two-phase auto-scroll when message count or loading status changes
-    LaunchedEffect(uiState.messages.size, uiState.isLoading) {
+    // Smooth auto-scroll when message count, loading status, or keyboard opens
+    LaunchedEffect(isKeyboardOpen, uiState.messages.size, uiState.isLoading) {
         if (uiState.messages.isNotEmpty()) {
+            delay(100)
             scrollState.animateScrollTo(scrollState.maxValue)
             delay(150)
             if (scrollState.value < scrollState.maxValue) {
@@ -158,18 +164,117 @@ fun AiChatScreenContent(
         }
     }
 
+    // Clear Chat Confirmation Dialog
+    if (uiState.showClearConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = onDismissClearDialog,
+            title = {
+                Text(
+                    text = "Clear Current Chat?",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 17.sp,
+                    color = MomoraPurpleDark
+                )
+            },
+            text = {
+                Text(
+                    text = "This clears the active chat screen so you can start a fresh topic. All past conversations remain safely saved in Chat History.",
+                    fontSize = 13.5.sp,
+                    lineHeight = 19.sp,
+                    color = MomoraPurpleText
+                )
+            },
+            confirmButton = {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFFE57373))
+                        .clickable { onConfirmClear() }
+                        .padding(horizontal = 14.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        text = "Clear Chat",
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.sp
+                    )
+                }
+            },
+            dismissButton = {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFFF3EDF5))
+                        .clickable { onDismissClearDialog() }
+                        .padding(horizontal = 14.dp, vertical = 8.dp)
+                ) {
+                    Text(
+                        text = "Cancel",
+                        color = MomoraPurpleDark,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 13.sp
+                    )
+                }
+            },
+            containerColor = Color.White,
+            shape = RoundedCornerShape(20.dp)
+        )
+    }
+
+    // Chat History Modal Bottom Sheet
+    if (uiState.isHistoryDrawerOpen) {
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        val scope = rememberCoroutineScope()
+
+        ModalBottomSheet(
+            onDismissRequest = onDismissHistory,
+            sheetState = sheetState,
+            containerColor = Color.White,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        ) {
+            ChatHistorySheetContent(
+                sessions = uiState.sessions,
+                selectedSessionId = uiState.selectedSessionId,
+                onNewChatClick = {
+                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+                        onNewChatClick()
+                    }
+                },
+                onSelectSession = { sessionId ->
+                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+                        onSelectSession(sessionId)
+                    }
+                },
+                onClose = {
+                    scope.launch { sheetState.hide() }.invokeOnCompletion {
+                        onDismissHistory()
+                    }
+                }
+            )
+        }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(MomoraScreenBackground)
             .statusBarsPadding()
-            .navigationBarsPadding(),
+            .then(
+                if (isKeyboardOpen) {
+                    Modifier.imePadding()
+                } else {
+                    Modifier.navigationBarsPadding()
+                }
+            ),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        // 1. Premium Compact Header
+        // 1. ChatGPT-Style Premium Header
         AiChatHeader(
             onBackClick = onBackClick,
-            onNotificationClick = onNotificationClick
+            onNewChatClick = onNewChatClick,
+            onOpenHistoryClick = onOpenHistoryClick,
+            onClearChatClick = onClearChatClick,
+            hasMessages = uiState.messages.isNotEmpty()
         )
 
         // 2. Chat Area: Either Welcome Empty State OR Scrollable Conversation
@@ -193,15 +298,15 @@ fun AiChatScreenContent(
             }
         }
 
-        // 3. Quick Suggestions Chips Row (only shown above input if messages exist)
-        if (uiState.messages.isNotEmpty() && uiState.quickSuggestions.isNotEmpty()) {
+        // 3. Quick Suggestions Chips Row (only visible when keyboard is closed)
+        if (!isKeyboardOpen && uiState.messages.isNotEmpty() && uiState.quickSuggestions.isNotEmpty()) {
             QuickSuggestionChipsBar(
                 suggestions = uiState.quickSuggestions,
                 onSuggestionClick = onSuggestionClick
             )
         }
 
-        // 4. Modern Docked Input Bar
+        // 4. Modern Docked Input Bar (always visible immediately above keyboard or bottom nav)
         ChatInputBar(
             inputQuery = uiState.inputQuery,
             isLoading = uiState.isLoading,
@@ -209,21 +314,26 @@ fun AiChatScreenContent(
             onSendMessageClick = onSendMessageClick
         )
 
-        // 5. Bottom Navigation Bar
-        DashboardBottomNavBar(
-            selectedIndex = selectedNavIndex,
-            onTabSelected = onNavTabSelected
-        )
+        // 5. Bottom Navigation Bar (only visible when keyboard is closed)
+        if (!isKeyboardOpen) {
+            DashboardBottomNavBar(
+                selectedIndex = selectedNavIndex,
+                onTabSelected = onNavTabSelected
+            )
+        }
     }
 }
 
 // =============================================================================
-// 1. HEADER COMPONENT
+// 1. CHATGPT-STYLE PREMIUM HEADER
 // =============================================================================
 @Composable
 private fun AiChatHeader(
     onBackClick: () -> Unit,
-    onNotificationClick: () -> Unit
+    onNewChatClick: () -> Unit,
+    onOpenHistoryClick: () -> Unit,
+    onClearChatClick: () -> Unit,
+    hasMessages: Boolean
 ) {
     Column(
         modifier = Modifier
@@ -233,14 +343,14 @@ private fun AiChatHeader(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 10.dp),
+                .padding(horizontal = 14.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Back Button
+            // Left: Back Button
             Box(
                 modifier = Modifier
-                    .size(38.dp)
+                    .size(36.dp)
                     .clip(CircleShape)
                     .background(Color(0xFFF9F5FA))
                     .clickable { onBackClick() },
@@ -248,20 +358,20 @@ private fun AiChatHeader(
             ) {
                 Text(
                     text = "←",
-                    fontSize = 20.sp,
+                    fontSize = 19.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = MomoraPurpleDark
                 )
             }
 
-            // Center: AI Avatar & Title
+            // Center: AI Avatar & Titles
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
                 Box(
                     modifier = Modifier
-                        .size(36.dp)
+                        .size(34.dp)
                         .clip(CircleShape)
                         .background(
                             Brush.linearGradient(
@@ -273,11 +383,11 @@ private fun AiChatHeader(
                 ) {
                     SparklesIcon(
                         color = MomoraPurplePrimary,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(17.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(8.dp))
 
                 Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -287,8 +397,7 @@ private fun AiChatHeader(
                             fontWeight = FontWeight.Bold,
                             color = MomoraPurpleDark
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        // Subtle Active Indicator Dot
+                        Spacer(modifier = Modifier.width(5.dp))
                         Box(
                             modifier = Modifier
                                 .size(7.dp)
@@ -298,25 +407,64 @@ private fun AiChatHeader(
                     }
                     Text(
                         text = "Your pregnancy companion",
-                        fontSize = 11.5.sp,
+                        fontSize = 11.sp,
                         color = MomoraBodyMuted
                     )
                 }
             }
 
-            // Notification Bell Button
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFFF9F5FA))
-                    .clickable { onNotificationClick() },
-                contentAlignment = Alignment.Center
+            // Right Action Controls: History, New Chat, Clear
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                BellIcon(
-                    color = MomoraPurplePrimary,
-                    modifier = Modifier.size(18.dp)
-                )
+                // Chat History Button
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFF9F5FA))
+                        .clickable { onOpenHistoryClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    HistoryIcon(
+                        color = MomoraPurplePrimary,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+
+                // New Chat Button (+)
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFFAF0F6))
+                        .border(1.dp, Color(0xFFF0DEEB), CircleShape)
+                        .clickable { onNewChatClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    PlusIcon(
+                        color = MomoraPurplePrimary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+
+                // Clear Chat Button (only active if messages exist)
+                if (hasMessages) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFFFF4F4))
+                            .clickable { onClearChatClick() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        ClearChatIcon(
+                            color = Color(0xFFE57373),
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
             }
         }
 
@@ -331,7 +479,204 @@ private fun AiChatHeader(
 }
 
 // =============================================================================
-// 2. WELCOME EMPTY STATE
+// 2. CHAT HISTORY SHEET CONTENT
+// =============================================================================
+@Composable
+private fun ChatHistorySheetContent(
+    sessions: List<ChatSession>,
+    selectedSessionId: String?,
+    onNewChatClick: () -> Unit,
+    onSelectSession: (String) -> Unit,
+    onClose: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxHeight(0.75f)
+            .padding(horizontal = 20.dp, vertical = 8.dp)
+    ) {
+        // Sheet Header
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                HistoryIcon(color = MomoraPurplePrimary, modifier = Modifier.size(20.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Chat History",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MomoraPurpleDark
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .size(30.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFF5EEF6))
+                    .clickable { onClose() },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "✕",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MomoraPurpleDark
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // + Start New Conversation Button
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(14.dp))
+                .background(
+                    Brush.linearGradient(
+                        listOf(Color(0xFFFBF1F6), Color(0xFFF3E5F4))
+                    )
+                )
+                .border(1.dp, Color(0xFFE7D6E9), RoundedCornerShape(14.dp))
+                .clickable { onNewChatClick() }
+                .padding(vertical = 12.dp, horizontal = 16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                PlusIcon(color = MomoraPurplePrimary, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Start a New Chat",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MomoraPurplePrimary
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "Previous Conversations",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = MomoraBodyMuted
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        if (sessions.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "No previous conversations found.\nStart your first chat with Momora AI!",
+                    fontSize = 13.sp,
+                    color = MomoraBodyMuted,
+                    textAlign = TextAlign.Center
+                )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                items(sessions.reversed()) { session ->
+                    val isSelected = session.id == selectedSessionId
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(if (isSelected) Color(0xFFFAF3FB) else Color.White)
+                            .border(
+                                1.dp,
+                                if (isSelected) MomoraPurplePrimary else Color(0xFFEFE8F3),
+                                RoundedCornerShape(14.dp)
+                            )
+                            .clickable { onSelectSession(session.id) }
+                            .padding(14.dp)
+                    ) {
+                        Column {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = session.title,
+                                    fontSize = 13.5.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MomoraPurpleDark,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(50))
+                                        .background(Color(0xFFF2EAF3))
+                                        .padding(horizontal = 8.dp, vertical = 2.dp)
+                                ) {
+                                    Text(
+                                        text = session.dateLabel,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = MomoraPurplePrimary
+                                    )
+                                }
+                            }
+
+                            if (session.previewText.isNotBlank()) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = session.previewText,
+                                    fontSize = 12.sp,
+                                    color = MomoraBodyMuted,
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = "${session.messageCount} messages",
+                                    fontSize = 10.5.sp,
+                                    color = MomoraFooterText
+                                )
+                                if (isSelected) {
+                                    Text(
+                                        text = "Active",
+                                        fontSize = 10.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MomoraPurplePrimary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// =============================================================================
+// 3. WELCOME EMPTY STATE
 // =============================================================================
 @Composable
 private fun WelcomeEmptyState(
@@ -381,7 +726,7 @@ private fun WelcomeEmptyState(
         Spacer(modifier = Modifier.height(6.dp))
 
         Text(
-            text = "I'm Momora, your warm and gentle pregnancy wellness companion. Ask me anything about nutrition, comfort, body changes, or your baby's milestones.",
+            text = "I'm Momora, your warm and gentle pregnancy wellness companion. Ask me anything about Indian prenatal meals, comforting remedies, or your baby's weekly growth.",
             fontSize = 13.sp,
             lineHeight = 19.sp,
             color = MomoraBodyMuted,
@@ -444,10 +789,10 @@ private fun WelcomeEmptyState(
 
         // 4 Curated Prompt Cards in a sleek layout
         val promptItems = listOf(
-            PromptItem("🥗", "Healthy meal ideas", "Nutritious snack choices for pregnancy energy"),
-            PromptItem("🤰", "Pregnancy symptoms", "Gentle comfort tips for nausea & heartburn"),
-            PromptItem("👶", "Baby development", "Milestones & fetal growth expectations"),
-            PromptItem("🌸", "Prenatal wellness", "Safe gentle stretches & restorative sleep")
+            PromptItem("🥗", "Healthy Indian meals", "Idli with sambar, dosa, dal & paneer ideas"),
+            PromptItem("🤰", "Morning sickness relief", "Gentle tips for nausea, acidity & hydration"),
+            PromptItem("🌾", "Ragi & iron nutrition", "Wholesome grains, lentils & spinach benefits"),
+            PromptItem("🌸", "Safe pregnancy stretches", "Pelvic comfort & gentle maternal movement")
         )
 
         promptItems.forEach { item ->
@@ -546,7 +891,7 @@ private fun PromptCard(
 }
 
 // =============================================================================
-// 3. CONVERSATION SCROLLABLE LIST
+// 4. CONVERSATION SCROLLABLE LIST
 // =============================================================================
 @Composable
 private fun ConversationScrollableList(
@@ -561,12 +906,11 @@ private fun ConversationScrollableList(
             .padding(horizontal = 18.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.Start
     ) {
-        // Formatted Today Date Banner
         val todayStr = remember {
             try {
-                "TODAY · " + SimpleDateFormat("d MMM yyyy", Locale.getDefault()).format(Date()).uppercase()
+                "CONVERSATION · " + SimpleDateFormat("d MMM yyyy", Locale.getDefault()).format(Date()).uppercase()
             } catch (e: Exception) {
-                "TODAY"
+                "CONVERSATION"
             }
         }
 
@@ -646,7 +990,7 @@ private fun ConversationScrollableList(
 }
 
 // =============================================================================
-// 4. USER CHAT BUBBLE
+// 5. USER CHAT BUBBLE
 // =============================================================================
 @Composable
 private fun UserChatBubble(msg: ChatMessage) {
@@ -697,8 +1041,125 @@ private fun UserChatBubble(msg: ChatMessage) {
 }
 
 // =============================================================================
-// 5. AI RESPONSE CARD
+// 6. AI RESPONSE CARD & STRUCTURED LAYOUT
 // =============================================================================
+private data class FormattedAnswerBlock(
+    val title: String? = null,
+    val icon: String? = null,
+    val paragraphs: List<String> = emptyList(),
+    val bullets: List<String> = emptyList(),
+    val isDoctorWarning: Boolean = false,
+    val isIndianFood: Boolean = false
+)
+
+private fun parseAiResponseIntoBlocks(rawText: String, legacyBullets: List<String>): List<FormattedAnswerBlock> {
+    val clean = rawText.trim()
+    if (clean.isBlank() && legacyBullets.isEmpty()) return emptyList()
+
+    val lines = clean.lines()
+    val blocks = mutableListOf<FormattedAnswerBlock>()
+
+    var currentTitle: String? = null
+    var currentIcon: String? = null
+    var currentIsWarning = false
+    var currentIsFood = false
+    var currentParagraphs = mutableListOf<String>()
+    var currentBullets = mutableListOf<String>()
+
+    fun flushCurrent() {
+        if (currentTitle != null || currentParagraphs.isNotEmpty() || currentBullets.isNotEmpty()) {
+            blocks.add(
+                FormattedAnswerBlock(
+                    title = currentTitle,
+                    icon = currentIcon,
+                    paragraphs = currentParagraphs.toList(),
+                    bullets = currentBullets.toList(),
+                    isDoctorWarning = currentIsWarning,
+                    isIndianFood = currentIsFood
+                )
+            )
+            currentTitle = null
+            currentIcon = null
+            currentIsWarning = false
+            currentIsFood = false
+            currentParagraphs = mutableListOf()
+            currentBullets = mutableListOf()
+        }
+    }
+
+    for (line in lines) {
+        val trimmed = line.trim()
+        if (trimmed.isEmpty()) {
+            continue
+        }
+
+        val lower = trimmed.lowercase().trimEnd(':')
+
+        // Detect section title
+        val isSectionHeader = when {
+            lower.startsWith("what you should know") -> true
+            lower.startsWith("helpful suggestions") || lower.startsWith("practical suggestions") -> true
+            lower.contains("indian food") || lower.startsWith("food suggestions") || lower.startsWith("diet suggestions") -> true
+            lower.contains("contact your doctor") || lower.contains("call your doctor") || lower.contains("seek medical") || lower.contains("medical warning") || lower.contains("urgent medical notice") -> true
+            trimmed.endsWith(":") && trimmed.length in 4..45 && !trimmed.startsWith("•") && !trimmed.startsWith("-") -> true
+            else -> false
+        }
+
+        if (isSectionHeader) {
+            flushCurrent()
+            val headerTitle = trimmed.trimEnd(':').trim()
+            currentTitle = headerTitle
+
+            when {
+                lower.contains("doctor") || lower.contains("medical") || lower.contains("warning") || lower.contains("urgent") -> {
+                    currentIsWarning = true
+                    currentIcon = "🩺"
+                }
+                lower.contains("food") || lower.contains("indian") || lower.contains("diet") || lower.contains("nutrition") -> {
+                    currentIsFood = true
+                    currentIcon = "🥗"
+                }
+                lower.contains("know") -> {
+                    currentIcon = "📋"
+                }
+                lower.contains("suggestion") || lower.contains("tip") -> {
+                    currentIcon = "💡"
+                }
+                else -> {
+                    currentIcon = "✨"
+                }
+            }
+        } else if (trimmed.startsWith("•") || trimmed.startsWith("-") || trimmed.startsWith("*")) {
+            val bulletContent = trimmed.replace(Regex("^[•\\-*\\s]+"), "").trim()
+            if (bulletContent.isNotBlank()) {
+                currentBullets.add(bulletContent)
+            }
+        } else {
+            currentParagraphs.add(trimmed)
+        }
+    }
+
+    flushCurrent()
+
+    // Only append legacyBullets if no blocks already contain bullets and legacy bullets are not in rawText
+    if (legacyBullets.isNotEmpty() && blocks.none { it.bullets.isNotEmpty() }) {
+        val nonDuplicateBullets = legacyBullets.filter { b -> !clean.contains(b, ignoreCase = true) }
+        if (nonDuplicateBullets.isNotEmpty()) {
+            blocks.add(
+                FormattedAnswerBlock(
+                    title = "Helpful suggestions",
+                    icon = "💡",
+                    bullets = nonDuplicateBullets,
+                    isDoctorWarning = false,
+                    isIndianFood = false
+                )
+            )
+        }
+    }
+
+    return blocks
+}
+
 @Suppress("DEPRECATION")
 @Composable
 private fun AiChatCard(msg: ChatMessage) {
@@ -774,42 +1235,30 @@ private fun AiChatCard(msg: ChatMessage) {
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Main Text Content
-            Text(
-                text = msg.text,
-                fontSize = 13.5.sp,
-                lineHeight = 20.sp,
-                color = MomoraPurpleText
-            )
+            // Main Structured Content
+            StructuredAiAnswerContent(msg = msg)
 
-            // Bullet Points (if any)
-            if (msg.bulletPoints.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    msg.bulletPoints.forEach { point ->
-                        Row(
-                            verticalAlignment = Alignment.Top,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = "•",
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MomoraPurplePrimary,
-                                modifier = Modifier.padding(top = 1.dp, end = 6.dp)
-                            )
-                            Text(
-                                text = point,
-                                fontSize = 13.sp,
-                                lineHeight = 18.sp,
-                                color = MomoraPurpleText
-                            )
-                        }
-                    }
+            // Image Preview (if image URL is present)
+            if (!msg.imageUrl.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(10.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(160.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFFF5EEF6))
+                        .border(1.dp, Color(0xFFE9DFEC), RoundedCornerShape(12.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "📷 Image Attachment Preview",
+                        fontSize = 12.sp,
+                        color = MomoraPurplePrimary
+                    )
                 }
             }
 
-            // Footer Note / Clinical Disclaimer Highlight
+            // Footer Note / Clinical Disclaimer (if provided)
             if (!msg.footerNote.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Box(
@@ -835,7 +1284,7 @@ private fun AiChatCard(msg: ChatMessage) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Action & Disclaimer Bar
+            // Action & Timestamp Bar
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -887,8 +1336,240 @@ private fun AiChatCard(msg: ChatMessage) {
     }
 }
 
+@Composable
+private fun StructuredAiAnswerContent(msg: ChatMessage) {
+    val blocks = remember(msg.text, msg.bulletPoints) {
+        parseAiResponseIntoBlocks(msg.text, msg.bulletPoints)
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        blocks.forEach { block ->
+            val hasContent = block.paragraphs.isNotEmpty() || block.bullets.isNotEmpty()
+            if (hasContent) {
+                when {
+                    block.isDoctorWarning -> {
+                        DoctorWarningBlock(block = block)
+                    }
+                    block.isIndianFood -> {
+                        IndianFoodBlock(block = block)
+                    }
+                    block.title != null -> {
+                        StandardSectionBlock(block = block)
+                    }
+                    else -> {
+                        // Intro or standard paragraphs
+                        block.paragraphs.forEach { paragraph ->
+                            Text(
+                                text = paragraph,
+                                fontSize = 13.5.sp,
+                                lineHeight = 21.sp,
+                                color = MomoraPurpleText
+                            )
+                        }
+                        if (block.bullets.isNotEmpty()) {
+                            BulletPointsList(bullets = block.bullets)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DoctorWarningBlock(block: FormattedAnswerBlock) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFFFFF5F5))
+            .border(1.dp, Color(0xFFFFCDD2), RoundedCornerShape(12.dp))
+            .padding(12.dp)
+    ) {
+        Column {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = "🩺", fontSize = 14.sp)
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = block.title ?: "When to contact your doctor",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFC62828)
+                )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            block.paragraphs.forEach { p ->
+                Text(
+                    text = p,
+                    fontSize = 12.5.sp,
+                    lineHeight = 18.sp,
+                    color = Color(0xFFB71C1C)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+            block.bullets.forEach { b ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 2.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Text(
+                        text = "•",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFC62828),
+                        modifier = Modifier.padding(top = 1.dp, end = 6.dp)
+                    )
+                    Text(
+                        text = b,
+                        fontSize = 12.5.sp,
+                        lineHeight = 18.sp,
+                        color = Color(0xFFB71C1C)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun IndianFoodBlock(block: FormattedAnswerBlock) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFFFDF7FA))
+            .border(1.dp, Color(0xFFF2E2ED), RoundedCornerShape(12.dp))
+            .padding(12.dp)
+    ) {
+        Column {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = "🥗", fontSize = 14.sp)
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = block.title ?: "Indian food suggestions",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF882463)
+                )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            block.paragraphs.forEach { p ->
+                Text(
+                    text = p,
+                    fontSize = 13.sp,
+                    lineHeight = 19.sp,
+                    color = MomoraPurpleText
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+            block.bullets.forEach { b ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 2.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Text(
+                        text = "•",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraPurplePrimary,
+                        modifier = Modifier.padding(top = 1.dp, end = 6.dp)
+                    )
+                    Text(
+                        text = b,
+                        fontSize = 13.sp,
+                        lineHeight = 19.sp,
+                        color = MomoraPurpleText
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StandardSectionBlock(block: FormattedAnswerBlock) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (!block.icon.isNullOrBlank()) {
+                Text(text = block.icon, fontSize = 13.sp)
+                Spacer(modifier = Modifier.width(6.dp))
+            }
+            Text(
+                text = block.title ?: "",
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                color = MomoraPurpleDark
+            )
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        block.paragraphs.forEach { p ->
+            Text(
+                text = p,
+                fontSize = 13.sp,
+                lineHeight = 19.sp,
+                color = MomoraPurpleText
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+        }
+        block.bullets.forEach { b ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 2.dp),
+                verticalAlignment = Alignment.Top
+            ) {
+                Text(
+                    text = "•",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MomoraPurplePrimary,
+                    modifier = Modifier.padding(top = 1.dp, end = 6.dp)
+                )
+                Text(
+                    text = b,
+                    fontSize = 13.sp,
+                    lineHeight = 19.sp,
+                    color = MomoraPurpleText
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun BulletPointsList(bullets: List<String>) {
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        bullets.forEach { b ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 2.dp),
+                verticalAlignment = Alignment.Top
+            ) {
+                Text(
+                    text = "•",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MomoraPurplePrimary,
+                    modifier = Modifier.padding(top = 1.dp, end = 6.dp)
+                )
+                Text(
+                    text = b,
+                    fontSize = 13.sp,
+                    lineHeight = 19.sp,
+                    color = MomoraPurpleText
+                )
+            }
+        }
+    }
+}
+
 // =============================================================================
-// 6. ANIMATED TYPING INDICATOR BUBBLE
+// 7. ANIMATED TYPING INDICATOR BUBBLE
 // =============================================================================
 @Composable
 private fun TypingIndicatorBubble() {
@@ -977,7 +1658,7 @@ private fun TypingIndicatorBubble() {
 }
 
 // =============================================================================
-// 7. QUICK CHIPS ROW (ABOVE INPUT)
+// 8. QUICK CHIPS ROW (ABOVE INPUT)
 // =============================================================================
 @Composable
 private fun QuickSuggestionChipsBar(
@@ -1011,7 +1692,7 @@ private fun QuickSuggestionChipsBar(
 }
 
 // =============================================================================
-// 8. DOCKED MODERN INPUT BAR
+// 9. DOCKED MODERN INPUT BAR
 // =============================================================================
 @Composable
 private fun ChatInputBar(
@@ -1047,7 +1728,7 @@ private fun ChatInputBar(
                 Box(modifier = Modifier.weight(1f)) {
                     if (inputQuery.isEmpty()) {
                         Text(
-                            text = "Ask what's on your mind...",
+                            text = "Ask Momora anything...",
                             fontSize = 13.5.sp,
                             color = Color(0xFFA69EAC)
                         )
@@ -1102,7 +1783,7 @@ private fun ChatInputBar(
 }
 
 // =============================================================================
-// 9. DASHBOARD BOTTOM NAVIGATION BAR
+// 10. DASHBOARD BOTTOM NAVIGATION BAR
 // =============================================================================
 @Composable
 private fun DashboardBottomNavBar(
@@ -1201,8 +1882,78 @@ private fun NavTabItem(
 }
 
 // =============================================================================
-// 10. CUSTOM ICONS
+// 11. CUSTOM ICONS (ZERO EXTRA ASSET DEPENDENCY)
 // =============================================================================
+@Composable
+private fun PlusIcon(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val strokeWidth = 2.dp.toPx()
+        drawLine(
+            color = color,
+            start = Offset(w * 0.5f, h * 0.22f),
+            end = Offset(w * 0.5f, h * 0.78f),
+            strokeWidth = strokeWidth,
+            cap = StrokeCap.Round
+        )
+        drawLine(
+            color = color,
+            start = Offset(w * 0.22f, h * 0.5f),
+            end = Offset(w * 0.78f, h * 0.5f),
+            strokeWidth = strokeWidth,
+            cap = StrokeCap.Round
+        )
+    }
+}
+
+@Composable
+private fun HistoryIcon(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val strokeWidth = 1.8.dp.toPx()
+        drawCircle(
+            color = color,
+            radius = w * 0.36f,
+            center = Offset(w * 0.5f, h * 0.5f),
+            style = Stroke(width = strokeWidth)
+        )
+        drawLine(
+            color = color,
+            start = Offset(w * 0.5f, h * 0.5f),
+            end = Offset(w * 0.5f, h * 0.28f),
+            strokeWidth = strokeWidth,
+            cap = StrokeCap.Round
+        )
+        drawLine(
+            color = color,
+            start = Offset(w * 0.5f, h * 0.5f),
+            end = Offset(w * 0.68f, h * 0.5f),
+            strokeWidth = strokeWidth,
+            cap = StrokeCap.Round
+        )
+    }
+}
+
+@Composable
+private fun ClearChatIcon(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val strokeWidth = 1.8.dp.toPx()
+        val binPath = Path().apply {
+            moveTo(w * 0.28f, h * 0.36f)
+            lineTo(w * 0.33f, h * 0.80f)
+            lineTo(w * 0.67f, h * 0.80f)
+            lineTo(w * 0.72f, h * 0.36f)
+        }
+        drawPath(binPath, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        drawLine(color = color, start = Offset(w * 0.20f, h * 0.36f), end = Offset(w * 0.80f, h * 0.36f), strokeWidth = strokeWidth, cap = StrokeCap.Round)
+        drawLine(color = color, start = Offset(w * 0.40f, h * 0.26f), end = Offset(w * 0.60f, h * 0.26f), strokeWidth = strokeWidth, cap = StrokeCap.Round)
+    }
+}
+
 @Composable
 private fun SendIcon(color: Color, modifier: Modifier = Modifier) {
     Canvas(modifier = modifier) {
@@ -1240,25 +1991,6 @@ private fun CopyIcon(color: Color, modifier: Modifier = Modifier) {
             size = Size(w * 0.55f, h * 0.55f),
             style = Stroke(width = strokeWidth)
         )
-    }
-}
-
-@Composable
-private fun BellIcon(color: Color, modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier) {
-        val w = size.width
-        val h = size.height
-        val strokeWidth = 1.8.dp.toPx()
-
-        val bellPath = Path().apply {
-            moveTo(w * 0.25f, h * 0.65f)
-            lineTo(w * 0.75f, h * 0.65f)
-            cubicTo(w * 0.70f, h * 0.40f, w * 0.65f, h * 0.25f, w * 0.50f, h * 0.25f)
-            cubicTo(w * 0.35f, h * 0.25f, w * 0.30f, h * 0.40f, w * 0.25f, h * 0.65f)
-            close()
-        }
-        drawPath(bellPath, color = color, style = Stroke(width = strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round))
-        drawCircle(color = color, radius = strokeWidth * 1.2f, center = Offset(w * 0.50f, h * 0.78f))
     }
 }
 

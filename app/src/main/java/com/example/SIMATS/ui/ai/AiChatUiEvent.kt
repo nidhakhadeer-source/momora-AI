@@ -8,4 +8,13 @@ sealed interface AiChatUiEvent {
     data object OnBackClicked : AiChatUiEvent
     data object OnNotificationClicked : AiChatUiEvent
     data object OnRetryClicked : AiChatUiEvent
+
+    // ChatGPT-Style Conversation Management
+    data object OnNewChatClicked : AiChatUiEvent
+    data object OnOpenHistoryClicked : AiChatUiEvent
+    data object OnDismissHistoryClicked : AiChatUiEvent
+    data class OnSelectSession(val sessionId: String) : AiChatUiEvent
+    data object OnClearChatClicked : AiChatUiEvent
+    data object OnConfirmClearChat : AiChatUiEvent
+    data object OnDismissClearDialog : AiChatUiEvent
 }

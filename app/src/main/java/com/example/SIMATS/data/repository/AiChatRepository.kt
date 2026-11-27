@@ -9,16 +9,16 @@ import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException
 
 interface AiChatRepository {
-    fun getInitialChatMessages(): Flow<Result<List<ChatMessage>>>
-    fun sendMessage(userText: String): Flow<Result<SendChatMessageData>>
+    fun getInitialChatMessages(conversationId: String? = null): Flow<Result<List<ChatMessage>>>
+    fun sendMessage(userText: String, conversationId: String? = null): Flow<Result<SendChatMessageData>>
 }
 
 class AiChatRepositoryImpl : AiChatRepository {
     private val apiService = RetrofitClient.apiService
 
-    override fun getInitialChatMessages(): Flow<Result<List<ChatMessage>>> = flow {
+    override fun getInitialChatMessages(conversationId: String?): Flow<Result<List<ChatMessage>>> = flow {
         try {
-            val response = apiService.getChatMessages(SessionManager.getUserId())
+            val response = apiService.getChatMessages(SessionManager.getUserId(), conversationId)
             if (response.success) {
                 emit(Result.success(response.data))
             } else {
@@ -34,9 +34,9 @@ class AiChatRepositoryImpl : AiChatRepository {
         }
     }
 
-    override fun sendMessage(userText: String): Flow<Result<SendChatMessageData>> = flow {
+    override fun sendMessage(userText: String, conversationId: String?): Flow<Result<SendChatMessageData>> = flow {
         try {
-            val response = apiService.sendChatMessage(userText)
+            val response = apiService.sendChatMessage(userText, conversationId)
             if (response.success) {
                 emit(Result.success(response.data))
             } else {

@@ -282,13 +282,15 @@ interface ApiService {
     // -------------------------------------------------------------------------
     @GET("ai/chat.php")
     suspend fun getChatMessages(
-        @Query("user_id") userId: Int? = null
+        @Query("user_id") userId: Int? = null,
+        @Query("conversation_id") conversationId: String? = null
     ): DataResponse<List<ChatMessage>>
 
     @FormUrlEncoded
     @POST("ai/chat.php")
     suspend fun sendChatMessage(
-        @Field("message") message: String
+        @Field("message") message: String,
+        @Field("conversation_id") conversationId: String? = null
     ): DataResponse<com.example.SIMATS.data.model.SendChatMessageData>
 
     // -------------------------------------------------------------------------
