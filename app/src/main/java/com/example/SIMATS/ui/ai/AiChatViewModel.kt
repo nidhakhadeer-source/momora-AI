@@ -67,15 +67,18 @@ class AiChatViewModel(
     }
 
     private fun sendUserMessage(queryText: String) {
-        if (queryText.isBlank()) return
+        val trimmed = queryText.trim()
+        if (trimmed.isBlank() || _uiState.value.isLoading) return
 
+        val tempId = "temp_${System.currentTimeMillis()}"
         val userMsg = ChatMessage(
-            id = System.currentTimeMillis().toString(),
+            id = tempId,
             sender = MessageSender.USER,
-            text = queryText,
+            text = trimmed,
             timestampText = "You · Just now"
         )
 
+        // 1. Immediately display the user's message and loading indicator
         val updatedList = _uiState.value.messages + userMsg
         _uiState.value = _uiState.value.copy(
             messages = updatedList,
@@ -85,14 +88,29 @@ class AiChatViewModel(
         )
 
         viewModelScope.launch {
-            repository.sendMessage(queryText).collect { result ->
-                result.onSuccess { aiResponse ->
+            repository.sendMessage(trimmed).collect { result ->
+                result.onSuccess { sendData ->
+                    // 2. Map response IDs & fields correctly
+                    val aiMessage = sendData.toChatMessage()
+                    val officialQuestionId = sendData.question_id?.toString()
+
+                    val currentMessages = _uiState.value.messages
+                    val reconciledMessages = currentMessages.map { msg ->
+                        if (msg.id == tempId && !officialQuestionId.isNullOrBlank()) {
+                            msg.copy(id = officialQuestionId)
+                        } else {
+                            msg
+                        }
+                    }
+
+                    // 3. Immediately append the AI response to the displayed list and stop loading
                     _uiState.value = _uiState.value.copy(
-                        messages = _uiState.value.messages + aiResponse,
+                        messages = reconciledMessages + aiMessage,
                         isLoading = false,
                         errorMessage = null
                     )
                 }.onFailure { err ->
+                    // 4. On failure, stop loading and display error without clearing messages
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         errorMessage = err.message ?: "Failed to send message"

@@ -289,7 +289,7 @@ interface ApiService {
     @POST("ai/chat.php")
     suspend fun sendChatMessage(
         @Field("message") message: String
-    ): DataResponse<ChatMessage>
+    ): DataResponse<com.example.SIMATS.data.model.SendChatMessageData>
 
     // -------------------------------------------------------------------------
     // Doctor Portal

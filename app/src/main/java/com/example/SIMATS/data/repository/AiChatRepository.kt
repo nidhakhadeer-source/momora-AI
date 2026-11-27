@@ -2,6 +2,7 @@ package com.example.SIMATS.data.repository
 
 import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.ChatMessage
+import com.example.SIMATS.data.model.SendChatMessageData
 import com.example.SIMATS.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -9,7 +10,7 @@ import retrofit2.HttpException
 
 interface AiChatRepository {
     fun getInitialChatMessages(): Flow<Result<List<ChatMessage>>>
-    fun sendMessage(userText: String): Flow<Result<ChatMessage>>
+    fun sendMessage(userText: String): Flow<Result<SendChatMessageData>>
 }
 
 class AiChatRepositoryImpl : AiChatRepository {
@@ -18,7 +19,7 @@ class AiChatRepositoryImpl : AiChatRepository {
     override fun getInitialChatMessages(): Flow<Result<List<ChatMessage>>> = flow {
         try {
             val response = apiService.getChatMessages(SessionManager.getUserId())
-            if (response.success && response.data != null) {
+            if (response.success) {
                 emit(Result.success(response.data))
             } else {
                 emit(Result.failure(Exception(response.message ?: "Failed to load chat history")))
@@ -33,10 +34,10 @@ class AiChatRepositoryImpl : AiChatRepository {
         }
     }
 
-    override fun sendMessage(userText: String): Flow<Result<ChatMessage>> = flow {
+    override fun sendMessage(userText: String): Flow<Result<SendChatMessageData>> = flow {
         try {
             val response = apiService.sendChatMessage(userText)
-            if (response.success && response.data != null) {
+            if (response.success) {
                 emit(Result.success(response.data))
             } else {
                 emit(Result.failure(Exception(response.message ?: "Failed to send message")))
