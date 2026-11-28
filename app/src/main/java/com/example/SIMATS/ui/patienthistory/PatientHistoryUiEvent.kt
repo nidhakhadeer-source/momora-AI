@@ -12,6 +12,9 @@ sealed interface PatientHistoryUiEvent {
     data class OnReportClicked(val report: PatientReportItem, val context: Context) : PatientHistoryUiEvent
     data object OnViewAllReportsClicked : PatientHistoryUiEvent
     data object OnOpenHealthMonitoringClicked : PatientHistoryUiEvent
+    data object OnToggleHealthMonitoringExpand : PatientHistoryUiEvent
+    data object OnGenerateSummaryClicked : PatientHistoryUiEvent
+    data object OnGenerateAgainClicked : PatientHistoryUiEvent
     data object OnRetryClicked : PatientHistoryUiEvent
     data object OnBackClicked : PatientHistoryUiEvent
     data object OnNotificationClicked : PatientHistoryUiEvent
