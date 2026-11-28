@@ -20,6 +20,10 @@ data class AiChatUiState(
     val isHistoryDrawerOpen: Boolean = false,
     val showClearConfirmDialog: Boolean = false,
     val inputQuery: String = "",
+    val selectedImageUri: android.net.Uri? = null,
+    val selectedImageBytes: ByteArray? = null,
+    val selectedImageMimeType: String? = null,
+    val selectedImageName: String? = null,
     val quickSuggestions: List<String> = listOf(
         "Healthy Indian meals",
         "Morning sickness relief",
