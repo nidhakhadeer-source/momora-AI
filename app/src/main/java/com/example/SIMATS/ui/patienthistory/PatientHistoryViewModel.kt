@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.SIMATS.data.model.PatientReportItem
 import com.example.SIMATS.data.repository.MedicalReportsRepository
 import com.example.SIMATS.data.repository.MedicalReportsRepositoryImpl
+import com.example.SIMATS.data.repository.PatientHealthMonitoringRepository
+import com.example.SIMATS.data.repository.PatientHealthMonitoringRepositoryImpl
 import com.example.SIMATS.data.repository.PatientHistoryRepository
 import com.example.SIMATS.data.repository.PatientHistoryRepositoryImpl
 import com.example.SIMATS.navigation.SelectedPatientHolder
@@ -20,6 +22,7 @@ import java.io.File
 class PatientHistoryViewModel(
     private val repository: PatientHistoryRepository = PatientHistoryRepositoryImpl(),
     private val reportsRepository: MedicalReportsRepository = MedicalReportsRepositoryImpl(),
+    private val monitoringRepository: PatientHealthMonitoringRepository = PatientHealthMonitoringRepositoryImpl(),
     patientId: String? = SelectedPatientHolder.selectedPatientId,
     patientName: String? = SelectedPatientHolder.selectedPatientName
 ) : ViewModel() {
@@ -70,6 +73,22 @@ class PatientHistoryViewModel(
                 _uiState.value = _uiState.value.copy(selectedTab = 1)
             }
             PatientHistoryUiEvent.OnOpenHealthMonitoringClicked -> {}
+            PatientHistoryUiEvent.OnToggleHealthMonitoringExpand -> {
+                _uiState.value = _uiState.value.copy(
+                    isHealthMonitoringExpanded = !_uiState.value.isHealthMonitoringExpanded
+                )
+            }
+            PatientHistoryUiEvent.OnGenerateSummaryClicked,
+            PatientHistoryUiEvent.OnGenerateAgainClicked -> {
+                val id = currentPatientId ?: SelectedPatientHolder.selectedPatientId
+                if (!id.isNullOrBlank()) {
+                    generateAiSummary(id)
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        summaryErrorMessage = "No patient selected"
+                    )
+                }
+            }
             PatientHistoryUiEvent.OnRetryClicked -> {
                 val id = currentPatientId ?: SelectedPatientHolder.selectedPatientId
                 if (!id.isNullOrBlank()) {
@@ -146,8 +165,43 @@ class PatientHistoryViewModel(
             if (!resolvedName.isNullOrBlank()) {
                 SelectedPatientHolder.selectedPatientName = resolvedName
             }
-            _uiState.value = _uiState.value.copy(patientName = resolvedName ?: _uiState.value.patientName)
+            _uiState.value = _uiState.value.copy(
+                patientName = resolvedName ?: _uiState.value.patientName,
+                summaryData = null,
+                isSummaryGenerated = false,
+                summaryErrorMessage = null,
+                isSummaryLoading = false,
+                healthMonitoringData = null,
+                isHealthMonitoringExpanded = false
+            )
             loadHistory(id)
+        }
+    }
+
+    private fun generateAiSummary(patientId: String) {
+        _uiState.value = _uiState.value.copy(
+            isSummaryLoading = true,
+            summaryErrorMessage = null
+        )
+        viewModelScope.launch {
+            repository.getDoctorPatientSummary(patientId).collect { result ->
+                result.fold(
+                    onSuccess = { summary ->
+                        _uiState.value = _uiState.value.copy(
+                            summaryData = summary,
+                            isSummaryLoading = false,
+                            summaryErrorMessage = null,
+                            isSummaryGenerated = true
+                        )
+                    },
+                    onFailure = { err ->
+                        _uiState.value = _uiState.value.copy(
+                            isSummaryLoading = false,
+                            summaryErrorMessage = err.message ?: "Failed to generate AI patient summary"
+                        )
+                    }
+                )
+            }
         }
     }
 
@@ -177,16 +231,31 @@ class PatientHistoryViewModel(
                 )
             }
         }
+        viewModelScope.launch {
+            monitoringRepository.getPatientHealthMonitoring(id, 7).collect { result ->
+                result.fold(
+                    onSuccess = { mData ->
+                        _uiState.value = _uiState.value.copy(
+                            healthMonitoringData = mData
+                        )
+                    },
+                    onFailure = {
+                        // Health monitoring data non-fatal
+                    }
+                )
+            }
+        }
     }
 
     class Factory(
         private val repository: PatientHistoryRepository = PatientHistoryRepositoryImpl(),
         private val reportsRepository: MedicalReportsRepository = MedicalReportsRepositoryImpl(),
+        private val monitoringRepository: PatientHealthMonitoringRepository = PatientHealthMonitoringRepositoryImpl(),
         private val patientId: String? = null
     ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return PatientHistoryViewModel(repository, reportsRepository, patientId) as T
+            return PatientHistoryViewModel(repository, reportsRepository, monitoringRepository, patientId) as T
         }
     }
 }
