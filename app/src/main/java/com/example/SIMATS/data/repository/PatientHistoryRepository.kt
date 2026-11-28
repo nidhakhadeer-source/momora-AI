@@ -1,6 +1,7 @@
 package com.example.SIMATS.data.repository
 
 import com.example.SIMATS.data.local.SessionManager
+import com.example.SIMATS.data.model.DoctorPatientSummaryData
 import com.example.SIMATS.data.model.PatientMedicalHistoryData
 import com.example.SIMATS.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
@@ -9,6 +10,7 @@ import retrofit2.HttpException
 
 interface PatientHistoryRepository {
     fun getPatientHistory(patientId: String): Flow<Result<PatientMedicalHistoryData>>
+    fun getDoctorPatientSummary(patientId: String): Flow<Result<DoctorPatientSummaryData>>
 }
 
 class PatientHistoryRepositoryImpl : PatientHistoryRepository {
@@ -21,6 +23,24 @@ class PatientHistoryRepositoryImpl : PatientHistoryRepository {
                 emit(Result.success(response.data))
             } else {
                 emit(Result.failure(Exception(response.message ?: "Failed to load patient medical history")))
+            }
+        } catch (e: Exception) {
+            if (e is HttpException && e.code() == 401) {
+                SessionManager.notifySessionExpired()
+                emit(Result.failure(Exception("Session expired. Please log in again.")))
+            } else {
+                emit(Result.failure(Exception(e.localizedMessage ?: "Network connection error")))
+            }
+        }
+    }
+
+    override fun getDoctorPatientSummary(patientId: String): Flow<Result<DoctorPatientSummaryData>> = flow {
+        try {
+            val response = apiService.getDoctorPatientSummary(patientId)
+            if (response.success && response.data != null) {
+                emit(Result.success(response.data))
+            } else {
+                emit(Result.failure(Exception(response.message ?: "Failed to generate AI patient summary")))
             }
         } catch (e: Exception) {
             if (e is HttpException && e.code() == 401) {
