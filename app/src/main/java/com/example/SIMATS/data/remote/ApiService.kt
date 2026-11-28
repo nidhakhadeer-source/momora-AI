@@ -16,6 +16,7 @@ import com.example.SIMATS.data.model.DoctorAccountItem
 import com.example.SIMATS.data.model.DoctorAdviceData
 import com.example.SIMATS.data.model.DoctorAvailabilityResponseData
 import com.example.SIMATS.data.model.DoctorDashboardData
+import com.example.SIMATS.data.model.DoctorPatientSummaryData
 import com.example.SIMATS.data.model.DoctorProfileData
 import com.example.SIMATS.data.model.DoctorScheduleData
 import com.example.SIMATS.data.model.SaveAvailabilityRequest
@@ -179,7 +180,7 @@ interface ApiService {
     ): DataResponse<NutritionPlanData>
 
     // -------------------------------------------------------------------------
-    // Medication Reminders
+    // Medication Reminders & Care Management
     // -------------------------------------------------------------------------
     @GET("medication/reminders.php")
     suspend fun getMedicationReminders(
@@ -189,6 +190,43 @@ interface ApiService {
     @FormUrlEncoded
     @POST("medication/reminders.php")
     suspend fun markMedicationTaken(
+        @Field("medicationId") medicationId: Int,
+        @Field("action") action: String = "mark_taken"
+    ): BaseResponse
+
+    @FormUrlEncoded
+    @POST("medication/reminders.php")
+    suspend fun addMedication(
+        @Field("action") action: String = "add",
+        @Field("name") name: String,
+        @Field("dosage") dosage: String,
+        @Field("frequency") frequency: String,
+        @Field("reminderTime") reminderTime: String,
+        @Field("instructions") instructions: String?,
+        @Field("startDate") startDate: String?,
+        @Field("endDate") endDate: String?,
+        @Field("doctorName") doctorName: String?
+    ): BaseResponse
+
+    @FormUrlEncoded
+    @POST("medication/reminders.php")
+    suspend fun editMedication(
+        @Field("action") action: String = "edit",
+        @Field("medicationId") medicationId: Int,
+        @Field("name") name: String,
+        @Field("dosage") dosage: String,
+        @Field("frequency") frequency: String,
+        @Field("reminderTime") reminderTime: String,
+        @Field("instructions") instructions: String?,
+        @Field("startDate") startDate: String?,
+        @Field("endDate") endDate: String?,
+        @Field("doctorName") doctorName: String?
+    ): BaseResponse
+
+    @FormUrlEncoded
+    @POST("medication/reminders.php")
+    suspend fun discontinueMedication(
+        @Field("action") action: String = "discontinue",
         @Field("medicationId") medicationId: Int
     ): BaseResponse
 
@@ -293,6 +331,14 @@ interface ApiService {
         @Field("conversation_id") conversationId: String? = null
     ): DataResponse<com.example.SIMATS.data.model.SendChatMessageData>
 
+    @Multipart
+    @POST("ai/chat.php")
+    suspend fun sendChatMessageWithImage(
+        @Part("message") message: RequestBody,
+        @Part("conversation_id") conversationId: RequestBody?,
+        @Part image: MultipartBody.Part
+    ): DataResponse<com.example.SIMATS.data.model.SendChatMessageData>
+
     // -------------------------------------------------------------------------
     // Doctor Portal
     // -------------------------------------------------------------------------
@@ -312,6 +358,11 @@ interface ApiService {
     suspend fun getPatientHistory(
         @Query("patientId") patientId: String
     ): DataResponse<PatientMedicalHistoryData>
+
+    @GET("doctor/patient_summary.php")
+    suspend fun getDoctorPatientSummary(
+        @Query("patientId") patientId: String
+    ): DataResponse<DoctorPatientSummaryData>
 
     @GET("doctor/patient_monitoring.php")
     suspend fun getPatientHealthMonitoring(
