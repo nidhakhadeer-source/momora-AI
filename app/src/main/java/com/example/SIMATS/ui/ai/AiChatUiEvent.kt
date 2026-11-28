@@ -17,4 +17,13 @@ sealed interface AiChatUiEvent {
     data object OnClearChatClicked : AiChatUiEvent
     data object OnConfirmClearChat : AiChatUiEvent
     data object OnDismissClearDialog : AiChatUiEvent
+
+    // Image Attachment & Understanding
+    data class OnImageSelected(
+        val uri: android.net.Uri,
+        val bytes: ByteArray?,
+        val mimeType: String?,
+        val fileName: String?
+    ) : AiChatUiEvent
+    data object OnRemoveImageClicked : AiChatUiEvent
 }
