@@ -3,6 +3,7 @@ package com.example.SIMATS
 import android.app.Application
 import com.example.SIMATS.data.local.FcmTokenManager
 import com.example.SIMATS.data.local.LocalNotificationHelper
+import com.example.SIMATS.data.local.MedicationNotificationScheduler
 import com.example.SIMATS.data.local.SessionManager
 
 class MomoraApp : Application() {
@@ -10,6 +11,7 @@ class MomoraApp : Application() {
         super.onCreate()
         SessionManager.init(this)
         LocalNotificationHelper.init(this)
+        MedicationNotificationScheduler.init(this)
         FcmTokenManager.init(this)
     }
 }
