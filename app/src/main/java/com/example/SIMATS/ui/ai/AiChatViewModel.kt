@@ -98,6 +98,23 @@ class AiChatViewModel(
             AiChatUiEvent.OnDismissClearDialog -> {
                 _uiState.value = _uiState.value.copy(showClearConfirmDialog = false)
             }
+            is AiChatUiEvent.OnImageSelected -> {
+                _uiState.value = _uiState.value.copy(
+                    selectedImageUri = event.uri,
+                    selectedImageBytes = event.bytes,
+                    selectedImageMimeType = event.mimeType,
+                    selectedImageName = event.fileName,
+                    errorMessage = null
+                )
+            }
+            AiChatUiEvent.OnRemoveImageClicked -> {
+                _uiState.value = _uiState.value.copy(
+                    selectedImageUri = null,
+                    selectedImageBytes = null,
+                    selectedImageMimeType = null,
+                    selectedImageName = null
+                )
+            }
         }
     }
 
@@ -131,15 +148,22 @@ class AiChatViewModel(
 
     private fun sendUserMessage(queryText: String) {
         val trimmed = queryText.trim()
-        if (trimmed.isBlank() || _uiState.value.isLoading) return
+        val attachedUri = _uiState.value.selectedImageUri
+        val attachedBytes = _uiState.value.selectedImageBytes
+        val attachedMime = _uiState.value.selectedImageMimeType
+        val attachedName = _uiState.value.selectedImageName
 
+        if ((trimmed.isBlank() && attachedBytes == null) || _uiState.value.isLoading) return
+
+        val displayText = if (trimmed.isNotBlank()) trimmed else "Please analyze this image"
         val activeConvId = _uiState.value.currentConversationId ?: generateConversationId()
         val tempId = "temp_${System.currentTimeMillis()}"
         val userMsg = ChatMessage(
             id = tempId,
             conversationId = activeConvId,
             sender = MessageSender.USER,
-            text = trimmed,
+            text = displayText,
+            imageUrl = attachedUri?.toString(),
             timestampText = "You · Just now",
             created_at = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())
         )
@@ -156,25 +180,31 @@ class AiChatViewModel(
             allHistoryMessages = updatedAllMessages,
             sessions = updatedSessions,
             inputQuery = "",
+            selectedImageUri = null,
+            selectedImageBytes = null,
+            selectedImageMimeType = null,
+            selectedImageName = null,
             isLoading = true,
             errorMessage = null
         )
 
         viewModelScope.launch {
-            repository.sendMessage(trimmed, activeConvId).collect { result ->
+            repository.sendMessage(displayText, activeConvId, attachedBytes, attachedMime, attachedName).collect { result ->
                 result.onSuccess { sendData ->
                     // 2. Map response IDs & fields correctly and clean markdown
                     val rawAiMessage = sendData.toChatMessage()
                     val resolvedConvId = sendData.conversation_id ?: activeConvId
                     val aiMessage = sanitizeChatMessage(rawAiMessage).copy(conversationId = resolvedConvId)
                     val officialQuestionId = sendData.question_id?.toString()
+                    val serverImageUrl = sendData.imageUrl
 
                     val currentMessages = _uiState.value.messages
                     val reconciledCurrent = currentMessages.map { msg ->
                         if (msg.id == tempId) {
                             msg.copy(
                                 id = officialQuestionId ?: msg.id,
-                                conversationId = resolvedConvId
+                                conversationId = resolvedConvId,
+                                imageUrl = serverImageUrl ?: msg.imageUrl
                             )
                         } else {
                             msg
@@ -186,7 +216,8 @@ class AiChatViewModel(
                         if (msg.id == tempId) {
                             msg.copy(
                                 id = officialQuestionId ?: msg.id,
-                                conversationId = resolvedConvId
+                                conversationId = resolvedConvId,
+                                imageUrl = serverImageUrl ?: msg.imageUrl
                             )
                         } else {
                             msg
