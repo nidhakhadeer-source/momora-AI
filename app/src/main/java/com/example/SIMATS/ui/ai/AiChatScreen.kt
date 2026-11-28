@@ -1,5 +1,13 @@
 package com.example.SIMATS.ui.ai
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
+import android.net.Uri
+import android.os.Build
+import android.provider.OpenableColumns
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -7,6 +15,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,6 +30,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -49,6 +59,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -62,8 +73,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextStyle
@@ -75,14 +89,20 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.SIMATS.data.local.SessionManager
 import com.example.SIMATS.data.model.ChatMessage
 import com.example.SIMATS.data.model.MessageSender
+import com.example.SIMATS.data.remote.RetrofitClient
 import com.example.SIMATS.ui.components.formatErrorMessage
 import com.example.SIMATS.ui.theme.MomoraBodyMuted
 import com.example.SIMATS.ui.theme.MomoraFooterText
 import com.example.SIMATS.ui.theme.MomoraPurpleDark
 import com.example.SIMATS.ui.theme.MomoraPurplePrimary
 import com.example.SIMATS.ui.theme.MomoraPurpleText
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.net.HttpURLConnection
+import java.net.URL
 import com.example.SIMATS.ui.theme.MomoraScreenBackground
 import com.example.SIMATS.ui.theme.MomoraSubTitleText
 import kotlinx.coroutines.delay
@@ -100,6 +120,39 @@ fun AiChatScreen(
     onNavTabSelected: (Int) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            val cr = context.contentResolver
+            val mime = cr.getType(uri) ?: "image/jpeg"
+            val bytes = try {
+                cr.openInputStream(uri)?.use { it.readBytes() }
+            } catch (e: Exception) {
+                null
+            }
+            var fileName = "photo_${System.currentTimeMillis()}.jpg"
+            try {
+                cr.query(uri, null, null, null, null)?.use { cursor ->
+                    val nameIdx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (cursor.moveToFirst() && nameIdx >= 0) {
+                        fileName = cursor.getString(nameIdx)
+                    }
+                }
+            } catch (_: Exception) {}
+
+            viewModel.onEvent(
+                AiChatUiEvent.OnImageSelected(
+                    uri = uri,
+                    bytes = bytes,
+                    mimeType = mime,
+                    fileName = fileName
+                )
+            )
+        }
+    }
 
     AiChatScreenContent(
         modifier = modifier,
@@ -107,6 +160,8 @@ fun AiChatScreen(
         selectedNavIndex = selectedNavIndex,
         onRetryClick = { viewModel.onEvent(AiChatUiEvent.OnRetryClicked) },
         onInputQueryChanged = { q -> viewModel.onEvent(AiChatUiEvent.OnInputQueryChanged(q)) },
+        onAttachImageClick = { galleryLauncher.launch("image/*") },
+        onRemoveImageClick = { viewModel.onEvent(AiChatUiEvent.OnRemoveImageClicked) },
         onSendMessageClick = { viewModel.onEvent(AiChatUiEvent.OnSendMessageClicked) },
         onSuggestionClick = { s -> viewModel.onEvent(AiChatUiEvent.OnSuggestionClicked(s)) },
         onBackClick = {
@@ -135,6 +190,8 @@ fun AiChatScreenContent(
     uiState: AiChatUiState = AiChatUiState(),
     onRetryClick: () -> Unit = {},
     onInputQueryChanged: (String) -> Unit = {},
+    onAttachImageClick: () -> Unit = {},
+    onRemoveImageClick: () -> Unit = {},
     onSendMessageClick: () -> Unit = {},
     onSuggestionClick: (String) -> Unit = {},
     onBackClick: () -> Unit = {},
@@ -309,8 +366,12 @@ fun AiChatScreenContent(
         // 4. Modern Docked Input Bar (always visible immediately above keyboard or bottom nav)
         ChatInputBar(
             inputQuery = uiState.inputQuery,
+            selectedImageUri = uiState.selectedImageUri,
+            selectedImageName = uiState.selectedImageName,
             isLoading = uiState.isLoading,
             onInputQueryChanged = onInputQueryChanged,
+            onAttachImageClick = onAttachImageClick,
+            onRemoveImageClick = onRemoveImageClick,
             onSendMessageClick = onSendMessageClick
         )
 
@@ -1019,14 +1080,31 @@ private fun UserChatBubble(msg: ChatMessage) {
                     Color(0xFFE9D8E7),
                     RoundedCornerShape(topStart = 18.dp, topEnd = 4.dp, bottomStart = 18.dp, bottomEnd = 18.dp)
                 )
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .padding(horizontal = 14.dp, vertical = 10.dp)
         ) {
-            Text(
-                text = msg.text,
-                fontSize = 14.sp,
-                lineHeight = 20.sp,
-                color = MomoraPurpleDark
-            )
+            Column {
+                if (!msg.imageUrl.isNullOrBlank()) {
+                    NetworkOrUriImage(
+                        urlOrUri = msg.imageUrl,
+                        contentDescription = "Attached Image",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 220.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                    )
+                    if (msg.text.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                }
+                if (msg.text.isNotBlank()) {
+                    Text(
+                        text = msg.text,
+                        fontSize = 14.sp,
+                        lineHeight = 20.sp,
+                        color = MomoraPurpleDark
+                    )
+                }
+            }
         }
 
         Spacer(modifier = Modifier.height(4.dp))
@@ -1692,17 +1770,21 @@ private fun QuickSuggestionChipsBar(
 }
 
 // =============================================================================
-// 9. DOCKED MODERN INPUT BAR
+// 9. DOCKED MODERN INPUT BAR WITH IMAGE ATTACHMENT
 // =============================================================================
 @Composable
 private fun ChatInputBar(
     inputQuery: String,
+    selectedImageUri: Uri?,
+    selectedImageName: String?,
     isLoading: Boolean,
     onInputQueryChanged: (String) -> Unit,
+    onAttachImageClick: () -> Unit,
+    onRemoveImageClick: () -> Unit,
     onSendMessageClick: () -> Unit
 ) {
     val focusManager = LocalFocusManager.current
-    val canSend = inputQuery.isNotBlank() && !isLoading
+    val canSend = (inputQuery.isNotBlank() || selectedImageUri != null) && !isLoading
 
     Column(
         modifier = Modifier
@@ -1710,6 +1792,63 @@ private fun ChatInputBar(
             .background(Color.White)
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
+        // Image preview banner if image attached
+        if (selectedImageUri != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Color(0xFFFAF2F7))
+                    .border(1.dp, Color(0xFFE9D8E7), RoundedCornerShape(14.dp))
+                    .padding(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    NetworkOrUriImage(
+                        urlOrUri = selectedImageUri.toString(),
+                        contentDescription = "Selected Image Preview",
+                        modifier = Modifier
+                            .size(46.dp)
+                            .clip(RoundedCornerShape(8.dp))
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = selectedImageName ?: "Photo attached",
+                            fontSize = 12.5.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MomoraPurpleDark,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Text(
+                            text = "Ready to send with Momora AI",
+                            fontSize = 11.sp,
+                            color = MomoraBodyMuted
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFEADBEC))
+                            .clickable { onRemoveImageClick() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "✕",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MomoraPurplePrimary
+                        )
+                    }
+                }
+            }
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1717,18 +1856,34 @@ private fun ChatInputBar(
                 .clip(RoundedCornerShape(50))
                 .background(Color.White)
                 .border(1.dp, Color(0xFFE8DEEC), RoundedCornerShape(50))
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 10.dp),
             contentAlignment = Alignment.CenterStart
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                // Image Attachment Button
+                Box(
+                    modifier = Modifier
+                        .size(34.dp)
+                        .clip(CircleShape)
+                        .background(if (selectedImageUri != null) Color(0xFFEADBEC) else Color(0xFFF7F1F8))
+                        .clickable(enabled = !isLoading) { onAttachImageClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    AttachImageIcon(
+                        color = if (selectedImageUri != null) MomoraPurplePrimary else Color(0xFF8F7E94),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
                 Box(modifier = Modifier.weight(1f)) {
                     if (inputQuery.isEmpty()) {
                         Text(
-                            text = "Ask Momora anything...",
+                            text = if (selectedImageUri != null) "Ask a question about this image..." else "Ask Momora anything...",
                             fontSize = 13.5.sp,
                             color = Color(0xFFA69EAC)
                         )
@@ -1779,6 +1934,127 @@ private fun ChatInputBar(
                 }
             }
         }
+    }
+}
+
+// =============================================================================
+// IMAGE UNDERSTANDING UTILITIES: ASYNC IMAGE LOADER & ATTACHMENT ICON
+// =============================================================================
+@Composable
+private fun NetworkOrUriImage(
+    urlOrUri: String?,
+    contentDescription: String?,
+    modifier: Modifier = Modifier
+) {
+    if (urlOrUri.isNullOrBlank()) return
+    val context = LocalContext.current
+    val bitmapState = produceState<Bitmap?>(initialValue = null, key1 = urlOrUri) {
+        value = withContext(Dispatchers.IO) {
+            try {
+                if (urlOrUri.startsWith("content://") || urlOrUri.startsWith("file://")) {
+                    val uri = Uri.parse(urlOrUri)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        val source = ImageDecoder.createSource(context.contentResolver, uri)
+                        ImageDecoder.decodeBitmap(source) { decoder, _, _ ->
+                            decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
+                            decoder.isMutableRequired = true
+                        }
+                    } else {
+                        context.contentResolver.openInputStream(uri)?.use { stream ->
+                            BitmapFactory.decodeStream(stream)
+                        }
+                    }
+                } else {
+                    val base = RetrofitClient.BASE_URL.trimEnd('/')
+                    val cleanPath = urlOrUri.trimStart('/')
+                    val fullUrl = if (urlOrUri.startsWith("http://") || urlOrUri.startsWith("https://")) {
+                        urlOrUri
+                    } else if (base.endsWith("momora-AI") && cleanPath.startsWith("momora-AI/")) {
+                        base.substringBeforeLast("momora-AI") + cleanPath
+                    } else {
+                        "$base/$cleanPath"
+                    }
+                    val url = URL(fullUrl)
+                    val connection = url.openConnection() as HttpURLConnection
+                    connection.connectTimeout = 8000
+                    connection.readTimeout = 8000
+                    connection.setRequestProperty("ngrok-skip-browser-warning", "true")
+                    val token = SessionManager.getToken()
+                    if (!token.isNullOrBlank()) {
+                        connection.setRequestProperty("Authorization", "Bearer $token")
+                    }
+                    connection.connect()
+                    if (connection.responseCode in 200..299) {
+                        connection.inputStream.use { stream ->
+                            BitmapFactory.decodeStream(stream)
+                        }
+                    } else {
+                        null
+                    }
+                }
+            } catch (e: Exception) {
+                null
+            }
+        }
+    }
+
+    val bitmap = bitmapState.value
+    if (bitmap != null) {
+        Image(
+            bitmap = bitmap.asImageBitmap(),
+            contentDescription = contentDescription,
+            modifier = modifier,
+            contentScale = ContentScale.Crop
+        )
+    } else {
+        Box(
+            modifier = modifier
+                .background(Color(0xFFF7F1F8), RoundedCornerShape(10.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Loading image...",
+                fontSize = 11.sp,
+                color = Color(0xFF9E8EA3)
+            )
+        }
+    }
+}
+
+@Composable
+private fun AttachImageIcon(color: Color, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val w = size.width
+        val h = size.height
+        val stroke = 1.6.dp.toPx()
+
+        // Outer rounded picture frame
+        drawRoundRect(
+            color = color,
+            topLeft = Offset(w * 0.14f, h * 0.18f),
+            size = Size(w * 0.72f, h * 0.64f),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(w * 0.14f, h * 0.14f),
+            style = Stroke(width = stroke)
+        )
+        // Little sun/circle in top right
+        drawCircle(
+            color = color,
+            radius = w * 0.08f,
+            center = Offset(w * 0.64f, h * 0.38f)
+        )
+        // Mountains/slopes
+        val mountPath = Path().apply {
+            moveTo(w * 0.22f, h * 0.68f)
+            lineTo(w * 0.42f, h * 0.48f)
+            lineTo(w * 0.54f, h * 0.60f)
+            lineTo(w * 0.66f, h * 0.46f)
+            lineTo(w * 0.78f, h * 0.58f)
+        }
+        drawPath(
+            path = mountPath,
+            color = color,
+            style = Stroke(width = stroke, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        )
     }
 }
 
