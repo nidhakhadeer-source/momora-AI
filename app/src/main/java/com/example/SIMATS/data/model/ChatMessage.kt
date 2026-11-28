@@ -13,6 +13,7 @@ data class ChatMessage(
     val footerNote: String? = null,
     val timestampText: String = "",
     val created_at: String? = null,
+    @SerializedName("image_url")
     val imageUrl: String? = null
 )
 
@@ -38,6 +39,7 @@ data class SendChatMessageData(
     val is_emergency: Boolean? = null,
     val provider: String? = null,
     val created_at: String? = null,
+    @SerializedName("image_url")
     val imageUrl: String? = null
 ) {
     fun toChatMessage(): ChatMessage {
