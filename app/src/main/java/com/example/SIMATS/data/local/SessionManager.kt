@@ -348,6 +348,10 @@ object SessionManager {
         return sharedPreferences?.getBoolean(KEY_REMINDER_MEDICATION, true) ?: true
     }
 
+    fun setReminderMedication(enabled: Boolean) {
+        sharedPreferences?.edit()?.putBoolean(KEY_REMINDER_MEDICATION, enabled)?.commit()
+    }
+
     fun getReminderAppointments(): Boolean {
         return sharedPreferences?.getBoolean(KEY_REMINDER_APPOINTMENTS, true) ?: true
     }
