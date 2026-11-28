@@ -79,17 +79,18 @@ $dailyCareItems = [];
 $medStmt = $pdo->prepare(
     'SELECT id, name, dosage_and_time, is_taken
      FROM medications
-     WHERE user_id = ?
+     WHERE user_id = ? AND (is_active = 1 OR is_active IS NULL)
      ORDER BY id ASC'
 );
 $medStmt->execute([$userId]);
 $meds = $medStmt->fetchAll();
 
 foreach ($meds as $med) {
+    $cleanSubtitle = preg_replace('/(\?\?|[\x{FFFD}])/u', ' · ', $med['dosage_and_time']);
     $dailyCareItems[] = [
         'id' => (int)$med['id'],
         'title' => $med['name'],
-        'subtitle' => $med['dosage_and_time'],
+        'subtitle' => $cleanSubtitle,
         'isTaken' => (bool)$med['is_taken'],
         'isAppointment' => false
     ];
@@ -124,7 +125,7 @@ if (empty($dailyCareItems)) {
             'id' => 1,
             'title' => 'Prenatal vitamin',
             'subtitle' => '1 tablet · Today at 08:00',
-            'isTaken' => true,
+            'isTaken' => false,
             'isAppointment' => false
         ],
         [
