@@ -597,12 +597,42 @@ fun HomeScreenContent(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Daily Care Items Container
+                // Daily Care Items Container (Display only upcoming medications; hide completed; show completion card when all done)
                 Column(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    if (data?.dailyCareItems.isNullOrEmpty()) {
+                    val careItems = data?.dailyCareItems ?: emptyList()
+                    val scheduledMeds = careItems.filter { !it.isAppointment }
+                    val upcomingMeds = scheduledMeds.filter { !it.isTaken }
+                    val appointments = careItems.filter { it.isAppointment }
+                    val allMedsCompleted = scheduledMeds.isNotEmpty() && upcomingMeds.isEmpty()
+
+                    if (allMedsCompleted) {
+                        AllMedicationsCompletedCard(
+                            onClick = onMedicationClick
+                        )
+                    } else if (upcomingMeds.isNotEmpty()) {
+                        upcomingMeds.forEach { item ->
+                            DailyCareCardItem(
+                                item = item,
+                                onMedicationClick = onMedicationClick,
+                                onAppointmentClick = onAppointmentClick
+                            )
+                        }
+                    }
+
+                    // Render any upcoming appointments
+                    appointments.forEach { apptItem ->
+                        DailyCareCardItem(
+                            item = apptItem,
+                            onMedicationClick = onMedicationClick,
+                            onAppointmentClick = onAppointmentClick
+                        )
+                    }
+
+                    // Empty state when there are no scheduled medications and no appointments
+                    if (scheduledMeds.isEmpty() && appointments.isEmpty()) {
                         Card(
                             shape = RoundedCornerShape(16.dp),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -629,14 +659,6 @@ fun HomeScreenContent(
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                        }
-                    } else {
-                        data?.dailyCareItems?.forEach { item ->
-                            DailyCareCardItem(
-                                item = item,
-                                onMedicationClick = onMedicationClick,
-                                onAppointmentClick = onAppointmentClick
-                            )
                         }
                     }
                 }
@@ -968,6 +990,88 @@ private fun DailyCareCardItem(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+            }
+        }
+    }
+}
+
+/**
+ * Card displayed on Home dashboard when all scheduled medications for today are completed.
+ */
+@Composable
+private fun AllMedicationsCompletedCard(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(16.dp))
+            .clickable { onClick() }
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(MomoraMintBadgeBg),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "✓",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MomoraMintBadgeText
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "All medications completed today",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = "You're all caught up with your prescribed doses for today.",
+                        fontSize = 11.5.sp,
+                        lineHeight = 15.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(MomoraMintBadgeBg)
+                    .padding(horizontal = 10.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = "Done",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MomoraMintBadgeText
+                )
             }
         }
     }
